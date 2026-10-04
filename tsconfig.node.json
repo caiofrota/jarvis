@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["es2023", "dom", "dom.iterable", "dom.asynciterable"],
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "rootDir": ".",
+    "outDir": "dist",
+    "noEmitOnError": true,
+    "types": ["node", "dom-speech-recognition"]
+  },
+  "include": [
+    "server.ts",
+    "lib/**/*.ts",
+    "shared/**/*.ts",
+    "desktop/**/*.ts",
+    "scripts/**/*.ts",
+    "client/stored-value.ts",
+    "features/tasks/task-actions.ts",
+    "features/chat/conversation.ts",
+    "features/chat/local-commands.ts",
+    "features/voice/browser-recognition.ts",
+    "features/voice/local-capture.ts",
+    "features/voice/speech-pipeline.ts",
+    "types/**/*.d.ts",
+    "features/voice/conversation-turns.ts",
+    "features/voice/audio-output.ts",
+    "features/voice/playback-guard.ts"
+  ],
+  "exclude": ["node_modules", "dist", "release"]
+}

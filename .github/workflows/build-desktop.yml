@@ -1,0 +1,38 @@
+name: Build desktop
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Enable pinned pnpm
+        run: corepack enable && corepack prepare pnpm@11.25.0 --activate
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Backend tests
+        run: pnpm test
+      - name: Build Windows installer
+        if: runner.os == 'Windows'
+        run: pnpm dist --win nsis --x64 --publish never
+      - name: Build Linux packages
+        if: runner.os == 'Linux'
+        run: pnpm dist --linux AppImage deb --x64 --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-${{ runner.os }}-x64
+          path: |
+            release/**/*.exe
+            release/**/*.AppImage
+            release/**/*.deb
+          if-no-files-found: error
+

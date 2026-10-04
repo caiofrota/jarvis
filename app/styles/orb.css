@@ -1,0 +1,296 @@
+.conversation-dock {
+  position: relative;
+  isolation: isolate;
+  margin: 2px -5px 18px;
+  border: 1px solid #1162aa;
+  border-radius: 12px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 48% 32%, #0539a2 0%, #062765 38%, #041636 68%, #030d21 100%);
+  box-shadow: inset 0 0 45px #006bff15;
+}
+.conversation-dock::before {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(90deg, #2787ea30 1px, transparent 1px), linear-gradient(#2787ea30 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(#0008, #000 25%, #000b 75%, #0003);
+}
+.conversation-dock::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00b7ff, transparent);
+  box-shadow: 0 -2px 18px #008dff;
+}
+.orb-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 17px 18px 0;
+  color: #7ecbf5;
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  font-family: ui-monospace, Consolas, monospace;
+}
+.orb-heading > span:first-child {
+  color: #9de9ff;
+  font-size: 10px;
+  letter-spacing: 3px;
+}
+.orb-heading i {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin: 0 6px 1px 0;
+  border-radius: 50%;
+  background: #35caff;
+  box-shadow: 0 0 9px #00b7ff;
+}
+[data-phase='listening'] .orb-heading i {
+  background: #82ffde;
+}
+.energy-stage {
+  height: 355px;
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.energy-trigger {
+  width: 100%;
+  height: 340px;
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+.energy-trigger:hover {
+  background: radial-gradient(ellipse, #008cff0c, transparent 65%);
+}
+.energy-trigger:focus-visible {
+  outline: 1px solid #64d7ff;
+  outline-offset: -10px;
+}
+.energy-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.energy-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: min(55%, 210px);
+  min-height: 88px;
+  padding: 13px 10px;
+  border: 1px solid #0395ed;
+  border-radius: 4px;
+  background: linear-gradient(160deg, #033473eb, #02132fef);
+  box-shadow:
+    0 0 0 4px #0065cd30,
+    inset 0 0 17px #007cff40,
+    0 0 26px #0079ff55;
+  pointer-events: none;
+}
+.energy-center-kicker {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 7px;
+  letter-spacing: 1.7px;
+  color: #35d9ff;
+}
+.energy-center-title {
+  display: block;
+  margin: 9px 0;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.22;
+  color: #c4f9ff;
+  text-shadow: 0 0 9px #02aaffaa;
+}
+.energy-center-action {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 7px;
+  letter-spacing: 0.6px;
+  line-height: 1.7;
+  color: #80cef6;
+}
+.orb-coordinate {
+  position: absolute;
+  top: 46%;
+  z-index: 1;
+  pointer-events: none;
+  color: #65aedd;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 7px;
+  letter-spacing: 1px;
+  line-height: 1.9;
+}
+.orb-coordinate-left {
+  left: 13px;
+}
+.orb-coordinate-right {
+  right: 13px;
+  text-align: right;
+}
+.orb-caption {
+  position: absolute;
+  top: 12px;
+  pointer-events: none;
+  color: #20cfff;
+  text-shadow: 0 0 8px #0091ff;
+  letter-spacing: 4px;
+  font-size: 9px;
+  font-family: ui-monospace, Consolas, monospace;
+}
+.orb-caption::after {
+  content: '';
+  display: block;
+  height: 3px;
+  margin-top: 8px;
+  background: repeating-linear-gradient(90deg, #15a7ff99 0 1px, transparent 1px 3px);
+}
+.orb-status {
+  padding: 0 22px 12px;
+  text-align: center;
+}
+.orb-status p {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #9abce0;
+  margin: 0 auto 8px;
+  max-width: 310px;
+  min-height: 35px;
+}
+.orb-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 0 14px 22px;
+}
+.orb-controls button {
+  border: 1px solid #1766a4;
+  border-radius: 4px;
+  background: #062751;
+  color: #b7e5ff;
+  padding: 8px 12px;
+  font-size: 10px;
+  min-height: 34px;
+}
+.orb-controls .orb-options {
+  background: #041d3dcc;
+  color: #8bdcff;
+  border-color: #166aa6;
+}
+.orb-options span {
+  margin-left: 12px;
+  font-size: 14px;
+}
+.orb-controls .orb-end {
+  color: #f2b8be;
+  border-color: #563c50;
+  background: #322032a0;
+}
+.orb-end span {
+  font-size: 8px;
+  margin-right: 5px;
+}
+.orb-notice,
+.conversation-dock > .feature-error {
+  padding: 0 18px 16px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.orb-settings-body {
+  padding: 6px 18px 18px;
+  border-top: 1px solid #2a3c50;
+  background: #101b29;
+}
+.orb-settings-body .setting-row {
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 15px 0;
+}
+.orb-settings-body .setting-row strong {
+  font-size: 12px;
+}
+.orb-settings-body .setting-row small {
+  font-size: 10px;
+}
+.orb-settings-body .setting-row select {
+  width: 100%;
+  max-width: 100%;
+  font-size: 11px;
+  min-height: 36px;
+}
+.orb-settings-body .voice-disclosure,
+.orb-settings-body [role='status'] {
+  font-size: 11px;
+  line-height: 1.7;
+}
+.assistant-body.has-messages .messages {
+  min-height: 150px;
+  max-height: 300px;
+  flex: none;
+}
+
+@media (max-width: 720px) {
+  .energy-stage {
+    height: 302px;
+  }
+  .energy-trigger {
+    height: 290px;
+  }
+  .energy-center {
+    min-height: 78px;
+    padding: 10px 7px;
+    width: 57%;
+  }
+  .energy-center-title {
+    font-size: 16px;
+  }
+  .energy-center-kicker {
+    font-size: 6px;
+    letter-spacing: 1px;
+  }
+  .energy-center-action {
+    font-size: 6px;
+  }
+  .orb-heading {
+    font-size: 7px;
+    letter-spacing: 0.6px;
+    padding-inline: 12px;
+  }
+  .orb-coordinate {
+    font-size: 6px;
+  }
+  .orb-status {
+    padding-inline: 15px;
+  }
+}
+.orb-route {
+  display: block;
+  margin: 3px 0 7px;
+  color: #9db4ca;
+  font-size: 9px;
+  line-height: 1.6;
+}

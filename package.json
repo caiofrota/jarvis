@@ -1,0 +1,93 @@
+{
+  "name": "jarvis-studio",
+  "version": "0.4.0",
+  "private": true,
+  "description": "Assistente desktop com IA local e na nuvem, notas e painéis configuráveis.",
+  "author": "Jarvis Studio",
+  "main": "dist/desktop/main.js",
+  "scripts": {
+    "start": "pnpm build:runtime && node node_modules/electron/cli.js .",
+    "preview": "pnpm build:runtime && node dist/server.js",
+    "test": "pnpm build:runtime && node --test tests/*.test.cjs",
+    "pack": "pnpm build && node node_modules/electron-builder/cli.js --dir",
+    "dist": "pnpm build && node node_modules/electron-builder/cli.js",
+    "dev": "node node_modules/tsx/dist/cli.mjs watch --ignore dist --ignore out scripts/dev.ts",
+    "build": "pnpm typecheck && pnpm build:runtime && pnpm build:worklet && next build && node dist/scripts/secure-export.js",
+    "format": "prettier --write app components features client shared lib desktop scripts tests",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit",
+    "build:runtime": "tsc -p tsconfig.node.json",
+    "build:worklet": "tsc -p tsconfig.worklet.json"
+  },
+  "devDependencies": {
+    "@types/dom-speech-recognition": "^0.0.12",
+    "@types/node": "^24.19.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "electron": "44.5.1",
+    "electron-builder": "26.15.3",
+    "next": "16.3.8",
+    "prettier": "^3.9.9",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tsx": "^4.23.15",
+    "typescript": "5.9.3"
+  },
+  "build": {
+    "appId": "dev.jarvisstudio.desktop",
+    "productName": "Jarvis Studio",
+    "directories": {
+      "output": "release/v0.4.0"
+    },
+    "files": [
+      "dist/**/*",
+      "out/**/*",
+      "assets/**/*",
+      "package.json",
+      "!node_modules/**/*"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility",
+      "icon": "assets/icon.png",
+      "maintainer": "Jarvis Studio",
+      "desktop": {
+        "entry": {
+          "StartupWMClass": "jarvis-studio"
+        }
+      }
+    },
+    "extraResources": [
+      {
+        "from": "voice",
+        "to": "voice",
+        "filter": [
+          "*.py",
+          "requirements.txt"
+        ]
+      }
+    ]
+  }
+}

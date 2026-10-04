@@ -1,0 +1,22 @@
+@import './styles/base.css';
+@import './styles/shell.css';
+@import './styles/panels.css';
+@import './styles/assistant.css';
+@import './styles/calendar.css';
+@import './styles/tasks.css';
+@import './styles/notes.css';
+@import './styles/system.css';
+@import './styles/dialogs.css';
+@import './styles/voice.css';
+@import './styles/responsive.css';
+@import './styles/orb.css';
+@import './styles/transcript.css';
+@import './styles/stage.css';
+@import './styles/fullscreen.css';
+@import './styles/card-layout.css';
+.session-status {
+  padding: 12px 0;
+  color: var(--accent);
+  font-size: 12px;
+  line-height: 1.7;
+}

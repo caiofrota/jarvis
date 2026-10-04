@@ -1,0 +1,211 @@
+'use strict';
+const { test } = require('node:test'),
+  assert = require('node:assert/strict'),
+  vm = require('node:vm'),
+  fs = require('node:fs');
+function harness() {
+  let node;
+  class AudioContext {
+    constructor() {
+      this.sampleRate = 16000;
+      this.audioWorklet = { addModule: async () => {} };
+      this.destination = {};
+    }
+    async resume() {}
+    async close() {}
+    createMediaStreamSource() {
+      return { connect() {}, disconnect() {} };
+    }
+  }
+  class AudioWorkletNode {
+    constructor() {
+      node = this;
+      this.port = { postMessage: () => queueMicrotask(() => this.port.onmessage({ data: 'flushed' })) };
+    }
+    connect() {}
+    disconnect() {}
+  }
+  const scope = {
+    exports: {},
+    require: require('node:module').createRequire(require.resolve('../dist/features/voice/local-capture.js')),
+    AudioContext,
+    AudioWorkletNode,
+    Float32Array,
+    ArrayBuffer,
+    DataView,
+    setTimeout,
+    clearTimeout,
+    btoa: (s) => Buffer.from(s, 'binary').toString('base64'),
+  };
+  vm.runInNewContext(
+    fs.readFileSync(require.resolve('../dist/features/voice/local-capture.js'), 'utf8'),
+    scope,
+  );
+  return { api: scope.exports, feed: (samples) => node.port.onmessage({ data: samples }) };
+}
+test('transcrição envia trecho enquanto gravação continua e preserva o texto ao parar', async () => {
+  const h = harness();
+  let calls = 0,
+    text = '';
+  const capture = await h.api.capture({
+    stream: {},
+    api: {
+      transcribe: async (request) => {
+        calls++;
+        assert.equal(request.provider, 'local');
+        assert.equal(request.live, true);
+        assert.equal(Buffer.from(request.audio, 'base64').toString('ascii', 0, 4), 'RIFF');
+        return { text: 'Abra a calculadora' };
+      },
+      cancelVoice: async () => {},
+    },
+    onText: (value) => (text = value),
+    onError: (e) => {
+      throw new Error(e);
+    },
+  });
+  h.feed(new Float32Array(24000).fill(0.1));
+  await new Promise((r) => setImmediate(r));
+  assert.equal(calls, 1);
+  assert.equal(text, 'Abra a calculadora');
+  assert.equal(await capture.stop(), 'Abra a calculadora');
+});
+test('silêncio não envia trechos ao reconhecedor', async () => {
+  const h = harness();
+  let calls = 0;
+  const capture = await h.api.capture({
+    stream: {},
+    api: { transcribe: async () => calls++, cancelVoice: async () => {} },
+    onText() {},
+    onError() {},
+  });
+  h.feed(new Float32Array(32000));
+  await capture.stop();
+  assert.equal(calls, 0);
+});
+test('respostas longas são divididas para começar a falar antes do áudio completo', () => {
+  const { api } = harness();
+  const parts = api.chunks('Olá. ' + 'Uma resposta com várias palavras. '.repeat(20));
+  assert.equal(parts[0], 'Olá.');
+  assert.ok(parts.length > 1);
+  assert.ok(parts.every((s) => s.length <= 180));
+});
+
+test('pausa envia uma fala completa, preserva parciais e volta a receber outra fala', async () => {
+  const h = harness(),
+    utterances = [],
+    partials = [];
+  let starts = 0,
+    transcriptions = 0;
+  const session = await h.api.capture({
+    stream: {},
+    api: {
+      transcribe: async () => ({ text: ++transcriptions <= 2 ? 'Abra o PowerPoint' : 'Agora o Word' }),
+      cancelVoice: async () => {},
+    },
+    onText: (value) => partials.push(value),
+    onError: assert.fail,
+    onSpeechStart: () => starts++,
+    onUtterance: (value) => utterances.push(value),
+  });
+  h.feed(new Float32Array(24000).fill(0.1));
+  await new Promise((r) => setImmediate(r));
+  assert.equal(utterances.length, 0);
+  assert.equal(partials.at(-1), 'Abra o PowerPoint');
+  h.feed(new Float32Array(14400));
+  await new Promise((r) => setImmediate(r));
+  assert.deepEqual(utterances, ['Abra o PowerPoint']);
+  h.feed(new Float32Array(24000).fill(0.1));
+  await new Promise((r) => setImmediate(r));
+  h.feed(new Float32Array(14400));
+  await new Promise((r) => setImmediate(r));
+  assert.deepEqual(utterances, ['Abra o PowerPoint', 'Agora o Word']);
+  assert.equal(starts, 2);
+  session.cancel();
+});
+test('nuvem envia áudio somente ao terminar cada fala, com consentimento explícito', async () => {
+  const h = harness();
+  let calls = 0;
+  const session = await h.api.capture({
+    stream: {},
+    provider: 'cloud',
+    api: {
+      transcribe: async (request) => {
+        calls++;
+        assert.equal(request.provider, 'cloud');
+        assert.equal(request.consent, true);
+        return { text: 'Olá' };
+      },
+      cancelVoice: async () => {},
+    },
+    onText() {},
+    onError: assert.fail,
+    onUtterance() {},
+  });
+  h.feed(new Float32Array(24000).fill(0.1));
+  await new Promise((r) => setImmediate(r));
+  assert.equal(calls, 0);
+  h.feed(new Float32Array(14400));
+  await new Promise((r) => setImmediate(r));
+  assert.equal(calls, 1);
+  session.cancel();
+});
+
+test('captura preserva 240 ms antes da fala e a margem de silêncio no fim', async () => {
+  const h = harness(),
+    recordings = [];
+  const session = await h.api.capture({
+    stream: {},
+    api: {
+      transcribe: async (request) => {
+        recordings.push(Buffer.from(request.audio, 'base64'));
+        return { text: 'Uma fala' };
+      },
+      cancelVoice: async () => {},
+    },
+    onText() {},
+    onError: assert.fail,
+  });
+  h.feed(new Float32Array(10000).fill(0.001));
+  h.feed(new Float32Array(24000).fill(0.1));
+  await new Promise((resolve) => setImmediate(resolve));
+  h.feed(new Float32Array(14400));
+  await new Promise((resolve) => setImmediate(resolve));
+  const pcm = recordings.at(-1);
+  assert.equal(pcm.readUInt32LE(40) / 2, 3840 + 24000 + 14400);
+  assert.equal(pcm.readInt16LE(44), 32);
+  assert.equal(pcm.readInt16LE(44 + 3840 * 2), 3276);
+  assert.equal(pcm.readInt16LE(pcm.length - 2), 0);
+  session.cancel();
+});
+test('pausar captura descarta transcrição em voo e não processa o áudio do Jarvis', async () => {
+  const h = harness(),
+    texts = [];
+  let finish,
+    calls = 0;
+  const session = await h.api.capture({
+    stream: {},
+    api: {
+      transcribe: async () => {
+        calls++;
+        return await new Promise((resolve) => (finish = resolve));
+      },
+      cancelVoice: async () => {},
+    },
+    onText: (text) => texts.push(text),
+    onError: assert.fail,
+  });
+  h.feed(new Float32Array(24000).fill(0.1));
+  session.setPaused(true);
+  h.feed(new Float32Array(24000).fill(0.1));
+  finish({ text: 'Voz do Jarvis' });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(calls, 1);
+  assert.deepEqual(texts, []);
+  session.setPaused(false);
+  h.feed(new Float32Array(24000).fill(0.1));
+  finish({ text: 'Voz da pessoa' });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(texts, ['Voz da pessoa']);
+  session.cancel();
+});

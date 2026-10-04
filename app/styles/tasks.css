@@ -1,0 +1,86 @@
+.panel[data-panel='tasks'] {
+  grid-column: span 3;
+}
+.task-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 17px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.task-summary strong {
+  font-size: 26px;
+  color: var(--text);
+  font-weight: 400;
+}
+.progress-track {
+  height: 3px;
+  background: #283640;
+  border-radius: 9px;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+.progress-track > div {
+  height: 100%;
+  background: var(--accent);
+}
+.task-list {
+  display: grid;
+  gap: 13px;
+  margin-bottom: 15px;
+}
+.task-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.task-row label {
+  display: flex;
+  gap: 9px;
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.task-row input {
+  accent-color: var(--accent);
+  margin: 2px 0 0;
+  flex-shrink: 0;
+}
+.task-row.completed span {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+.task-row .delete {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 15px;
+  padding: 0 3px;
+}
+.empty {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.task-form {
+  display: flex;
+  gap: 6px;
+}
+.task-form input {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #0c141d;
+  padding: 9px;
+  color: var(--text);
+  font-size: 11px;
+}
+.task-form button {
+  border: 1px solid var(--line);
+  background: #263945;
+  width: 30px;
+}

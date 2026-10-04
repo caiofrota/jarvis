@@ -1,0 +1,34 @@
+node_modules/
+release/
+src-tauri/target/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Local Python voice runtime and downloaded models
+
+.voice-env/
+.voice-data/
+.voice-data-*/
+voice/__pycache__/
+**/__pycache__/
+*.py[cod]
+
+# Downloaded model and audio artifacts (keep source code and requirements tracked)
+*.onnx
+*.pt
+*.pth
+*.safetensors
+*.bin
+*.model
+*.ckpt
+*.wav
+*.mp3
+
+.next/
+out/
+
+dist/
+*.tsbuildinfo

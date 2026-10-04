@@ -1,0 +1,216 @@
+dialog {
+  background: #111b25;
+  color: var(--text);
+  border: 1px solid #344653;
+  border-radius: 16px;
+  width: min(580px, calc(100vw - 32px));
+  padding: 25px;
+  max-height: 85vh;
+  box-shadow: 0 30px 120px #0009;
+}
+dialog::backdrop {
+  background: #02060bcc;
+  backdrop-filter: blur(6px);
+}
+.dialog-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+.dialog-head .eyebrow {
+  font-size: 9px;
+  margin-bottom: 8px;
+}
+.dialog-description {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+  margin-bottom: 20px;
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 17px 0;
+  border-bottom: 1px solid var(--line);
+}
+.setting-row strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+}
+.setting-row small {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 7px;
+  line-height: 1.6;
+}
+.setting-row select {
+  max-width: 175px;
+  background: #0b131b;
+  color: var(--text);
+  border: 1px solid #374755;
+  padding: 9px;
+}
+.setting-row input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+.settings-foot {
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+.addon-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.addon-card strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.addon-card p {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-top: 6px;
+}
+.addon-logo {
+  font-size: 23px;
+  width: 36px;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+.addon-info {
+  flex: 1;
+}
+.command-list {
+  display: grid;
+  gap: 8px;
+}
+.command-list button {
+  padding: 13px;
+  border: 1px solid var(--line);
+  background: #17232d;
+  text-align: left;
+  font-size: 13px;
+}
+.command-list button span {
+  float: right;
+  color: var(--muted);
+  font-size: 11px;
+}
+.toast {
+  position: fixed;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #244039;
+  color: #d9fff3;
+  border: 1px solid #507d70;
+  border-radius: 9px;
+  padding: 13px 19px;
+  font-size: 12px;
+  z-index: 20;
+  max-width: 90vw;
+  box-shadow: 0 10px 25px #0006;
+}
+.toast[hidden] {
+  display: none;
+}
+body[data-profile='eco'] dialog::backdrop {
+  backdrop-filter: none;
+}
+.cloud-key {
+  margin: 20px 0;
+}
+.cloud-key label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 9px;
+}
+.key-row {
+  display: flex;
+  gap: 8px;
+}
+.key-row input {
+  min-width: 0;
+  flex: 1;
+  background: #0b131b;
+  color: var(--text);
+  border: 1px solid #374755;
+  padding: 10px;
+}
+.cloud-key p {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin: 10px 0;
+}
+.connection-status {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+  padding: 15px 0;
+  overflow-wrap: anywhere;
+}
+#ai-model {
+  max-width: 260px;
+  font-size: 11px;
+}
+.personal-profile {
+  display: grid;
+  gap: 15px;
+}
+.profile-field {
+  display: grid;
+  gap: 8px;
+}
+.profile-field strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+}
+.profile-field small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.profile-field input,
+.profile-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: #0b131b;
+  color: var(--text);
+  border: 1px solid #374755;
+  border-radius: 6px;
+  padding: 10px 11px;
+  font: inherit;
+  font-size: 12px;
+}
+.profile-field textarea {
+  min-height: 74px;
+  resize: vertical;
+  line-height: 1.6;
+}
+.profile-field input:focus,
+.profile-field textarea:focus {
+  outline: 1px solid var(--accent);
+  border-color: var(--accent);
+}
+.profile-privacy {
+  margin-bottom: 0;
+}

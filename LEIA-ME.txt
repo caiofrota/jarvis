@@ -1,0 +1,255 @@
+JARVIS STUDIO 0.4.0 — COMO RODAR
+
+PROJETO
+C:\Users\caiof\Documents\Codex\2026-09-30\tem\outputs\jarvis-studio
+
+RODAR MANUALMENTE NO SEU WINDOWS (recomendado durante desenvolvimento)
+1. Feche a versão antiga do Jarvis. Se existir um terminal do servidor antigo,
+   pressione Ctrl+C nele. Não é preciso executar como administrador.
+2. Pelo Explorador de Arquivos, abra a pasta do projeto acima.
+3. Dê dois cliques em Iniciar Jarvis.cmd.
+4. Deixe essa janela aberta e acesse http://127.0.0.1:4318 no Chrome.
+   O iniciador não abre navegador automaticamente.
+5. Para encerrar, pressione Ctrl+C na janela que você abriu.
+
+O processo iniciado pelo seu Explorador usa a sua sessão normal do Windows.
+Ele não fica dentro do ambiente protegido das ferramentas do Codex.
+Se a porta 4318 estiver ocupada, o iniciador avisa e não cria uma segunda instância.
+A interface Next e a ponte de controle do PC usam a mesma porta.
+Alterações da interface aparecem automaticamente. Mudanças nos serviços TypeScript
+reiniciam o servidor de desenvolvimento; uma conversa ativa pode ser interrompida.
+
+PRÉ-REQUISITOS DE DESENVOLVIMENTO
+Node.js 22.12 ou superior e dependências instaladas (já preparadas nesta pasta).
+Em outra máquina: instale Node.js e pnpm, copie o código-fonte e execute:
+  pnpm install
+  pnpm dev
+Para a IA local, abra o Ollama e escolha um modelo instalado em Inteligência.
+A IA na nuvem continua opcional. No aplicativo desktop, a chave OpenAI é protegida
+com o armazenamento seguro do sistema e volta ao abrir o Jarvis. Na prévia do
+Chrome, ela fica no localStorage deste perfil apenas para testes e não é criptografada;
+remova a chave em Inteligência antes de compartilhar esse perfil do navegador.
+
+APLICATIVO DESKTOP SEM REINSTALAR
+Depois de mudanças na interface, execute pnpm build na pasta do projeto.
+Feche o Jarvis desktop e abra Iniciar Jarvis Desktop.cmd pelo Explorador.
+Ele usa o Electron da pasta de desenvolvimento e a interface exportada.
+Não abra o iniciador web e o desktop ao mesmo tempo se quiser uma só instância.
+
+INSTALADOR
+release\v0.4.0\Jarvis Studio Setup 0.4.0.exe
+Esse instalador é a versão anterior; as mudanças TypeScript e conversa por voz
+estão na pasta de desenvolvimento. Para gerar um instalador atualizado, execute
+pnpm dist --win nsis --x64 --publish never.
+Não é necessário reinstalar a cada
+alteração enquanto você usa o iniciador de desenvolvimento.
+O aplicativo instalado inclui Electron e a interface Next exportada; não precisa
+instalar Node.js nem executar um servidor Next para abrir.
+O instalador ainda não tem assinatura digital nem atualização automática.
+
+JANELAS E CARDS
+O fundo quadriculado ocupa toda a tela, com o anel centralizado e os cards
+flutuando nas laterais. O anel existe apenas na janela principal.
+Nas secundárias, todo o espaço é dedicado aos cards. Em telas estreitas,
+Mostrar cards alterna entre o anel e os cards, sem interromper a conversa.
+Personalizar painéis escolhe os cards desta janela. Ordem, visibilidade e distribuição de espaço
+são salvas separadamente por janela. Restaurar disposição afeta apenas ela.
+Nova janela cria um espaço somente de cards, sem anel; a seta de um card abre uma janela
+iniciada com esse card, onde você pode acrescentar outros.
+Tarefas e notas continuam compartilhadas entre janelas da mesma origem.
+No navegador, o endereço identifica a janela: recarregar preserva sua configuração;
+salve esse endereço nos favoritos se quiser reabrir o mesmo espaço mais tarde.
+Uma nova janela começa com seu próprio layout. No desktop, a janela principal
+mantém seu layout entre inicializações. Ocultar o assistente encerra a escuta
+naquela janela.
+Os cards dividem a altura disponível e rolam seu conteúdo por dentro. Quando
+não há espaço para todos, as setas de páginas dão acesso aos demais cards.
+O controle vertical dá mais espaço à linha do card, mantendo tudo dentro da tela.
+O teste com três janelas do navegador confirmou layouts independentes, recarga,
+tarefas/notas compartilhadas e configuração de cards nas janelas destacadas.
+
+VOZ
+Chrome online: transcrição ao vivo pelo serviço do navegador, grátis e sem chave.
+O áudio pode ser enviado ao provedor do navegador. É uma escolha explícita.
+Clique na esfera do painel Assistente para iniciar a conversa, sem abrir outra
+janela. A aba Conversa exibe a esfera; a aba Transcrição reúne o histórico,
+as parciais do reconhecimento e o campo para escrever. Trocar de aba preserva
+a conversa por voz e os rascunhos. Opções de voz permite escolher
+reconhecimento, saída e alto-falantes/fones no próprio painel.
+Uma pausa envia sua fala; o Jarvis responde em voz e retoma a escuta.
+Durante a resposta, clique na esfera para interromper. Enquanto está ouvindo,
+clique nela para encerrar; o botão Encerrar também permanece disponível.
+O anel de energia tem linhas azuis ondulantes e pontos de luz em rotação, sobre
+um fundo quadriculado. O brilho e a deformação acompanham a amplitude e as
+frequências do áudio Kokoro/OpenAI. O centro mostra o estado real da conversa.
+A voz do sistema usa movimento ambiente (não fornece áudio para análise).
+O visual não usa uma biblioteca 3D: perfis limitam o desenho a 20/30/45 quadros por
+segundo; ele pausa fora da tela e respeita a preferência de movimento reduzido.
+Alto-falantes (padrão): pausa o reconhecimento antes de reproduzir a resposta e
+volta a ouvir 900 ms após o fim do áudio. Aguarde "Estou ouvindo" para falar.
+Durante a resposta, use Interromper resposta para parar a fala do Jarvis.
+Fones: mantém a escuta durante a resposta e permite interrupção por voz quando
+chega uma transcrição diferente da fala do Jarvis. Volume sozinho não interrompe
+a reprodução. O modo de alto-falantes prioriza evitar eco; não é uma conversa
+com fala e escuta simultâneas enquanto o Jarvis está falando.
+A conversa continua ouvindo ao alternar entre aplicativos. Clique em Encerrar
+conversa para desligar a escuta.
+Ditar mensagem continua disponível para revisar texto antes de enviar.
+Local/offline: Whisper base em português, com parciais durante a gravação.
+Saída gratuita: Kokoro neural local ou vozes locais instaladas no sistema.
+OpenAI de voz continua opcional, identificada como API paga. Não há troca
+silenciosa para a nuvem quando uma opção local falha.
+
+A primeira instalação de voz local baixa pacotes e modelos. Precisa de internet
+nessa instalação e de Python 3.12 com pip/venv. Nesta pasta de desenvolvimento,
+o ambiente de voz já está preparado. No instalador, os componentes ficam em
+%APPDATA%\jarvis-studio\.voice-env e os modelos em voice-models, fora da pasta
+do programa. Se Python não estiver disponível, a tela explica o requisito e
+mostra Tentar instalar novamente após a falha. Python não é incluído no instalador.
+Reconhecimento do Chrome não está disponível dentro do Electron; use Chrome
+para essa opção ou selecione o reconhecimento local no aplicativo desktop.
+
+Ao abrir o Jarvis, o modelo Ollama já selecionado começa a aquecer em segundo plano;
+seu primeiro pedido não precisa iniciar esse carregamento. Os perfis Equilibrado e
+Completo mantêm a IA carregada por 10 e 30 minutos; Econômico libera ao concluir.
+Pedidos escritos ou falados são interpretados pela IA, incluindo abreviações.
+O nome identificado é resolvido contra os aplicativos encontrados no computador.
+Destinos ausentes ou ambíguos geram uma pergunta; não há aplicativo substituto.
+Botões do painel Meu computador abrem diretamente o destino escolhido.
+A síntese agrupa frases, prepara até três blocos e busca uma reserva inicial de
+1,4 segundo de áudio. Respostas mais curtas começam assim que estiverem prontas.
+Kokoro e a saída de áudio da nuvem usam reprodução agendada, com 120 ms de silêncio
+no início e 220 ms no fim da resposta, preservando todas as amostras de voz.
+A captura local conserva 240 ms anteriores à detecção da fala e espera 850 ms de
+silêncio para concluir o trecho. Os motores de reconhecimento e síntese são
+separados. Interromper o áudio não descarrega imediatamente a voz local.
+Esses ajustes reduzem fragmentação e interrupções falsas; a velocidade de geração
+do texto ainda depende da IA escolhida e do computador.
+Ainda não foi medida a experiência de conversa com o seu microfone nesta versão.
+
+LINUX
+Código e configuração de empacotamento mantidos para Linux.
+Instale Node.js, pnpm, Python 3.12 (ou uma versão compatível com os pacotes),
+python3-venv/pip e Ollama para IA local. Execute pnpm install e sh 'Iniciar Jarvis.sh'.
+Para gerar AppImage/deb no Linux: pnpm dist --linux AppImage deb --x64 --publish never.
+O fluxo .github/workflows/build-desktop.yml gera Windows e Linux em seus sistemas.
+Não foi executado um teste real de Linux nesta máquina Windows.
+
+ORGANIZAÇÃO DO CÓDIGO
+app/                  Rotas Next e estilos separados por área.
+components/workspace/ Estrutura da janela, composição dos painéis e diálogos.
+features/chat/        Histórico, envio, resposta em fluxo e interface da conversa.
+features/voice/       Reconhecimento, captura, fila de frases e reprodução.
+features/ai/          Provedor, modelos e conexão da chave.
+features/actions/     Catálogo e abertura de aplicativos/pastas.
+features/tasks, notes, calendar, system, settings/  Painéis independentes.
+client/               Comunicação HTTP/IPC e armazenamento do navegador.
+shared/               Tratamento de texto compartilhado com o backend.
+lib/                  IA, controle do PC, permissões e motores de voz.
+desktop/              Electron, janelas, permissões de microfone e IPC.
+voice/                Processos Python de reconhecimento/síntese e download.
+scripts/              Desenvolvimento e proteção da exportação estática.
+tests/                Testes de serviços, permissões, voz e streaming.
+
+Next + React, servidor, Electron e serviços estão em TypeScript estrito (.ts/.tsx).
+Os contratos de mensagens, ações, voz e IPC ficam em shared/types.ts e shared/ipc.ts.
+O código compilado dos serviços fica em dist/. O módulo de captura do navegador
+é gerado de features/voice/pcm-worklet.ts para public/pcm-worklet.js.
+Python continua responsável por Whisper/Kokoro; testes de serviços usam Node.
+Para verificar tipos: pnpm typecheck. Para testar: pnpm test.
+Para preparar web exportada e desktop: pnpm build.
+Não há Claude Code nesta versão. Ollama e OpenAI continuam como provedores.
+Trello e calendário conectado ainda são próximos passos; a agenda é demonstrativa.
+Notas, tarefas e históricos existentes no mesmo navegador/origem são preservados.
+Dados do navegador e do aplicativo desktop continuam separados.
+
+VALIDAÇÃO DESTA ETAPA
+TypeScript estrito na interface, no backend e no worklet passou nesta revisão.
+77 testes automatizados passaram; 2 testes de HTTP locais não puderam abrir
+127.0.0.1 dentro do ambiente restrito do Codex (EACCES), e 2 testes opcionais
+com Ollama real foram ignorados por não haver modelo configurado para teste.
+A suíte cobre tarefas consecutivas, PowerPoint a partir de ppt, VS Code,
+Notepad++, destinos ausentes/ambíguos, reserva de áudio, preservação das amostras,
+pausa do reconhecimento, descarte de eco atrasado e cancelamento.
+A interface web foi testada com seis turnos de voz: interrupção durante geração
+e reprodução com fones, proteção contra eco nos alto-falantes, retomada após a
+margem, interrupção por botão, histórico preservado e execução única.
+A esfera inline foi conferida em tela grande e celular, com teclado, movimento
+reduzido e pausa do desenho em aba oculta. A análise de áudio mantém uma só rota
+de saída, sem duplicar o som ou abrir outra captura de microfone. Microfone
+e reprodução foram simulados; nenhum programa real foi aberto pelo teste de ações.
+Whisper real foi executado sem reproduzir som, incluindo cancelamento
+e reaproveitamento dos processos. A qualidade com seu microfone e a latência
+da conversa real ainda precisam ser conferidas no uso; dependem do modelo e PC.
+A exportação file:// foi testada com a ponte desktop simulada. A compilação Next
+e a inicialização nativa do Electron continuam sem validação neste ambiente:
+o sandbox bloqueou a canonicalização da pasta e a abertura de processos/portas.
+Linux mantém o empacotamento configurado, sem teste em um sistema Linux nesta
+máquina. O instalador deve ser gerado fora do ambiente restrito.
+
+LATÊNCIA DA CONVERSA (02/10/2026)
+As respostas de conversa agora aparecem por frases validadas durante a geração.
+Ações continuam aguardando a decisão completa e validada; texto parcial não
+executa programas nem registra tarefas. A voz pode preparar a primeira frase
+em paralelo à geração, mantendo a reserva e as margens de áudio.
+No modo local, uma conversa comum usa texto simples em streaming e contexto
+menor quando falada; somente pedidos que podem virar tarefa ou abertura passam
+pela saída JSON estruturada. Isso remove o custo de obrigar cada resposta a
+montar um envelope de ferramenta, sem retirar a validação das ações.
+O perfil econômico mantém o modelo por 2 minutos de inatividade, em vez de
+recarregá-lo a cada turno. Somente a janela principal solicita pré-carregamento.
+O histórico mostra o tempo até o primeiro texto e o tempo total separadamente.
+Medição pontual com gemma4:e4b, perfil equilibrado, duas frases sobre a cor do céu:
+modelo já carregado: primeiro texto 26,0 s antes; 10,2 s depois. Tempo total
+26,9 s depois. Isso mede texto, não início de áudio. Carregamento inicial medido
+entre 65 e 74 s. Os valores variam conforme hardware, carga e contexto.
+Para latência próxima de instantânea, ainda é necessário comparar um modelo
+menor ou outro provedor. Nenhum modelo foi trocado nem serviço pago ativado.
+
+REPRODUÇÃO PROGRESSIVA (02/10/2026)
+A primeira frase agora pode tocar assim que preencher a reserva de áudio de
+1,4 s, sem aguardar a segunda frase ou a conclusão do modelo. A margem final
+de 220 ms é acrescentada ao encerrar quando ainda não estava no último bloco.
+A proteção contra eco continua ativa até terminar o áudio e sua margem.
+Isso elimina uma espera do aplicativo, mas não aumenta os tokens por segundo
+do modelo local; um modelo lento ainda pode deixar pausas entre frases.
+A referência adewaskar/jarvis usa Claude na nuvem, sessão contínua no Agent SDK
+e fala por sentenças conforme o texto chega. Navegador ou ElevenLabs fornecem
+a voz. O desempenho da demonstração não é um benchmark desta máquina.
+
+PREPARAÇÃO AO ABRIR (02/10/2026)
+Em Inteligência, Manter IA pronta vem ativado e pode ser desativado para
+economizar memória. A janela principal prepara o modelo ao abrir e renova
+essa preparação a cada minuto. Chamadas repetidas em até 110 segundos usam
+a preparação recente; trocar modelo ou perfil exige a preparação correspondente.
+Ao fechar a janela ou desativar a opção, o Ollama volta a liberar o modelo
+pelo prazo do perfil contado desde o último uso. Não existe descarga forçada.
+O seletor exibe Carregando IA, IA pronta ou a falha de preparação. A opção
+mantém o modelo na memória; não diminui seu tamanho nem a geração de tokens.
+Os tempos de carregamento e resposta ainda precisam ser medidos novamente
+fora do ambiente de execução restrito. Não foi gerado novo instalador.
+
+MODELO LOCAL DE TESTE (03/10/2026)
+Neste PC, o Ollama recebeu o qwen2.5:3b, com aproximadamente 1,9 GB, e ele
+foi selecionado no Jarvis como modelo local ativo. O gemma4:e4b, de 6,6 GB,
+continua instalado para comparação. Em uma execução aquecida, o qwen2.5:3b
+respondeu ao teste curto em cerca de 3,6 s; o primeiro carregamento ainda é
+mais demorado e depende da memória e da GPU disponíveis.
+
+PERFIL DO JARVIS (03/10/2026)
+Abra "Meu perfil" na barra superior ou use Ctrl+K > "Configurar briefing e
+personalidade". Ali ficam seu nome, a forma como o Jarvis deve chamar você, o
+briefing pessoal, a personalidade desejada e preferências ou limites. O perfil
+é salvo no armazenamento local deste dispositivo e entra como contexto em cada
+conversa; ele não altera as regras de segurança nem executa ações sozinho.
+Quando a IA na nuvem estiver selecionada, o perfil acompanha a solicitação
+enviada ao provedor. Para manter essas informações somente no PC, selecione um
+modelo local.
+
+VOZ LOCAL E ESTILO JARVIS (03/10/2026)
+Na janela "Uma voz para suas ideias" ou nas opções da conversa, a voz local
+gratuita permite escolher Alex (masculina), Santa (masculina suave) ou Dora
+(feminina), todas do Kokoro em português brasileiro. A instalação baixa o
+modelo Kokoro 82M e as três vozes brasileiras; o perfil
+já começa com um preset de personalidade calmo, elegante, proativo e com humor
+discreto, que pode ser substituído no campo Personalidade do Jarvis.

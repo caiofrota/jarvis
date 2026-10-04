@@ -1,0 +1,358 @@
+html { background-color: #050d19; }
+/* The grid and ring belong to the viewport; the cards are a foreground layer. */
+body {
+  background: radial-gradient(ellipse at 50% 48%, #063d94 0%, #062456 32%, #061427 62%, #050d19 100%);
+  background-attachment: fixed;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(90deg, #2385db29 1px, transparent 1px), linear-gradient(#2385db29 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+.shell {
+  position: relative;
+  z-index: 1;
+}
+.main-shell {
+  margin-left: 0;
+}
+.main-shell main {
+  max-width: none;
+  padding: 0;
+}
+.rail {
+  width: 60px;
+  background: #04101c99;
+  border-color: #21547a77;
+  z-index: 8;
+}
+.rail .brand {
+  font-size: 26px;
+}
+.topbar {
+  position: fixed;
+  inset: 0 0 auto 60px;
+  height: 64px;
+  padding: 0 22px;
+  background: #041326bf;
+  border-color: #20578366;
+  z-index: 8;
+}
+.top-actions {
+  gap: 12px;
+}
+.topbar .preview-status {
+  display: none;
+}
+.page-intro,
+main > footer {
+  display: none;
+}
+.workspace-bar {
+  position: fixed;
+  top: 80px;
+  left: 82px;
+  border: 0;
+  z-index: 5;
+  gap: 16px;
+}
+.workspace-tools > span {
+  display: none;
+}
+.workspace-tabs {
+  gap: 16px;
+}
+.workspace-stage,
+.focus-mode .workspace-stage {
+  min-height: 100dvh;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  overflow: visible;
+}
+.workspace-stage::before {
+  display: none;
+}
+.workspace-core {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+.workspace-core .assistant-body {
+  padding: 0;
+}
+.workspace-core .ai-toolbar {
+  position: fixed;
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 310px;
+  margin: 0;
+  pointer-events: auto;
+}
+.workspace-core .assistant-tabs {
+  position: fixed;
+  top: 123px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  pointer-events: auto;
+}
+.workspace-core .orb-heading {
+  display: none;
+}
+.workspace-core .energy-stage {
+  position: fixed;
+  inset: 50% 0 auto;
+  transform: translateY(-50%);
+  height: min(62dvh, 620px);
+  pointer-events: none;
+}
+.workspace-core .energy-trigger {
+  width: min(800px, 100%);
+  height: 100%;
+  pointer-events: auto;
+}
+.workspace-core .energy-center {
+  width: 240px;
+  min-height: 104px;
+}
+.workspace-core .energy-center-title {
+  font-size: 24px;
+}
+.workspace-core .orb-caption {
+  top: 10px;
+}
+.workspace-core .orb-status {
+  position: fixed;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(390px, 90%);
+  padding: 0;
+}
+.workspace-core .orb-controls {
+  position: fixed;
+  bottom: 23px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(420px, 90%);
+  padding: 0;
+  pointer-events: auto;
+}
+.workspace-core .assistant-foot {
+  display: none;
+}
+.workspace-core .orb-settings-body {
+  position: fixed;
+  left: 50%;
+  top: 175px;
+  transform: translateX(-50%);
+  width: min(450px, 90%);
+  max-height: calc(100dvh - 210px);
+  overflow-y: auto;
+  pointer-events: auto;
+  z-index: 7;
+}
+.workspace-core .orb-notice,
+.workspace-core .conversation-dock > .feature-error {
+  position: fixed;
+  left: 50%;
+  bottom: 140px;
+  transform: translateX(-50%);
+  width: min(420px, 90%);
+  padding: 10px;
+  background: #0a2037ed;
+  pointer-events: auto;
+  z-index: 4;
+}
+.workspace-core #assistant-panel-transcript {
+  position: fixed;
+  top: 184px;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  max-width: 560px;
+  overflow-y: auto;
+  pointer-events: auto;
+}
+.workspace-core .conversation-transcript {
+  min-height: 390px;
+}
+.floating-cards {
+  position: fixed;
+  top: 145px;
+  left: 0;
+  right: 0;
+  padding: 0 18px 24px 80px;
+  max-height: calc(100dvh - 160px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #256596 transparent;
+}
+.workspace-card .panel {
+  backdrop-filter: blur(8px);
+  background: linear-gradient(145deg, #0a2439e0, #051728ce);
+}
+.cards-only .floating-cards {
+  padding-top: 0;
+}
+.empty-workspace {
+  position: fixed;
+  inset: 25% 0 auto;
+}
+@media (min-width: 851px) {
+  body {
+    overflow: hidden;
+  }
+}
+@media (max-width: 1050px) and (min-width: 851px) {
+  .workspace-core .ai-toolbar {
+    width: 270px;
+  }
+  .workspace-core .energy-center {
+    width: 210px;
+  }
+  .workspace-core .energy-center-title {
+    font-size: 21px;
+  }
+  .workspace-core .orb-status {
+    width: 300px;
+  }
+  .topbar .wordmark span {
+    display: none;
+  }
+}
+@media (max-width: 850px) {
+  .rail {
+    width: 54px;
+  }
+  .topbar {
+    left: 54px;
+    padding-inline: 10px;
+  }
+  .wordmark span {
+    display: none;
+  }
+  .topbar .button {
+    padding: 8px;
+    font-size: 10px;
+  }
+  .search-button {
+    padding: 8px;
+    font-size: 10px;
+  }
+  .search-button kbd {
+    display: none;
+  }
+  .top-actions {
+    gap: 6px;
+  }
+  .workspace-bar {
+    position: absolute;
+    top: 80px;
+    left: 70px;
+  }
+  .workspace-core {
+    position: relative;
+    min-height: calc(100svh - 105px);
+    margin-top: 105px;
+  }
+  .workspace-core .ai-toolbar {
+    position: absolute;
+    top: 10px;
+    width: min(280px, 72%);
+  }
+  .workspace-core .assistant-tabs {
+    position: absolute;
+    top: 57px;
+  }
+  .workspace-core .energy-stage {
+    position: absolute;
+    top: 49%;
+    height: min(64svh, 570px);
+  }
+  .workspace-core .energy-center {
+    width: min(220px, 53%);
+    min-height: 88px;
+  }
+  .workspace-core .energy-center-title {
+    font-size: 19px;
+  }
+  .workspace-core .orb-status {
+    position: absolute;
+    bottom: 66px;
+    width: 75%;
+  }
+  .workspace-core .orb-controls {
+    position: absolute;
+    bottom: 16px;
+  }
+  .workspace-core .orb-settings-body {
+    position: fixed;
+    top: 125px;
+    left: calc(50% + 20px);
+    width: calc(100% - 85px);
+    z-index: 10;
+  }
+  .workspace-core #assistant-panel-transcript {
+    position: relative;
+    top: 110px;
+    bottom: auto;
+    width: calc(100% - 85px);
+    left: calc(50% + 20px);
+    min-height: 480px;
+    margin-bottom: 120px;
+  }
+  .floating-cards,
+  .cards-only .floating-cards {
+    position: relative;
+    top: auto;
+    max-height: none;
+    padding: 25px 12px 25px 66px;
+    overflow: visible;
+  }
+  .workspace-stage.cards-only {
+    padding-top: 110px;
+  }
+  .empty-workspace {
+    inset: 180px 20px auto 75px;
+  }
+}
+@media (max-width: 580px) {
+  .topbar .wordmark {
+    display: none;
+  }
+  .top-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .workspace-core .energy-stage {
+    height: min(61svh, 450px);
+  }
+  .workspace-core .energy-trigger {
+    width: 100%;
+  }
+  .workspace-core .energy-center-title {
+    font-size: 18px;
+  }
+  .workspace-core .orb-status p {
+    font-size: 10px;
+  }
+}
+
+/* The central status already labels the ring; keep the tabs unobstructed. */
+.workspace-core .orb-caption {
+  display: none;
+}
+.workspace-core:has(.orb-options[aria-expanded='true']) {
+  z-index: 6;
+}
+
+.workspace-core .conversation-dock { position: static; }

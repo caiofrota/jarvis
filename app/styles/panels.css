@@ -1,0 +1,88 @@
+.panel {
+  background: linear-gradient(145deg, #131c27, var(--panel));
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  grid-column: span 4;
+  min-height: 280px;
+}
+.panel[data-panel='system'] {
+  grid-column: span 3;
+}
+.panel.wide {
+  grid-column: span 7;
+}
+.panel-head {
+  padding: 15px 17px;
+  border-bottom: 1px solid #202c38;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 53px;
+}
+.panel-head h2 {
+  font-size: 12px;
+  font-weight: 500;
+  flex: 1;
+}
+.panel-icon {
+  color: var(--accent);
+  font-size: 17px;
+}
+.panel-tools {
+  display: flex;
+}
+.panel-tools .icon-button {
+  font-size: 14px;
+  width: 23px;
+  height: 24px;
+}
+.panel.dragging {
+  opacity: 0.4;
+}
+.panel.drag-target {
+  outline: 1px solid var(--accent);
+}
+.panel-body {
+  padding: 19px;
+  flex: 1;
+}
+.panel-link {
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 11px;
+  padding: 4px 0;
+}
+.focus-mode .panel {
+  display: none;
+}
+.detached .rail,
+.detached .topbar,
+.detached .page-intro,
+.detached .workspace-bar,
+.detached footer {
+  display: none;
+}
+.detached .main-shell {
+  margin-left: 0;
+}
+.detached main {
+  padding: 15px;
+}
+.detached .workspace {
+  display: block;
+}
+.detached .panel {
+  display: none;
+}
+.detached .panel.detached-active {
+  display: flex;
+  min-height: calc(100vh - 30px);
+}
+.detached .panel-tools {
+  display: none;
+}
