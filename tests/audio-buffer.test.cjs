@@ -7,7 +7,7 @@ const { BrowserRecognition } = require('../dist/features/voice/browser-recogniti
 const { ConversationTurns } = require('../dist/features/voice/conversation-turns.js');
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 
-test('primeiro bloco toca antes de saber se é o último; saída acrescenta a margem ao terminar', async () => {
+test('first block plays before knowing it is last; output adds tail margin on completion', async () => {
   const edges = [];
   let done;
   const completed = new Promise((resolve) => (done = resolve));
@@ -24,7 +24,7 @@ test('primeiro bloco toca antes de saber se é o último; saída acrescenta a ma
   assert.deepEqual(edges, [{ first: true, last: false }]);
 });
 
-test('resposta curta é sintetizada em um bloco, sem espera artificial pelo mínimo de reserva', async () => {
+test('short response is synthesized in one block without an artificial minimum reserve wait', async () => {
   const generated = [],
     played = [];
   let done;
@@ -47,7 +47,7 @@ test('resposta curta é sintetizada em um bloco, sem espera artificial pelo mín
   assert.deepEqual(generated, ['Olá. Como posso ajudar?']);
   assert.deepEqual(played, generated);
 });
-test('reserva precede reprodução e limita síntese/áudio agendado a três blocos', async () => {
+test('reserve precedes playback and limits synthesis and scheduled audio to three blocks', async () => {
   let calls = 0,
     second;
   const played = [],
@@ -82,7 +82,7 @@ test('reserva precede reprodução e limita síntese/áudio agendado a três blo
   p.cancel();
   for (const resolve of end) resolve();
 });
-test('playback agenda o próximo buffer exatamente ao fim do anterior e cancela todos', async () => {
+test('playback schedules the next buffer exactly at the previous end and cancels all buffers', async () => {
   const sources = [];
   let settings;
   class Context {
@@ -130,7 +130,7 @@ test('playback agenda o próximo buffer exatamente ao fim do anterior e cancela 
     global.window = previous;
   }
 });
-test('bloqueio da escuta começa antes do som e conserva margem depois do último bloco', async () => {
+test('listening guard starts before audio and preserves the margin after the final block', async () => {
   const guard = new PlaybackGuard(),
     events = [];
   guard.subscribe((value) => events.push(value));
@@ -145,7 +145,7 @@ test('bloqueio da escuta começa antes do som e conserva margem depois do últim
   assert.deepEqual(events, [false, true, true, false]);
   guard.dispose();
 });
-test('navegador descarta retorno atrasado do alto-falante e reabre reconhecimento limpo', () => {
+test('browser discards delayed speaker output and reopens clean recognition', () => {
   const instances = [],
     texts = [];
   class Recognition {
@@ -175,7 +175,7 @@ test('navegador descarta retorno atrasado do alto-falante e reabre reconheciment
   assert.deepEqual(texts, ['Agora sou eu falando']);
   r.stop();
 });
-test('alto-falante não causa interrupção por volume; texto de eco tardio também é ignorado', async () => {
+test('speaker volume does not interrupt playback and late echo text is ignored', async () => {
   let active = true,
     stops = 0,
     sends = 0;
@@ -202,7 +202,7 @@ test('alto-falante não causa interrupção por volume; texto de eco tardio tamb
   await turns.utterance('Agora abra o Word');
   assert.equal(sends, 1);
 });
-test('interrupção durante geração invalida reserva pendente sem reproduzir áudio antigo', async () => {
+test('interruption during generation invalidates pending reserve without playing stale audio', async () => {
   let resolve,
     plays = 0;
   const p = new SpeechPipeline({
@@ -217,7 +217,7 @@ test('interrupção durante geração invalida reserva pendente sem reproduzir �
   assert.equal(plays, 0);
 });
 
-test('silêncio de proteção é adicionado apenas nas bordas e conserva todas as amostras', async () => {
+test('guard silence is added only at the edges and preserves every sample', async () => {
   const sources = [];
   const buffer = (channels, length, rate) => {
     const data = Array.from({ length: channels }, () => new Float32Array(length));
@@ -299,7 +299,7 @@ test('silêncio de proteção é adicionado apenas nas bordas e conserva todas a
   }
 });
 
-test('fim de fala já reproduzida acrescenta silêncio sem atrasar a primeira frase', async () => {
+test('already played speech adds tail silence without delaying the first sentence', async () => {
   const sources = [];
   const buffer = (channels, length, rate) => ({
     numberOfChannels: channels,

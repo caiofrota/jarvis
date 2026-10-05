@@ -16,7 +16,7 @@ const req = {
   messages: [{ role: 'user', content: 'Coloca a calculadora na tela pra eu usar' }],
 };
 const json = (x) => new Response(JSON.stringify(x));
-test('IA local emite decisão de abertura sem executar antes do cliente', async () => {
+test('local AI emits an open decision without executing before the client', async () => {
   let payload;
   const events = [];
   const ai = new AIService({
@@ -42,7 +42,7 @@ test('IA local emite decisão de abertura sem executar antes do cliente', async 
   assert.equal(events.find((e) => e.type === 'action').label, 'Calculadora');
   assert.equal(events.at(-1).loadMs, 100);
 });
-test('decisão na nuvem reúne JSON fragmentado', async () => {
+test('cloud decision joins fragmented JSON', async () => {
   const events = [];
   const ai = new AIService({
     fetchImpl: async () =>
@@ -59,7 +59,7 @@ test('decisão na nuvem reúne JSON fragmentado', async () => {
   await ai.chat({ ...req, provider: 'cloud' }, (e) => events.push(e));
   assert.equal(events.find((e) => e.type === 'action').id, 'downloads');
 });
-test('ferramenta inválida ou destino arbitrário não vira execução', async () => {
+test('invalid tool or arbitrary target never becomes execution', async () => {
   for (const call of [
     { name: 'exec', arguments: { command: 'shutdown' } },
     { name: 'open_computer_target', arguments: { target: 'calculator', path: 'malicious' } },
@@ -83,7 +83,7 @@ test('ferramenta inválida ou destino arbitrário não vira execução', async (
     );
   }
 });
-test('respostas são instruídas sem emoji e o texto final remove emojis', async () => {
+test('responses are instructed without emoji and final text removes emojis', async () => {
   let payload;
   const events = [];
   const ai = new AIService({
@@ -103,12 +103,12 @@ test('respostas são instruídas sem emoji e o texto final remove emojis', async
   assert.equal(events.find((e) => e.type === 'delta').text, 'Pronto ');
   assert.equal(withoutEmoji('Cálculos 😊🚀'), 'Cálculos ');
 });
-test('leitura limpa Markdown e preserva conteúdo matemático', () => {
+test('speech cleanup removes Markdown while preserving mathematical content', () => {
   assert.equal(forSpeech('**Cálculos**: 45 * 12 = 540. 😊'), 'Cálculos: 45 vezes 12 = 540.');
   assert.equal(forSpeech('# Título\n- **Primeiro**\n[site](https://example.com)'), 'Título\nPrimeiro\nsite');
   assert.match(forSpeech('```js\nalert(1)\n```'), /omitido/);
 });
-test('servidor restrito não registra falsa abertura', async () => {
+test('restricted server does not record a false open action', async () => {
   let calls = 0;
   const actions = new ActionService({
     environment: { restricted: true, message: 'Use Iniciar Jarvis.cmd' },
@@ -121,7 +121,7 @@ test('servidor restrito não registra falsa abertura', async () => {
   assert.equal(actions.history.length, 0);
   assert.equal(actions.list().runtime.restricted, true);
 });
-test('voz neural requer consentimento e envia texto sem marcadores', async () => {
+test('neural voice requires consent and sends text without formatting markers', async () => {
   let payload,
     calls = 0;
   const v = new VoiceService({
@@ -142,7 +142,7 @@ test('voz neural requer consentimento e envia texto sem marcadores', async () =>
   assert.equal(result.audio, 'AQID');
   assert.equal(v.speechActive, null);
 });
-test('cancelar voz neural pertence à janela que solicitou', async () => {
+test('neural voice cancellation belongs to the requesting window', async () => {
   let ready;
   const started = new Promise((r) => (ready = r));
   const v = new VoiceService({
@@ -161,7 +161,7 @@ test('cancelar voz neural pertence à janela que solicitou', async () => {
   await assert.rejects(p, /interrompida/);
   assert.equal(v.speechActive, null);
 });
-test('perfis mantêm modelo por mais tempo sem tirar liberação do econômico', () => {
+test('profiles keep the model longer without removing economical release behavior', () => {
   assert.equal(PROFILES.eco.keepAlive, '2m');
   assert.equal(PROFILES.balanced.keepAlive, '10m');
   assert.equal(PROFILES.full.keepAlive, '30m');

@@ -416,7 +416,7 @@ class AIService {
         const remaining = decision.text.slice(reply.text.length);
         if (remaining) onEvent({ type: 'delta', text: remaining });
       }
-      const { text: raw, ...stats } = generation;
+      const { text: _raw, ...stats } = generation;
       const result = { type: 'done' as const, durationMs: Date.now() - started, firstVisibleMs, ...stats };
       onEvent(result);
       return result;

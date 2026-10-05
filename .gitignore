@@ -10,6 +10,7 @@ src-tauri/target/
 # Local Python voice runtime and downloaded models
 
 .voice-env/
+voice/.venv/
 .voice-data/
 .voice-data-*/
 voice/__pycache__/

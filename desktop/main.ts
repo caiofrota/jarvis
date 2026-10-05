@@ -13,12 +13,10 @@ import { SecretStore } from '../lib/secret-store';
 import { WakeWordService } from '../lib/wakeword';
 const ai = new AIService(),
   windows = new Map<string, BrowserWindow>();
-let voice: VoiceService;
 let actions: ActionService;
 let secrets: SecretStore | null = null;
-let wakeword: WakeWordService;
 if (process.env.JARVIS_TEST_DATA && !app.isPackaged) app.setPath('userData', process.env.JARVIS_TEST_DATA);
-voice = new VoiceService({
+const voice: VoiceService = new VoiceService({
   ai,
   local: app.isPackaged
     ? new DuplexVoiceService({
@@ -49,7 +47,7 @@ function wakewordPaths() {
       }
     : {};
 }
-wakeword = new WakeWordService({
+const wakeword: WakeWordService = new WakeWordService({
   ...wakewordPaths(),
   onDetected: (owner) => {
     const win = BrowserWindow.getAllWindows().find((candidate) => candidate.webContents.id === owner);
@@ -136,7 +134,9 @@ handle('stop-speech', (event) => voice.cancelSpeech(event.sender.id));
 handle('transcribe', (event, request) => voice.transcribe(request, event.sender.id));
 handle('voice-cancel', (event) => voice.cancel(event.sender.id));
 handle('microphone', (event, enabled) => microphones.set(event.sender.id, enabled));
-handle('wakeword', (event, enabled) => (enabled ? wakeword.start(event.sender.id) : wakeword.stop(event.sender.id)));
+handle('wakeword', (event, enabled) =>
+  enabled ? wakeword.start(event.sender.id) : wakeword.stop(event.sender.id),
+);
 handle('wakeword-status', () => wakeword.status());
 handle('hardware', () => ({
   ...ai.hardware(),

@@ -35,16 +35,22 @@ export class WakeWordService {
     this.dataDir = dataDir;
     this.scriptsDir = scriptsDir;
     this.onDetected = onDetected;
-    this.python = path.join(root, '.voice-env', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
+    this.python = path.join(
+      root,
+      '.voice-env',
+      process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python',
+    );
   }
 
   private isInstalled() {
     return (
       fs.existsSync(this.python) &&
       fs.existsSync(path.join(this.dataDir, 'wakeword.ready.json')) &&
-      ['wake-models/melspectrogram.onnx', 'wake-models/embedding_model.onnx', 'wake-models/hey_jarvis_v0.1.onnx'].every(
-        (file) => fs.existsSync(path.join(this.dataDir, file)),
-      )
+      [
+        'wake-models/melspectrogram.onnx',
+        'wake-models/embedding_model.onnx',
+        'wake-models/hey_jarvis_v0.1.onnx',
+      ].every((file) => fs.existsSync(path.join(this.dataDir, file)))
     );
   }
 
@@ -57,7 +63,9 @@ export class WakeWordService {
       phrase: 'JARVIS',
       message:
         this.message ||
-        (available ? 'Escuta local pronta. Diga JARVIS para iniciar.' : 'Instale o detector local para ativar o wakeword.'),
+        (available
+          ? 'Escuta local pronta. Diga JARVIS para iniciar.'
+          : 'Instale o detector local para ativar o wakeword.'),
       ...(this.error ? { error: this.error } : {}),
     };
   }

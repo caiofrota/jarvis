@@ -1,7 +1,7 @@
 JARVIS STUDIO 0.4.0 — COMO RODAR
 
 PROJETO
-C:\Users\caiof\Documents\Codex\2026-09-30\tem\outputs\jarvis-studio
+A pasta que contém este arquivo e o código-fonte do Jarvis Studio.
 
 RODAR MANUALMENTE NO SEU WINDOWS (recomendado durante desenvolvimento)
 1. Feche a versão antiga do Jarvis. Se existir um terminal do servidor antigo,
@@ -101,7 +101,7 @@ OpenAI de voz continua opcional, identificada como API paga. Não há troca
 silenciosa para a nuvem quando uma opção local falha.
 
 A primeira instalação de voz local baixa pacotes e modelos. Precisa de internet
-nessa instalação e de Python 3.12 com pip/venv. Nesta pasta de desenvolvimento,
+nessa instalação e de Python 3.11 com uv. Nesta pasta de desenvolvimento,
 o ambiente de voz já está preparado. No instalador, os componentes ficam em
 %APPDATA%\jarvis-studio\.voice-env e os modelos em voice-models, fora da pasta
 do programa. Se Python não estiver disponível, a tela explica o requisito e
@@ -129,8 +129,7 @@ Ainda não foi medida a experiência de conversa com o seu microfone nesta vers�
 
 LINUX
 Código e configuração de empacotamento mantidos para Linux.
-Instale Node.js, pnpm, Python 3.12 (ou uma versão compatível com os pacotes),
-python3-venv/pip e Ollama para IA local. Execute pnpm install e sh 'Iniciar Jarvis.sh'.
+Instale Node.js, pnpm, Python 3.11, uv e Ollama para IA local. Execute pnpm install e sh 'Iniciar Jarvis.sh'.
 Para gerar AppImage/deb no Linux: pnpm dist --linux AppImage deb --x64 --publish never.
 O fluxo .github/workflows/build-desktop.yml gera Windows e Linux em seus sistemas.
 Não foi executado um teste real de Linux nesta máquina Windows.

@@ -6,7 +6,7 @@ const { LocalVoiceService } = require('../dist/lib/local-voice.js');
 const fs = require('node:fs'),
   os = require('node:os'),
   path = require('node:path');
-test('voz gratuita local não exige chave e nunca usa o adaptador de rede', async () => {
+test('free local voice needs no key and never uses the network adapter', async () => {
   const calls = [];
   const v = new VoiceService({
     ai: { cloudKey: '' },
@@ -27,7 +27,7 @@ test('voz gratuita local não exige chave e nunca usa o adaptador de rede', asyn
     { op: 'transcribe', owner: 'one' },
   ]);
 });
-test('falha de instalação é visível e permite nova tentativa', async () => {
+test('installation failure is visible and allows a retry', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jarvis-voice-'));
   const v = new LocalVoiceService({ root: dir, dataDir: dir });
   let attempts = 0;
@@ -44,7 +44,7 @@ test('falha de instalação é visível e permite nova tentativa', async () => {
   assert.equal(attempts, 2);
   fs.rmdirSync(dir);
 });
-test('cancelamento local só afeta a janela e a operação corretas', () => {
+test('local cancellation affects only the correct window and operation', () => {
   const v = new LocalVoiceService();
   let killed = 0,
     rejected = 0;

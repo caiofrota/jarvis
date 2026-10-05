@@ -4,7 +4,7 @@ const { ConversationTurns, isPlaybackEcho } = require('../dist/features/voice/co
 const { SpeechPipeline } = require('../dist/features/voice/speech-pipeline.js');
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 
-test('conversa envia falas sucessivas sem botão e não perde interrupção durante a resposta', async () => {
+test('conversation sends successive utterances without a button and preserves interruption during the response', async () => {
   const sent = [];
   let busy = false,
     stopped = 0;
@@ -28,7 +28,7 @@ test('conversa envia falas sucessivas sem botão e não perde interrupção dura
   assert.equal(stopped, 1);
   assert.deepEqual(sent, ['Boa tarde', 'Espere, quero abrir o PowerPoint']);
 });
-test('interrupção cancela resposta antes do próximo envio e encerramento bloqueia transcrição tardia', async () => {
+test('interruption cancels the response before the next send and ending blocks late transcription', async () => {
   let resolve,
     sent = 0,
     stopped = 0;
@@ -59,7 +59,7 @@ test('interrupção cancela resposta antes do próximo envio e encerramento bloq
   await turns.utterance('texto tardio');
   assert.equal(sent, 0);
 });
-test('eco da reprodução não inicia um novo turno nem interrompe áudio', async () => {
+test('playback echo does not start a new turn or interrupt audio', async () => {
   let stops = 0,
     sends = 0;
   const turns = new ConversationTurns({
@@ -80,7 +80,7 @@ test('eco da reprodução não inicia um novo turno nem interrompe áudio', asyn
   assert.equal(sends, 0);
   assert.equal(isPlaybackEcho('Quero o Word', 'O PowerPoint está instalado'), false);
 });
-test('áudio já solicitado não toca se o usuário interrompe antes de ficar pronto', async () => {
+test('requested audio does not play when the user interrupts before it is ready', async () => {
   let resolve,
     plays = 0;
   const p = new SpeechPipeline({

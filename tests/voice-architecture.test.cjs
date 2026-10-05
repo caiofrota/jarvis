@@ -5,7 +5,7 @@ const { BrowserRecognition } = require('../dist/features/voice/browser-recogniti
 const { SpeechPipeline } = require('../dist/features/voice/speech-pipeline.js');
 const { AIService } = require('../dist/lib/ai.js');
 const tick = () => new Promise((r) => setImmediate(r));
-test('navegador fornece parciais online e não duplica resultado final', async () => {
+test('browser provides online partials without duplicating the final result', async () => {
   let instance;
   class Recognition {
     constructor() {
@@ -33,7 +33,7 @@ test('navegador fornece parciais online e não duplica resultado final', async (
   assert.deepEqual(utterances, ['abrir a calculadora']);
   adapter.stop();
 });
-test('falha online para a escuta sem migrar para outro provedor', () => {
+test('online listening failure stops without migrating to another provider', () => {
   let r;
   class Recognition {
     constructor() {
@@ -49,7 +49,7 @@ test('falha online para a escuta sem migrar para outro provedor', () => {
   assert.equal(adapter.running, false);
   assert.match(error, /serviço online/);
 });
-test('voz usa respostas curtas sem mudar contexto e recarregar modelo', async () => {
+test('voice uses short responses without changing context or reloading the model', async () => {
   let payload;
   const ai = new AIService({
     fetchImpl: async (url, opt) =>
@@ -77,7 +77,7 @@ test('voz usa respostas curtas sem mudar contexto e recarregar modelo', async ()
   assert.equal(payload.options.num_predict, 128);
   assert.match(payload.messages[0].content, /duas frases/);
 });
-test('preparação não envia conversa nem cobra API de nuvem', async () => {
+test('preparation sends no conversation and does not charge the cloud API', async () => {
   const calls = [];
   const ai = new AIService({
     fetchImpl: async (url, opt) => {

@@ -69,7 +69,9 @@ export function useVoiceInput({ chat, speech, ai, profile, conversation = false 
       .catch(() => {});
     void getAPI()
       .wakeword(false)
-      .then((status) => setWakeword((current) => ({ ...current, ...status, enabled: wakewordPreference.current })))
+      .then((status) =>
+        setWakeword((current) => ({ ...current, ...status, enabled: wakewordPreference.current })),
+      )
       .catch(() => {});
   }
   useEffect(() => {
@@ -104,7 +106,9 @@ export function useVoiceInput({ chat, speech, ai, profile, conversation = false 
         void api
           .wakeword(true)
           .then((next) => mounted && setWakeword({ ...next, enabled: preference }))
-          .catch((cause: Error) => mounted && setWakeword((current) => ({ ...current, error: cause.message })));
+          .catch(
+            (cause: Error) => mounted && setWakeword((current) => ({ ...current, error: cause.message })),
+          );
       }
     });
     const unsubscribe = api.onWakeword(() => {
@@ -118,13 +122,21 @@ export function useVoiceInput({ chat, speech, ai, profile, conversation = false 
         latest.current.chat.busy
       )
         return;
-      setWakeword((current) => ({ ...current, listening: false, message: 'JARVIS detectado. Ativando conversa…' }));
+      setWakeword((current) => ({
+        ...current,
+        listening: false,
+        message: 'JARVIS detectado. Ativando conversa…',
+      }));
       void startRef.current();
     });
     const timer = window.setInterval(() => {
       void api
         .wakewordStatus()
-        .then((status) => mounted && setWakeword((current) => ({ ...status, enabled: wakewordPreference.current || current.enabled })));
+        .then(
+          (status) =>
+            mounted &&
+            setWakeword((current) => ({ ...status, enabled: wakewordPreference.current || current.enabled })),
+        );
     }, 1500);
     return () => {
       mounted = false;
@@ -133,7 +145,13 @@ export function useVoiceInput({ chat, speech, ai, profile, conversation = false 
     };
   }, [conversation]);
   useEffect(() => {
-    if (!conversation || !wakewordPreference.current || !localVoice.status.wakewordReady || wakeword.available) return;
+    if (
+      !conversation ||
+      !wakewordPreference.current ||
+      !localVoice.status.wakewordReady ||
+      wakeword.available
+    )
+      return;
     void getAPI()
       .wakewordStatus()
       .then((status) => {
@@ -223,7 +241,9 @@ export function useVoiceInput({ chat, speech, ai, profile, conversation = false 
     setProcessing(true);
     void getAPI()
       .wakeword(false)
-      .then((status) => setWakeword((current) => ({ ...current, ...status, enabled: wakewordPreference.current })))
+      .then((status) =>
+        setWakeword((current) => ({ ...current, ...status, enabled: wakewordPreference.current })),
+      )
       .catch(() => {});
     if (conversation) {
       turns.current = new ConversationTurns({
@@ -336,7 +356,12 @@ export function useVoiceInput({ chat, speech, ai, profile, conversation = false 
       setWakeword({ ...status, enabled });
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : String(cause);
-      setWakeword((current) => ({ ...current, enabled: false, error: message, message: 'Wakeword pausado.' }));
+      setWakeword((current) => ({
+        ...current,
+        enabled: false,
+        error: message,
+        message: 'Wakeword pausado.',
+      }));
       wakewordPreference.current = false;
     }
   }

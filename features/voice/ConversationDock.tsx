@@ -88,7 +88,9 @@ export default function ConversationDock({ voice: v, speech, chat, ai, profile, 
         <span>
           <i /> JARVIS
         </span>
-        <span>{v.recording ? 'CONVERSA ATIVA' : v.wakeword.listening ? 'JARVIS ATIVO' : 'PRONTO PARA CONECTAR'}</span>
+        <span>
+          {v.recording ? 'CONVERSA ATIVA' : v.wakeword.listening ? 'JARVIS ATIVO' : 'PRONTO PARA CONECTAR'}
+        </span>
       </div>
       <div className="energy-stage">
         <span className="orb-coordinate orb-coordinate-left" aria-hidden="true">

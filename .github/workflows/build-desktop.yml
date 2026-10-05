@@ -1,33 +1,96 @@
-name: Build desktop
+name: CI
+
 on:
+  pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
+
 permissions:
   contents: read
+
+concurrency:
+  group: jarvis-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  validate:
+    name: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.12.0'
+      # v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      # v6
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with:
+          version: '0.12.23'
+      - name: Enable pinned pnpm
+        run: corepack enable && corepack prepare pnpm@11.25.0 --activate
+      - name: Configure dependency cache
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22.12.0'
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install Node dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Check formatting
+        run: pnpm format:check
+      - name: Lint source and workflows
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Run tests
+        run: pnpm test
+      - name: Build browser and server artifacts
+        run: pnpm build
+      - name: Validate Python voice runtime
+        run: pnpm python:check
+
+  package:
+    name: package (${{ matrix.os }})
+    needs: validate
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '22'
+          node-version: '22.12.0'
       - name: Enable pinned pnpm
         run: corepack enable && corepack prepare pnpm@11.25.0 --activate
-      - name: Install
+      - name: Configure dependency cache
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22.12.0'
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install Node dependencies
         run: pnpm install --frozen-lockfile
-      - name: Backend tests
-        run: pnpm test
       - name: Build Windows installer
         if: runner.os == 'Windows'
         run: pnpm dist --win nsis --x64 --publish never
       - name: Build Linux packages
         if: runner.os == 'Linux'
         run: pnpm dist --linux AppImage deb --x64 --publish never
-      - uses: actions/upload-artifact@v4
+      # v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: github.event_name == 'workflow_dispatch'
         with:
           name: jarvis-${{ runner.os }}-x64
           path: |
@@ -36,3 +99,17 @@ jobs:
             release/**/*.deb
           if-no-files-found: error
 
+  ci:
+    name: ci
+    if: always()
+    needs: [validate, package]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require all validation and packaging jobs
+        env:
+          VALIDATE_RESULT: ${{ needs.validate.result }}
+          PACKAGE_RESULT: ${{ needs.package.result }}
+        run: |
+          test "$VALIDATE_RESULT" = success
+          test "$PACKAGE_RESULT" = success

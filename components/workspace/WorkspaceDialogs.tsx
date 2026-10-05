@@ -10,7 +10,9 @@ import IntelligenceDialog from '../../features/ai/IntelligenceDialog';
 import VoiceDialog from '../../features/voice/VoiceDialog';
 import SpeechDialog from '../../features/voice/SpeechDialog';
 import ComputerPanel from '../../features/actions/ComputerPanel';
-import { SettingsDialog, PanelsDialog, AddonsDialog } from '../../features/settings/SettingsDialog';
+import SettingsDialog from '../../features/settings/SettingsDialog';
+import PanelsDialog from '../../features/settings/PanelsDialog';
+import AddonsDialog from '../../features/settings/AddonsDialog';
 import PersonalProfileDialog from '../../features/profile/PersonalProfileDialog';
 const titles = {
   intelligence: 'Inteligência, à sua escolha.',

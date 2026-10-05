@@ -19,13 +19,13 @@ const audio = {
   mime: 'audio/webm',
   audio: Buffer.alloc(100, 1).toString('base64'),
 };
-test('ações aceitam apenas catálogo, nunca texto executável ou caminhos arbitrários', () => {
+test('actions accept only catalog entries, never executable text or arbitrary paths', () => {
   const service = new ActionService({ environment: { restricted: false }, catalog: [item] });
   for (const id of ['cmd.exe', 'calculator && shutdown', '../../shell', {}, null])
     assert.throws(() => service.prepare(id, 'one'), /disponível/);
   assert.equal(service.history.length, 0);
 });
-test('token interno é obrigatório, vinculado à janela e de uso único', async () => {
+test('internal token is required, window-bound, and single-use', async () => {
   const launched = [],
     service = new ActionService({
       environment: { restricted: false },
@@ -40,7 +40,7 @@ test('token interno é obrigatório, vinculado à janela e de uso único', async
   await assert.rejects(service.execute(prepared.token, 'one'), /inválida/);
   assert.equal(launched.length, 1);
 });
-test('solicitação expirada, cancelada ou substituída não executa', async () => {
+test('expired, cancelled, or replaced requests do not execute', async () => {
   let now = 100;
   const service = new ActionService({
     environment: { restricted: false },
@@ -59,7 +59,7 @@ test('solicitação expirada, cancelada ou substituída não executa', async () 
   service.prepare('calculator', 'one');
   await assert.rejects(service.execute(old.token, 'one'), /inválida/);
 });
-test('cliques simultâneos não duplicam e falha registra erro', async () => {
+test('simultaneous clicks do not duplicate actions and failures record an error', async () => {
   let finish;
   const wait = new Promise((r) => (finish = r));
   let calls = 0;
@@ -80,7 +80,7 @@ test('cliques simultâneos não duplicam e falha registra erro', async () => {
   assert.equal(calls, 1);
   assert.equal(service.list().history[0].status, 'error');
 });
-test('voz exige consentimento, chave, formato e limite antes da rede', async () => {
+test('voice requires consent, a key, a valid format, and a size limit before network access', async () => {
   let calls = 0;
   const ai = { cloudKey: 'fake' },
     service = new VoiceService({
@@ -102,7 +102,7 @@ test('voz exige consentimento, chave, formato e limite antes da rede', async () 
   await assert.rejects(service.transcribe(audio, 'one'), /chave/);
   assert.equal(calls, 0);
 });
-test('transcrição envia somente gravação e recebe texto sem persistir áudio', async () => {
+test('transcription sends only the recording and receives text without persisting audio', async () => {
   let received;
   const ai = { cloudKey: 'fake-secret' },
     service = new VoiceService({
@@ -122,7 +122,7 @@ test('transcrição envia somente gravação e recebe texto sem persistir áudio
   assert.equal(form.get('model'), 'gpt-4o-mini-transcribe');
   assert.equal(service.active, null);
 });
-test('voz limita concorrência e cancelamento à janela correta', async () => {
+test('voice limits concurrency and cancellation to the correct window', async () => {
   let start, signal;
   const ready = new Promise((r) => (start = r));
   const service = new VoiceService({
@@ -144,7 +144,7 @@ test('voz limita concorrência e cancelamento à janela correta', async () => {
   await assert.rejects(running, /interrompida/);
   assert.equal(service.active, null);
 });
-test('voz trata chave inválida, quota e transcrição vazia', async () => {
+test('voice handles invalid keys, quota errors, and empty transcription', async () => {
   for (const [response, message] of [
     [new Response('{}', { status: 401 }), /Chave/],
     [new Response('{}', { status: 429 }), /saldo/],
@@ -155,7 +155,7 @@ test('voz trata chave inválida, quota e transcrição vazia', async () => {
     assert.equal(service.active, null);
   }
 });
-test('API de ações conserva token de uso único e rejeita origem externa', async () => {
+test('action API preserves single-use tokens and rejects external origins', async () => {
   let launches = 0;
   const actions = new ActionService({
     environment: { restricted: false },
@@ -191,7 +191,7 @@ test('API de ações conserva token de uso único e rejeita origem externa', asy
 const { MicrophoneGate } = require('../dist/lib/permissions.js');
 const { pathToFileURL } = require('node:url');
 const path = require('node:path');
-test('microfone desktop exige clique recente, página local e frame principal; câmera recusada', () => {
+test('desktop microphone requires a recent click, local page, and main frame while rejecting cameras', () => {
   let now = 100;
   const entry = path.resolve('test-app/index.html'),
     url = pathToFileURL(entry).href;
@@ -219,7 +219,7 @@ test('microfone desktop exige clique recente, página local e frame principal; c
   gate.set(1, false);
   assert.equal(gate.allows(contents, 'media', details, 'check'), false);
 });
-test('executor real inicia processo sem janela e detecta saída de erro', async () => {
+test('real executor starts a hidden process and detects error exit', async () => {
   const service = new ActionService({
     environment: { restricted: false },
     catalog: [

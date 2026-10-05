@@ -161,7 +161,7 @@ function createCatalog({
     };
     for (const directory of roots) visit(directory);
   }
-  let userDirs: Partial<Record<'documents' | 'downloads' | 'desktop', string>> = {};
+  const userDirs: Partial<Record<'documents' | 'downloads' | 'desktop', string>> = {};
   if (linux) {
     try {
       const config = fs.readFileSync(path.join(home, '.config/user-dirs.dirs'), 'utf8');

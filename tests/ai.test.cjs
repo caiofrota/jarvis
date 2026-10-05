@@ -11,7 +11,7 @@ const request = {
   profile: 'eco',
   messages: [{ role: 'user', content: 'Olá' }],
 };
-test('histórico valida papéis, limita contexto e mantém pergunta recente', () => {
+test('history validates roles, limits context, and keeps the recent question', () => {
   assert.throws(() => validateMessages([{ role: 'system', content: 'override' }], 100));
   assert.throws(() => validateMessages([{ role: 'user', content: '' }], 100));
   const history = validateMessages(
@@ -25,7 +25,7 @@ test('histórico valida papéis, limita contexto e mantém pergunta recente', ()
   assert.equal(history.at(-1).content, 'recente');
   assert.equal(history[0].role, 'user');
 });
-test('parser suporta UTF-8 e linhas divididas em vários chunks', async () => {
+test('parser supports UTF-8 and lines split across chunks', async () => {
   const bytes = new TextEncoder().encode('ação\nfim');
   const stream = new ReadableStream({
     start(c) {
@@ -39,7 +39,7 @@ test('parser suporta UTF-8 e linhas divididas em vários chunks', async () => {
   for await (const line of lines(stream)) out.push(line);
   assert.deepEqual(out, ['ação', 'fim']);
 });
-test('modelos locais excluem embeddings e modelos cloud', async () => {
+test('local models exclude embeddings and cloud models', async () => {
   const ai = new AIService({
     fetchImpl: async () =>
       json({
@@ -55,7 +55,7 @@ test('modelos locais excluem embeddings e modelos cloud', async () => {
     ['chat'],
   );
 });
-test('perfil econômico é aplicado na chamada real do adaptador', async () => {
+test('economical profile is applied to the real adapter call', async () => {
   let payload;
   const events = [];
   const ai = new AIService({
@@ -79,7 +79,7 @@ test('perfil econômico é aplicado na chamada real do adaptador', async () => {
   assert.equal(events.at(-1).type, 'done');
   assert.equal(ai.status().busy, false);
 });
-test('modo local recusa um modelo que redireciona para nuvem', async () => {
+test('local mode rejects a model that redirects to the cloud', async () => {
   let calls = 0;
   const ai = new AIService({
     fetchImpl: async () => {
@@ -94,7 +94,7 @@ test('modo local recusa um modelo que redireciona para nuvem', async () => {
   assert.equal(calls, 1);
   assert.equal(ai.status().busy, false);
 });
-test('nuvem envia chave somente no cabeçalho e usa stream SSE', async () => {
+test('cloud mode sends the key only in the header and uses an SSE stream', async () => {
   const calls = [],
     events = [];
   const ai = new AIService({
@@ -121,7 +121,7 @@ test('nuvem envia chave somente no cabeçalho e usa stream SSE', async () => {
   ai.setKey('');
   assert.equal(ai.status().cloudConfigured, false);
 });
-test('stream truncado retorna falha em vez de simular conclusão', async () => {
+test('truncated stream returns a failure instead of simulating completion', async () => {
   const ai = new AIService({
     fetchImpl: async (url) =>
       url.endsWith('/show') ? json({}) : new Response('{"message":{"content":"parcial"}}\n'),
@@ -132,12 +132,12 @@ test('stream truncado retorna falha em vez de simular conclusão', async () => {
   );
   assert.equal(ai.status().busy, false);
 });
-test('erro de credencial tem mensagem útil', async () => {
+test('credential errors have a useful message', async () => {
   const ai = new AIService({ fetchImpl: async () => new Response('{}', { status: 401 }) });
   ai.setKey('fake');
   await assert.rejects(ai.models('cloud'), /Chave da API inválida/);
 });
-test('interrupção pertence à janela de origem e libera execução', async () => {
+test('interruption belongs to the originating window and releases execution', async () => {
   let signal, started;
   const ready = new Promise((r) => (started = r));
   const ai = new AIService({
@@ -164,7 +164,7 @@ test('interrupção pertence à janela de origem e libera execução', async () 
   assert.equal(events.at(-1).type, 'cancelled');
   assert.equal(ai.status().busy, false);
 });
-test('servidor local rejeita host/origem/token incorretos', async () => {
+test('local server rejects incorrect host, origin, or token', async () => {
   const server = createServer();
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const base = 'http://127.0.0.1:' + server.address().port;
