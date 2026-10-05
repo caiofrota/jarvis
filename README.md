@@ -1,9 +1,14 @@
-JARVIS STUDIO 0.4.0 — COMO RODAR
+# Jarvis Studio
 
-PROJETO
+Assistente com IA local ou na nuvem, conversa por voz e painéis de tarefas,
+notas e controle do computador. Versão atual: 0.4.0.
+
+## Projeto
+
 A pasta que contém este arquivo e o código-fonte do Jarvis Studio.
 
-RODAR MANUALMENTE NO SEU WINDOWS (recomendado durante desenvolvimento)
+## Executar no Windows
+
 1. Feche a versão antiga do Jarvis. Se existir um terminal do servidor antigo,
    pressione Ctrl+C nele. Não é preciso executar como administrador.
 2. Pelo Explorador de Arquivos, abra a pasta do projeto acima.
@@ -19,27 +24,29 @@ A interface Next e a ponte de controle do PC usam a mesma porta.
 Alterações da interface aparecem automaticamente. Mudanças nos serviços TypeScript
 reiniciam o servidor de desenvolvimento; uma conversa ativa pode ser interrompida.
 
-PRÉ-REQUISITOS DE DESENVOLVIMENTO
-Node.js 22.12 ou superior e dependências instaladas (já preparadas nesta pasta).
+## Pré-requisitos de desenvolvimento
+
+Node.js 22.13 ou superior e pnpm 11.25.0. O CI usa Node.js 22.23.2.
 Em outra máquina: instale Node.js e pnpm, copie o código-fonte e execute:
-  pnpm install
-  pnpm dev
+pnpm install
+pnpm dev
 Para a IA local, abra o Ollama e escolha um modelo instalado em Inteligência.
 A IA na nuvem continua opcional. No aplicativo desktop, a chave OpenAI é protegida
 com o armazenamento seguro do sistema e volta ao abrir o Jarvis. Na prévia do
 Chrome, ela fica no localStorage deste perfil apenas para testes e não é criptografada;
 remova a chave em Inteligência antes de compartilhar esse perfil do navegador.
 
-APLICATIVO DESKTOP SEM REINSTALAR
+## Aplicativo desktop sem reinstalar
+
 Depois de mudanças na interface, execute pnpm build na pasta do projeto.
 Feche o Jarvis desktop e abra Iniciar Jarvis Desktop.cmd pelo Explorador.
 Ele usa o Electron da pasta de desenvolvimento e a interface exportada.
 Não abra o iniciador web e o desktop ao mesmo tempo se quiser uma só instância.
 
-INSTALADOR
+## Instalador
+
 release\v0.4.0\Jarvis Studio Setup 0.4.0.exe
-Esse instalador é a versão anterior; as mudanças TypeScript e conversa por voz
-estão na pasta de desenvolvimento. Para gerar um instalador atualizado, execute
+O arquivo só existe após gerar o instalador. Para gerar um instalador atualizado, execute
 pnpm dist --win nsis --x64 --publish never.
 Não é necessário reinstalar a cada
 alteração enquanto você usa o iniciador de desenvolvimento.
@@ -47,7 +54,8 @@ O aplicativo instalado inclui Electron e a interface Next exportada; não precis
 instalar Node.js nem executar um servidor Next para abrir.
 O instalador ainda não tem assinatura digital nem atualização automática.
 
-JANELAS E CARDS
+## Janelas e cards
+
 O fundo quadriculado ocupa toda a tela, com o anel centralizado e os cards
 flutuando nas laterais. O anel existe apenas na janela principal.
 Nas secundárias, todo o espaço é dedicado aos cards. Em telas estreitas,
@@ -68,7 +76,8 @@ O controle vertical dá mais espaço à linha do card, mantendo tudo dentro da t
 O teste com três janelas do navegador confirmou layouts independentes, recarga,
 tarefas/notas compartilhadas e configuração de cards nas janelas destacadas.
 
-VOZ
+## Voz
+
 Chrome online: transcrição ao vivo pelo serviço do navegador, grátis e sem chave.
 O áudio pode ser enviado ao provedor do navegador. É uma escolha explícita.
 Clique na esfera do painel Assistente para iniciar a conversa, sem abrir outra
@@ -101,8 +110,8 @@ OpenAI de voz continua opcional, identificada como API paga. Não há troca
 silenciosa para a nuvem quando uma opção local falha.
 
 A primeira instalação de voz local baixa pacotes e modelos. Precisa de internet
-nessa instalação e de Python 3.11 com uv. Nesta pasta de desenvolvimento,
-o ambiente de voz já está preparado. No instalador, os componentes ficam em
+nessa instalação e de Python 3.11 com uv. O ambiente usa as dependências bloqueadas
+em `voice/uv.lock`, com PyTorch CPU. No instalador, os componentes ficam em
 %APPDATA%\jarvis-studio\.voice-env e os modelos em voice-models, fora da pasta
 do programa. Se Python não estiver disponível, a tela explica o requisito e
 mostra Tentar instalar novamente após a falha. Python não é incluído no instalador.
@@ -127,14 +136,18 @@ Esses ajustes reduzem fragmentação e interrupções falsas; a velocidade de ge
 do texto ainda depende da IA escolhida e do computador.
 Ainda não foi medida a experiência de conversa com o seu microfone nesta versão.
 
-LINUX
+## Linux
+
 Código e configuração de empacotamento mantidos para Linux.
 Instale Node.js, pnpm, Python 3.11, uv e Ollama para IA local. Execute pnpm install e sh 'Iniciar Jarvis.sh'.
 Para gerar AppImage/deb no Linux: pnpm dist --linux AppImage deb --x64 --publish never.
 O fluxo .github/workflows/ci.yml valida o projeto e gera Windows e Linux em seus sistemas.
-Não foi executado um teste real de Linux nesta máquina Windows.
+Os instaladores Windows e Linux são verificados pelo CI; testes com microfone
+e interface desktop nativa precisam de validação nos sistemas de destino.
 
-ORGANIZAÇÃO DO CÓDIGO
+## Organização do código
+
+```text
 app/                  Rotas Next e estilos separados por área.
 components/workspace/ Estrutura da janela, composição dos painéis e diálogos.
 features/chat/        Histórico, envio, resposta em fluxo e interface da conversa.
@@ -149,6 +162,7 @@ desktop/              Electron, janelas, permissões de microfone e IPC.
 voice/                Processos Python de reconhecimento/síntese e download.
 scripts/              Desenvolvimento e proteção da exportação estática.
 tests/                Testes de serviços, permissões, voz e streaming.
+```
 
 Next + React, servidor, Electron e serviços estão em TypeScript estrito (.ts/.tsx).
 Os contratos de mensagens, ações, voz e IPC ficam em shared/types.ts e shared/ipc.ts.
@@ -162,7 +176,29 @@ Trello e calendário conectado ainda são próximos passos; a agenda é demonstr
 Notas, tarefas e históricos existentes no mesmo navegador/origem são preservados.
 Dados do navegador e do aplicativo desktop continuam separados.
 
-VALIDAÇÃO DESTA ETAPA
+## Validação atual
+
+Use `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`
+e `pnpm python:check` (Python 3.11 e uv). A instalação Node no CI usa
+`pnpm install --frozen-lockfile`; Python usa `uv sync --project voice --locked`.
+O workflow [CI](.github/workflows/ci.yml) agrega as validações e o empacotamento
+Windows/Linux no check obrigatório `ci`.
+
+Na revisão local de 05/10/2026, build, tipos, lint e formatação passaram, junto
+com 79 testes; 2 testes opcionais com Ollama foram ignorados. As dependências
+Python foram instaladas a partir do lock e suas importações verificadas, com Ruff
+e compilação dos módulos aprovados. Isso não comprova a aceitação com microfone
+físico nem a execução dos instaladores nos sistemas de destino.
+
+O [contexto de engenharia](docs/engineering/context.md) registra os limites do
+projeto. A [ADR 001](docs/engineering/decisions/001-selective-security-updates.md)
+registra a limitação da automação de segurança e o alerta sem patch disponível.
+
+## Histórico de validação anterior à adoção do handbook
+
+Os registros abaixo descrevem revisões anteriores em outro ambiente; seus
+resultados e modelos instalados não representam a configuração de uma nova máquina.
+
 TypeScript estrito na interface, no backend e no worklet passou nesta revisão.
 77 testes automatizados passaram; 2 testes de HTTP locais não puderam abrir
 127.0.0.1 dentro do ambiente restrito do Codex (EACCES), e 2 testes opcionais
@@ -186,7 +222,8 @@ o sandbox bloqueou a canonicalização da pasta e a abertura de processos/portas
 Linux mantém o empacotamento configurado, sem teste em um sistema Linux nesta
 máquina. O instalador deve ser gerado fora do ambiente restrito.
 
-LATÊNCIA DA CONVERSA (02/10/2026)
+### Latência da conversa (02/10/2026)
+
 As respostas de conversa agora aparecem por frases validadas durante a geração.
 Ações continuam aguardando a decisão completa e validada; texto parcial não
 executa programas nem registra tarefas. A voz pode preparar a primeira frase
@@ -205,7 +242,8 @@ entre 65 e 74 s. Os valores variam conforme hardware, carga e contexto.
 Para latência próxima de instantânea, ainda é necessário comparar um modelo
 menor ou outro provedor. Nenhum modelo foi trocado nem serviço pago ativado.
 
-REPRODUÇÃO PROGRESSIVA (02/10/2026)
+### Reprodução progressiva (02/10/2026)
+
 A primeira frase agora pode tocar assim que preencher a reserva de áudio de
 1,4 s, sem aguardar a segunda frase ou a conclusão do modelo. A margem final
 de 220 ms é acrescentada ao encerrar quando ainda não estava no último bloco.
@@ -216,7 +254,8 @@ A referência adewaskar/jarvis usa Claude na nuvem, sessão contínua no Agent S
 e fala por sentenças conforme o texto chega. Navegador ou ElevenLabs fornecem
 a voz. O desempenho da demonstração não é um benchmark desta máquina.
 
-PREPARAÇÃO AO ABRIR (02/10/2026)
+### Preparação ao abrir (02/10/2026)
+
 Em Inteligência, Manter IA pronta vem ativado e pode ser desativado para
 economizar memória. A janela principal prepara o modelo ao abrir e renova
 essa preparação a cada minuto. Chamadas repetidas em até 110 segundos usam
@@ -228,14 +267,16 @@ mantém o modelo na memória; não diminui seu tamanho nem a geração de tokens
 Os tempos de carregamento e resposta ainda precisam ser medidos novamente
 fora do ambiente de execução restrito. Não foi gerado novo instalador.
 
-MODELO LOCAL DE TESTE (03/10/2026)
+### Modelo local de teste (03/10/2026)
+
 Neste PC, o Ollama recebeu o qwen2.5:3b, com aproximadamente 1,9 GB, e ele
 foi selecionado no Jarvis como modelo local ativo. O gemma4:e4b, de 6,6 GB,
 continua instalado para comparação. Em uma execução aquecida, o qwen2.5:3b
 respondeu ao teste curto em cerca de 3,6 s; o primeiro carregamento ainda é
 mais demorado e depende da memória e da GPU disponíveis.
 
-PERFIL DO JARVIS (03/10/2026)
+### Perfil do Jarvis (03/10/2026)
+
 Abra "Meu perfil" na barra superior ou use Ctrl+K > "Configurar briefing e
 personalidade". Ali ficam seu nome, a forma como o Jarvis deve chamar você, o
 briefing pessoal, a personalidade desejada e preferências ou limites. O perfil
@@ -245,7 +286,8 @@ Quando a IA na nuvem estiver selecionada, o perfil acompanha a solicitação
 enviada ao provedor. Para manter essas informações somente no PC, selecione um
 modelo local.
 
-VOZ LOCAL E ESTILO JARVIS (03/10/2026)
+### Voz local e estilo Jarvis (03/10/2026)
+
 Na janela "Uma voz para suas ideias" ou nas opções da conversa, a voz local
 gratuita permite escolher Alex (masculina), Santa (masculina suave) ou Dora
 (feminina), todas do Kokoro em português brasileiro. A instalação baixa o
