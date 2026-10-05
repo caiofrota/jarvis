@@ -18,8 +18,9 @@ export default function IntelligenceDialog({ ai, busy }: { ai: IntelligenceContr
   return (
     <>
       <p className="dialog-description">
-        Conversas separadas por provedor e modelo. O histórico, as tarefas e os nomes dos aplicativos ajudam a
-        IA a entender seus pedidos. No modo nuvem, esses dados são enviados ao provedor escolhido.
+        {ai.config.provider === 'cloud'
+          ? 'Conversa, perfil e tarefas são enviados à OpenAI. API paga.'
+          : 'Ollama precisa estar em execução.'}
       </p>
       <label className="setting-row">
         <span>
@@ -60,28 +61,16 @@ export default function IntelligenceDialog({ ai, busy }: { ai: IntelligenceContr
               {showKey ? 'Ocultar' : 'Mostrar'}
             </button>
           </div>
-          <p>
-            No aplicativo desktop, a chave fica protegida pelo armazenamento seguro do sistema e volta nas
-            próximas inicializações. Na prévia do Chrome, ela fica no localStorage deste perfil para os testes
-            e não é criptografada. Texto e histórico são enviados à OpenAI; o uso pode gerar cobranças.
-          </p>
+          <p>Chave protegida no desktop; no navegador, salva sem criptografia neste perfil.</p>
           <button className="panel-link" onClick={() => connect('')}>
             Desconectar chave
           </button>
         </div>
-      ) : (
-        <p className="settings-foot">
-          Mantenha o Ollama aberto neste PC. Nenhum modelo de IA será baixado automaticamente.
-        </p>
-      )}
+      ) : null}
       {ai.config.provider === 'local' && (
         <label className="setting-row">
           <span>
             <strong>Manter IA pronta</strong>
-            <small>
-              Enquanto a janela principal estiver aberta. Evita recarregar entre conversas e mantém o modelo
-              ocupando memória.
-            </small>
           </span>
           <input
             type="checkbox"

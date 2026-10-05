@@ -1,12 +1,14 @@
 import { useVoiceInput } from './useVoiceInput';
-import VoiceInputSettings from './VoiceInputSettings';
 import type { VoiceProps } from '../controllers';
+import type { OpenDialog } from '../../shared/types';
 
-export default function VoiceDialog(props: VoiceProps) {
+export default function VoiceDialog(props: VoiceProps & { open: OpenDialog }) {
   const v = useVoiceInput(props);
   return (
     <>
-      <VoiceInputSettings voice={v} />
+      <button className="panel-link" onClick={() => props.open('speech')}>
+        Configurações de voz
+      </button>
       <div className={'voice-stage ' + (v.recording ? 'recording' : '')}>
         <span className="voice-symbol" aria-hidden="true">
           ◉

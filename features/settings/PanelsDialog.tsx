@@ -29,10 +29,7 @@ export default function PanelsDialog({
             />
           </label>
         ))}
-      <p className="settings-foot">
-        Estas escolhas valem apenas para esta janela. Arraste os cards para mudar a ordem e o lado. A seta
-        diagonal abre outra janela, com sua própria seleção. Tarefas e notas continuam compartilhadas.
-      </p>
+      <p className="settings-foot">Painéis desta janela.</p>
     </>
   );
 }

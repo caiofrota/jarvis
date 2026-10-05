@@ -1,13 +1,16 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useId } from 'react';
 export default function Dialog({
   title,
   onClose,
   children,
+  className,
 }: {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  className?: string;
 }) {
+  const titleId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const d = ref.current;
@@ -15,11 +18,10 @@ export default function Dialog({
     return () => d?.close();
   }, []);
   return (
-    <dialog ref={ref} onCancel={onClose}>
+    <dialog ref={ref} className={className} aria-labelledby={titleId} onCancel={onClose}>
       <div className="dialog-head">
         <div>
-          <p className="eyebrow">SEU JARVIS</p>
-          <h2>{title}</h2>
+          <h2 id={titleId}>{title}</h2>
         </div>
         <button className="icon-button" onClick={onClose} aria-label="Fechar">
           ×

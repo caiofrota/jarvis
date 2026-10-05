@@ -1,7 +1,5 @@
-import { useState } from 'react';
 import EnergyRing from './orb/EnergyRing';
 import type { OrbPhase } from './orb/scene';
-import ConversationSettings from './ConversationSettings';
 import type { ReturnTypeVoiceInput } from './voice-types';
 import type { ChatController, IntelligenceController, SpeechController } from '../controllers';
 import type { Profile, OpenDialog } from '../../shared/types';
@@ -16,7 +14,6 @@ interface Props {
   open: OpenDialog;
 }
 export default function ConversationDock({ voice: v, speech, chat, ai, profile, motion, open }: Props) {
-  const [settings, setSettings] = useState(false);
   const speaking = speech.busy && speech.status === 'Falando…';
   const busy = chat.busy || speech.busy;
   const phase: OrbPhase = speaking
@@ -64,24 +61,11 @@ export default function ConversationDock({ voice: v, speech, chat, ai, profile, 
       return;
     }
     if (blocked) {
-      setSettings(true);
+      open('speech');
       return;
     }
     void v.start();
   }
-  const hint = !v.recording
-    ? v.wakeword.listening
-      ? 'Escuta local ativa. Diga JARVIS para começar.'
-      : v.processing
-        ? 'Toque no núcleo para cancelar.'
-        : 'Toque no núcleo e fale comigo.'
-    : v.protectedInput
-      ? 'Escuta protegida contra o retorno dos alto-falantes.'
-      : v.device === 'headphones'
-        ? 'Pode falar. Você pode me interromper.'
-        : busy
-          ? 'Pode falar enquanto preparo sua resposta.'
-          : 'Uma pausa envia sua fala. Eu respondo e volto a ouvir.';
   return (
     <section className="conversation-dock" data-phase={phase} aria-label="Conversa na esfera">
       <div className="orb-heading">
@@ -137,22 +121,6 @@ export default function ConversationDock({ voice: v, speech, chat, ai, profile, 
                 : 'AGUARDANDO'}
         </span>
       </div>
-      <div className="orb-status">
-        <p>{hint}</p>
-        <span className="orb-route">
-          {v.mode === 'browser'
-            ? 'Escuta Chrome online'
-            : v.mode === 'cloud'
-              ? 'Escuta OpenAI · paga'
-              : 'Escuta local'}
-          {' · '}
-          {speech.options.mode === 'local'
-            ? 'Voz Kokoro local'
-            : speech.options.mode === 'cloud'
-              ? 'Voz OpenAI · paga'
-              : 'Voz do sistema'}
-        </span>
-      </div>
       <div className="orb-controls">
         {(v.recording || v.processing) && (
           <button className="orb-end" onClick={() => void v.stop()} aria-label="Encerrar conversa">
@@ -164,14 +132,6 @@ export default function ConversationDock({ voice: v, speech, chat, ai, profile, 
             Interromper resposta
           </button>
         )}
-        <button
-          className="orb-options"
-          aria-expanded={settings}
-          aria-controls="orb-voice-settings"
-          onClick={() => setSettings(!settings)}
-        >
-          Opções de voz <span aria-hidden="true">{settings ? '−' : '+'}</span>
-        </button>
       </div>
       {(v.error || speech.error) && (
         <p className="feature-error" role="alert">
@@ -180,12 +140,12 @@ export default function ConversationDock({ voice: v, speech, chat, ai, profile, 
       )}
       {!v.recording && v.needsLocal && !v.local.ready && (
         <p className="orb-notice">
-          {v.local.message || 'Preparando os componentes de voz local.'} Abra as opções de voz para conferir.
+          {v.local.message || 'Voz local não instalada.'}
+          <button className="panel-link" onClick={() => open('speech')}>
+            Configurar voz
+          </button>
         </p>
       )}
-      <div id="orb-voice-settings" hidden={!settings}>
-        <ConversationSettings voice={v} speech={speech} />
-      </div>
     </section>
   );
 }

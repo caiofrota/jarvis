@@ -166,6 +166,7 @@ export default function WorkspaceView({ identity }: { identity: WorkspaceIdentit
         chat={chat}
         speech={speech}
         actions={actions}
+        voice={voice}
       />
     </>
   );

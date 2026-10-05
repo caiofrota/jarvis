@@ -95,7 +95,12 @@ for line in sys.stdin:
         elif req["op"] == "transcribe":
             data = io.BytesIO(base64.b64decode(req["audio"], validate=True))
             segments, info = load_whisper().transcribe(
-                data, language="pt", beam_size=3, vad_filter=True, condition_on_previous_text=False
+                data,
+                language="pt",
+                beam_size=3,
+                vad_filter=True,
+                condition_on_previous_text=False,
+                hotwords="Jarvis",
             )
             if info.duration > 65:
                 raise ValueError("A gravação deve ter no máximo 60 segundos.")

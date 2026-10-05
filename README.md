@@ -30,7 +30,7 @@ Node.js 22.13 ou superior e pnpm 11.25.0. O CI usa Node.js 22.23.2.
 Em outra máquina: instale Node.js e pnpm, copie o código-fonte e execute:
 pnpm install
 pnpm dev
-Para a IA local, abra o Ollama e escolha um modelo instalado em Inteligência.
+Para a IA local, abra o Ollama e escolha um modelo em Configurações > Inteligência.
 A IA na nuvem continua opcional. No aplicativo desktop, a chave OpenAI é protegida
 com o armazenamento seguro do sistema e volta ao abrir o Jarvis. Na prévia do
 Chrome, ela fica no localStorage deste perfil apenas para testes e não é criptografada;
@@ -60,7 +60,7 @@ O fundo quadriculado ocupa toda a tela, com o anel centralizado e os cards
 flutuando nas laterais. O anel existe apenas na janela principal.
 Nas secundárias, todo o espaço é dedicado aos cards. Em telas estreitas,
 Mostrar cards alterna entre o anel e os cards, sem interromper a conversa.
-Personalizar painéis escolhe os cards desta janela. Ordem, visibilidade e distribuição de espaço
+Configurações > Painéis escolhe os cards desta janela. Ordem, visibilidade e distribuição de espaço
 são salvas separadamente por janela. Restaurar disposição afeta apenas ela.
 Nova janela cria um espaço somente de cards, sem anel; a seta de um card abre uma janela
 iniciada com esse card, onde você pode acrescentar outros.
@@ -83,8 +83,8 @@ O áudio pode ser enviado ao provedor do navegador. É uma escolha explícita.
 Clique na esfera do painel Assistente para iniciar a conversa, sem abrir outra
 janela. A aba Conversa exibe a esfera; a aba Transcrição reúne o histórico,
 as parciais do reconhecimento e o campo para escrever. Trocar de aba preserva
-a conversa por voz e os rascunhos. Opções de voz permite escolher
-reconhecimento, saída e alto-falantes/fones no próprio painel.
+a conversa por voz e os rascunhos. Configurações > Voz reúne
+reconhecimento, saída e alto-falantes/fones.
 Uma pausa envia sua fala; o Jarvis responde em voz e retoma a escuta.
 Durante a resposta, clique na esfera para interromper. Enquanto está ouvindo,
 clique nela para encerrar; o botão Encerrar também permanece disponível.
@@ -281,8 +281,8 @@ mais demorado e depende da memória e da GPU disponíveis.
 
 ### Perfil do Jarvis (03/10/2026)
 
-Abra "Meu perfil" na barra superior ou use Ctrl+K > "Configurar briefing e
-personalidade". Ali ficam seu nome, a forma como o Jarvis deve chamar você, o
+Abra Configurações > Perfil pela engrenagem lateral ou use Ctrl+K > Configurações.
+Ali ficam seu nome, a forma como o Jarvis deve chamar você, o
 briefing pessoal, a personalidade desejada e preferências ou limites. O perfil
 é salvo no armazenamento local deste dispositivo e entra como contexto em cada
 conversa; ele não altera as regras de segurança nem executa ações sozinho.

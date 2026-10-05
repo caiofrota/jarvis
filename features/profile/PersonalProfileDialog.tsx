@@ -1,39 +1,6 @@
 import type { PersonalProfile, Provider, Save } from '../../shared/types';
 import { jarvisPersonalityPreset } from './usePersonalProfile';
-
-function Field({
-  label,
-  hint,
-  value,
-  onChange,
-  multiline = false,
-  placeholder,
-}: {
-  label: string;
-  hint?: string;
-  value: string;
-  onChange(value: string): void;
-  multiline?: boolean;
-  placeholder?: string;
-}) {
-  return (
-    <label className="profile-field">
-      <span>
-        <strong>{label}</strong>
-        {hint && <small>{hint}</small>}
-      </span>
-      {multiline ? (
-        <textarea
-          value={value}
-          placeholder={placeholder}
-          onChange={(event) => onChange(event.target.value)}
-        />
-      ) : (
-        <input value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
-      )}
-    </label>
-  );
-}
+import Field from './ProfileField';
 
 export default function PersonalProfileDialog({
   profile,
@@ -51,27 +18,20 @@ export default function PersonalProfileDialog({
   };
   return (
     <div className="personal-profile">
-      <p className="dialog-description">
-        Este perfil orienta o jeito do Jarvis conversar e dá contexto para suas decisões. Ele fica salvo neste
-        dispositivo e não treina o modelo.
-      </p>
       <Field
         label="Seu nome"
-        hint="Como você quer se identificar"
         value={profile.userName}
         placeholder="Ex.: Caio"
         onChange={(value) => update('userName', value)}
       />
       <Field
         label="Como devo chamar você"
-        hint="Apelido ou forma preferida"
         value={profile.address}
         placeholder="Ex.: Caio, chefe, você"
         onChange={(value) => update('address', value)}
       />
       <Field
         label="Briefing pessoal"
-        hint="Seu trabalho, projetos, rotina e contexto que ajudam nas respostas"
         value={profile.briefing}
         placeholder="Ex.: Trabalho com ..., estou construindo ..., moro em ..."
         multiline
@@ -79,7 +39,6 @@ export default function PersonalProfileDialog({
       />
       <Field
         label="Personalidade do Jarvis"
-        hint="Tom, iniciativa e comportamento desejados"
         value={profile.personality}
         placeholder="Ex.: direto, proativo, natural e questiona apenas quando houver ambiguidade"
         multiline
@@ -93,7 +52,6 @@ export default function PersonalProfileDialog({
       </button>
       <Field
         label="Preferências e limites"
-        hint="Formato de resposta, assuntos sensíveis ou coisas que ele deve considerar"
         value={profile.preferences}
         placeholder="Ex.: responda em português, sem emojis, seja breve"
         multiline
@@ -101,8 +59,7 @@ export default function PersonalProfileDialog({
       />
       {provider === 'cloud' && (
         <p className="settings-foot profile-privacy">
-          A IA na nuvem recebe este perfil junto com a conversa. Para mantê-lo somente neste PC, selecione IA
-          local em Inteligência.
+          Perfil enviado à OpenAI quando a IA na nuvem estiver selecionada.
         </p>
       )}
       {error && <p className="connection-status">{error}</p>}

@@ -23,10 +23,10 @@ export default function SpeechDialog({ speech, chat }: { speech: SpeechControlle
       </label>
       <p className="voice-disclosure">
         {options.mode === 'local'
-          ? 'Kokoro funciona neste PC, sem cobrança. Instale os componentes em Conversar → Local/offline. A primeira frase pode precisar carregar o modelo.'
+          ? 'Local, sem cobrança.'
           : options.mode === 'system'
-            ? 'Usa apenas as vozes instaladas no computador. A naturalidade depende das vozes do sistema.'
-            : 'O texto será enviado à OpenAI usando sua chave. Esta opção pode gerar cobrança.'}
+            ? 'Usa as vozes instaladas neste dispositivo.'
+            : 'Envia texto à OpenAI. API paga.'}
       </p>
       {options.mode === 'system' && (
         <label className="setting-row">
@@ -50,7 +50,6 @@ export default function SpeechDialog({ speech, chat }: { speech: SpeechControlle
           <label className="setting-row">
             <span>
               <strong>Voz local</strong>
-              <small>Modelo Kokoro gratuito, executado neste PC, com vozes brasileiras naturais.</small>
             </span>
             <select
               aria-label="Voz local"
@@ -63,10 +62,7 @@ export default function SpeechDialog({ speech, chat }: { speech: SpeechControlle
             </select>
           </label>
           {speech.localVoiceStatus && !speech.localVoiceStatus.ttsVoices?.includes(options.localVoice) && (
-            <p className="voice-disclosure">
-              Esta voz ainda não está instalada. Abra a conversa e use “Tentar instalar novamente” para baixar
-              os modelos gratuitos.
-            </p>
+            <p className="voice-disclosure">Voz não instalada. Use a instalação local acima.</p>
           )}
         </>
       )}

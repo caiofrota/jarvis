@@ -18,7 +18,6 @@ export default function SystemPanel({
       <div className="resource-hero">
         <div>
           <p>{profiles[prefs.profile]}</p>
-          <small>Uma resposta por vez</small>
         </div>
         <span className="resource-mark">⌁</span>
       </div>
@@ -33,9 +32,8 @@ export default function SystemPanel({
           <strong>{value}</strong>
         </div>
       ))}
-      <p className="resource-note">O tamanho do modelo também determina o uso de memória.</p>
       <button className="panel-link" onClick={() => open('settings')}>
-        Ajustar meu ambiente ↗
+        Configurações
       </button>
     </div>
   );

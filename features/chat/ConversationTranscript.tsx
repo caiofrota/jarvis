@@ -26,15 +26,8 @@ export default function ConversationTranscript({
         <button className="suggestion" onClick={() => chat.send('Minhas tarefas')}>
           O que tenho para fazer? <span>Local ↗</span>
         </button>
-        <button className="suggestion" onClick={() => open('intelligence')}>
-          Configurar minha inteligência <span>↗</span>
-        </button>
       </div>
-      {!chat.messages.length && (
-        <p className="transcript-empty">
-          O texto da conversa aparece aqui. Você também pode escrever uma mensagem.
-        </p>
-      )}
+      {!chat.messages.length && <p className="transcript-empty">Nenhuma mensagem.</p>}
       <div className="messages" ref={log} role="log" aria-label="Conversa">
         {chat.messages.map((m, i) => (
           <div key={i} className={'message ' + m.role + (m.status === 'error' ? ' message-error' : '')}>

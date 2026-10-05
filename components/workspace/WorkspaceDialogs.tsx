@@ -6,14 +6,10 @@ import type {
   ActionsController,
 } from '../../features/controllers';
 import Dialog from '../ui/Dialog';
-import IntelligenceDialog from '../../features/ai/IntelligenceDialog';
 import VoiceDialog from '../../features/voice/VoiceDialog';
-import SpeechDialog from '../../features/voice/SpeechDialog';
 import ComputerPanel from '../../features/actions/ComputerPanel';
-import SettingsDialog from '../../features/settings/SettingsDialog';
-import PanelsDialog from '../../features/settings/PanelsDialog';
-import AddonsDialog from '../../features/settings/AddonsDialog';
-import PersonalProfileDialog from '../../features/profile/PersonalProfileDialog';
+import SettingsHub, { type SettingsSection } from '../../features/settings/SettingsHub/SettingsHub';
+import type { ReturnTypeVoiceInput } from '../../features/voice/voice-types';
 const titles = {
   intelligence: 'Inteligência, à sua escolha.',
   profile: 'Seu briefing e a personalidade do Jarvis.',
@@ -40,6 +36,7 @@ export default function WorkspaceDialogs({
   chat,
   speech,
   actions,
+  voice,
 }: {
   dialog: DialogId | null;
   primary: boolean;
@@ -53,42 +50,38 @@ export default function WorkspaceDialogs({
   chat: ChatController;
   speech: SpeechController;
   actions: ActionsController;
+  voice: ReturnTypeVoiceInput;
 }) {
   if (!dialog) return null;
+  if (['intelligence', 'profile', 'speech', 'settings', 'panels', 'addons'].includes(dialog)) {
+    return (
+      <Dialog title="Configurações" className="settings-dialog" onClose={() => open(null)}>
+        <SettingsHub
+          key={dialog}
+          initialSection={dialog as SettingsSection}
+          primary={primary}
+          prefs={prefs}
+          patch={patch}
+          personalProfile={personalProfile}
+          savePersonalProfile={savePersonalProfile}
+          profileError={profileError}
+          ai={ai}
+          chat={chat}
+          speech={speech}
+          voice={voice}
+        />
+      </Dialog>
+    );
+  }
   let body;
   switch (dialog) {
-    case 'intelligence':
-      body = <IntelligenceDialog ai={ai} busy={chat.busy} />;
-      break;
-    case 'profile':
-      body = (
-        <PersonalProfileDialog
-          profile={personalProfile}
-          save={savePersonalProfile}
-          provider={ai.config.provider}
-          error={profileError}
-        />
-      );
-      break;
     case 'conversation':
       return null;
     case 'voice':
-      body = <VoiceDialog ai={ai} profile={prefs.profile} chat={chat} speech={speech} />;
-      break;
-    case 'speech':
-      body = <SpeechDialog chat={chat} speech={speech} />;
+      body = <VoiceDialog ai={ai} profile={prefs.profile} chat={chat} speech={speech} open={open} />;
       break;
     case 'computer':
       body = <ComputerPanel actions={actions} />;
-      break;
-    case 'settings':
-      body = <SettingsDialog prefs={prefs} patch={patch} />;
-      break;
-    case 'panels':
-      body = <PanelsDialog prefs={prefs} patch={patch} primary={primary} />;
-      break;
-    case 'addons':
-      body = <AddonsDialog />;
       break;
     case 'clear':
       body = (
@@ -112,9 +105,7 @@ export default function WorkspaceDialogs({
           {[
             ['conversation', 'Conversar por voz'],
             ['computer', 'Abrir aplicativos e pastas'],
-            ['intelligence', 'Escolher inteligência'],
-            ['profile', 'Configurar briefing e personalidade'],
-            ['settings', 'Ajustar preferências'],
+            ['settings', 'Configurações'],
           ]
             .filter(([id]) => primary || id !== 'conversation')
             .map(([id, label]) => (
