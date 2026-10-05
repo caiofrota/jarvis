@@ -30,9 +30,7 @@ export default function CalendarPanel() {
           <small>Exemplo · 30 min</small>
         </div>
       </div>
-      <p className="resource-note">
-        Agenda demonstrativa. A conexão com calendário ainda não está disponível.
-      </p>
+      <p className="resource-note">Agenda demonstrativa</p>
     </div>
   );
 }

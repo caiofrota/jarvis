@@ -9,7 +9,6 @@ export default function NotesPanel({
 }) {
   return (
     <div className="panel-body">
-      <p className="notes-title">Ideias que merecem ficar.</p>
       <textarea
         className="notes-area"
         aria-label="Suas notas"
@@ -18,9 +17,11 @@ export default function NotesPanel({
         maxLength={30000}
         placeholder="Uma ideia, uma lista, um plano…"
       />
-      <p className="note-status">
-        {error || 'Salvo automaticamente neste dispositivo'} · {value.length} caracteres
-      </p>
+      {error && (
+        <p className="note-status" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

@@ -27,18 +27,6 @@ export default function ChatPanel({
     <div className={'assistant-body ' + (chat.messages.length ? 'has-messages' : '')}>
       <div className="ai-toolbar">
         <button
-          className="ai-provider-button"
-          disabled={chat.busy || voice.recording || voice.processing}
-          onClick={() => open('intelligence')}
-        >
-          <i className="status-dot" />
-          <span>
-            {ai.config.provider === 'local' ? ai.preparationText || 'IA local' : 'API na nuvem'}
-            <strong>{ai.model || 'Escolher modelo'}</strong>
-          </span>
-          <span>⌄</span>
-        </button>
-        <button
           className="icon-button"
           aria-label="Nova conversa"
           disabled={chat.busy}
@@ -91,9 +79,11 @@ export default function ChatPanel({
         )}
         <ConversationTranscript chat={chat} voice={voice} open={open} visible={tab === 'transcript'} />
       </div>
-      <div className="assistant-foot">
-        <span role="status">{chat.status || ai.error || 'Histórico salvo neste dispositivo'}</span>
-      </div>
+      {(chat.status || ai.error) && (
+        <div className="assistant-foot">
+          <span role="status">{chat.status || ai.error}</span>
+        </div>
+      )}
     </div>
   );
 }

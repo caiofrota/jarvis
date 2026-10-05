@@ -13,7 +13,6 @@ export default function SettingsDialog({
       <label className="setting-row">
         <span>
           <strong>Desempenho</strong>
-          <small>Limita o contexto e a permanência do modelo na memória.</small>
         </span>
         <select
           aria-label="Desempenho"
@@ -44,14 +43,9 @@ export default function SettingsDialog({
       <label className="setting-row">
         <span>
           <strong>Animações</strong>
-          <small>O modo econômico sempre reduz os efeitos.</small>
         </span>
         <input type="checkbox" checked={prefs.motion} onChange={(e) => patch({ motion: e.target.checked })} />
       </label>
-      <p className="settings-foot">
-        Em computadores com 8 ou 12 GB, combine o perfil econômico com um modelo menor no Ollama. O tamanho do
-        modelo é o principal fator de memória.
-      </p>
     </>
   );
 }

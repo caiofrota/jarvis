@@ -4,7 +4,6 @@ export default function ComputerPanel({ actions }: { actions: ActionsController 
   const [message, setMessage] = useState('');
   return (
     <div className="panel-body computer-body">
-      <p className="resource-note">Abra aplicativos e pastas diretamente neste computador.</p>
       {actions.runtime?.restricted && <p className="runtime-warning">{actions.runtime.message}</p>}
       <div className="action-grid">
         {actions.items.map((item) => (
