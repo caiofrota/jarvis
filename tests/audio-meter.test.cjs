@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { AudioMeter } = require('../dist/features/voice/audio-meter.js');
 const { AudioOutput } = require('../dist/features/voice/audio-output.js');
 
-test('análise acompanha amostras e bandas reais, com silêncio sem reprodução', () => {
+test('analysis follows real samples and bands, with silence producing no playback', () => {
   let level = 128,
     frequency = 0,
     connections = 0;
@@ -35,7 +35,7 @@ test('análise acompanha amostras e bandas reais, com silêncio sem reprodução
   assert.deepEqual(meter.sample(true), { level: 0, bass: 0, mid: 0, high: 0 });
 });
 
-test('medidor permanece em uma única rota de saída e não mantém energia após parar', async () => {
+test('meter stays on one output path and does not retain energy after stopping', async () => {
   const previous = global.window;
   const connections = [];
   const input = {

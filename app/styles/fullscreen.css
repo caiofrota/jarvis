@@ -1,4 +1,6 @@
-html { background-color: #050d19; }
+html {
+  background-color: #050d19;
+}
 /* The grid and ring belong to the viewport; the cards are a foreground layer. */
 body {
   background: radial-gradient(ellipse at 50% 48%, #063d94 0%, #062456 32%, #061427 62%, #050d19 100%);
@@ -355,4 +357,6 @@ main > footer {
   z-index: 6;
 }
 
-.workspace-core .conversation-dock { position: static; }
+.workspace-core .conversation-dock {
+  position: static;
+}

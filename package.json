@@ -2,35 +2,44 @@
   "name": "jarvis-studio",
   "version": "0.4.0",
   "private": true,
+  "packageManager": "pnpm@11.25.0",
   "description": "Assistente desktop com IA local e na nuvem, notas e painéis configuráveis.",
   "author": "Jarvis Studio",
   "main": "dist/desktop/main.js",
   "scripts": {
-    "start": "pnpm build:runtime && node node_modules/electron/cli.js .",
-    "preview": "pnpm build:runtime && node dist/server.js",
+    "start": "pnpm build:runtime && node dist/server.js",
+    "preview": "pnpm start",
+    "desktop": "pnpm build && node node_modules/electron/cli.js .",
     "test": "pnpm build:runtime && node --test tests/*.test.cjs",
     "pack": "pnpm build && node node_modules/electron-builder/cli.js --dir",
     "dist": "pnpm build && node node_modules/electron-builder/cli.js",
     "dev": "node node_modules/tsx/dist/cli.mjs watch --ignore dist --ignore out scripts/dev.ts",
     "build": "pnpm typecheck && pnpm build:runtime && pnpm build:worklet && next build && node dist/scripts/secure-export.js",
     "format": "prettier --write app components features client shared lib desktop scripts tests",
+    "format:check": "prettier --check app components features client shared lib desktop scripts tests package.json tsconfig*.json next.config.ts pnpm-workspace.yaml .prettierrc.json .engineering-handbook.yaml .github/workflows/*.yml docs AGENTS.md README.md eslint.config.mjs",
+    "lint": "eslint app components features client shared lib desktop scripts server.ts next.config.ts tests --max-warnings=0 && node scripts/check-workflows.mjs",
+    "python:check": "uv sync --project voice --locked && uv run --project voice --locked ruff check voice && uv run --project voice --locked ruff format --check voice && uv run --project voice --locked python -m compileall -q voice/download.py voice/wakeword.py voice/worker.py",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit",
     "build:runtime": "tsc -p tsconfig.node.json",
     "build:worklet": "tsc -p tsconfig.worklet.json"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@types/dom-speech-recognition": "^0.0.12",
     "@types/node": "^24.19.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "electron": "44.5.1",
     "electron-builder": "26.15.3",
+    "eslint": "^9.39.5",
+    "globals": "^16.5.0",
     "next": "16.3.8",
     "prettier": "^3.9.9",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "tsx": "^4.23.15",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.71.0"
   },
   "build": {
     "appId": "dev.jarvisstudio.desktop",
@@ -85,7 +94,8 @@
         "to": "voice",
         "filter": [
           "*.py",
-          "requirements.txt"
+          "pyproject.toml",
+          "uv.lock"
         ]
       }
     ]

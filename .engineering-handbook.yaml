@@ -1,0 +1,13 @@
+schema-version: 1
+
+handbook:
+  id: caio-engineering-handbook/v1
+  source: codex-global
+
+profiles:
+  - platform.web
+  - platform.backend
+  - language.python
+
+project-context:
+  - docs/engineering/context.md

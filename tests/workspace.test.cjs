@@ -1,7 +1,7 @@
 const { test } = require('node:test'),
   assert = require('node:assert/strict');
 const { localCommand } = require('../dist/features/chat/local-commands.js');
-test('comandos locais preservam tarefas e não tratam pedidos de aplicativos como texto executável', () => {
+test('local commands preserve tasks and do not treat application requests as executable text', () => {
   const added = [];
   const context = {
     tasks: [

@@ -1,6 +1,5 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as os from 'node:os';
 import * as readline from 'node:readline';
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { forSpeech } from '../shared/text';
@@ -108,9 +107,11 @@ export class LocalVoiceService {
       );
     const wakewordReady =
       fs.existsSync(path.join(this.dataDir, 'wakeword.ready.json')) &&
-      ['wake-models/melspectrogram.onnx', 'wake-models/embedding_model.onnx', 'wake-models/hey_jarvis_v0.1.onnx'].every(
-        (p) => fs.existsSync(path.join(this.dataDir, p)),
-      );
+      [
+        'wake-models/melspectrogram.onnx',
+        'wake-models/embedding_model.onnx',
+        'wake-models/hey_jarvis_v0.1.onnx',
+      ].every((p) => fs.existsSync(path.join(this.dataDir, p)));
     return {
       ready,
       warming: !!this.warming,
@@ -142,7 +143,7 @@ export class LocalVoiceService {
       });
     return this.status();
   }
-  run(command: string, args: string[]): Promise<void> {
+  run(command: string, args: string[], environment: Record<string, string | undefined> = {}): Promise<void> {
     return new Promise((resolve, reject) => {
       const tempDir = this.tempDir();
       const child = spawn(command, args, {
@@ -151,6 +152,7 @@ export class LocalVoiceService {
         stdio: ['ignore', 'pipe', 'pipe'],
         env: {
           ...process.env,
+          ...environment,
           PYTHONIOENCODING: 'utf-8',
           PYTHONUTF8: '1',
           HF_HUB_DISABLE_TELEMETRY: '1',
@@ -180,35 +182,23 @@ export class LocalVoiceService {
       });
       child.once('exit', (code) => {
         clearTimeout(timer);
-        code === 0 ? resolve() : reject(new Error('Falha na instalação local: ' + errors.slice(-700)));
+        if (code === 0) resolve();
+        else reject(new Error('Falha na instalação local: ' + errors.slice(-700)));
       });
     });
   }
   async setup(): Promise<void> {
     fs.mkdirSync(this.dataDir, { recursive: true });
-    if (!fs.existsSync(this.python)) {
-      this.message = 'Preparando o motor de voz…';
-      const localInstall = path.join(os.homedir(), 'AppData/Local/Programs/Python/Python312/python.exe');
-      const command =
-        process.platform === 'win32' ? (fs.existsSync(localInstall) ? localInstall : 'python') : 'python3';
-      try {
-        await this.run(command, ['-m', 'venv', path.join(this.root, '.voice-env')]);
-      } catch {
-        throw new Error(
-          'Instale Python 3.12 com pip e suporte a venv, reinicie o Jarvis e clique em Tentar instalar novamente. No Linux, instale também python3-venv.',
-        );
-      }
-    }
     this.message = 'Instalando componentes gratuitos do Kokoro e Whisper…';
-    await this.run(this.python, [
-      '-m',
-      'pip',
-      'install',
-      '--disable-pip-version-check',
-      '--no-cache-dir',
-      '-r',
-      path.join(this.scriptsDir, 'requirements.txt'),
-    ]);
+    try {
+      await this.run(
+        process.platform === 'win32' ? 'uv.exe' : 'uv',
+        ['sync', '--project', this.scriptsDir, '--locked', '--no-dev', '--python', '3.11'],
+        { UV_PROJECT_ENVIRONMENT: path.join(this.root, '.voice-env') },
+      );
+    } catch {
+      throw new Error('Instale Python 3.11 e uv, reinicie o Jarvis e clique em Tentar instalar novamente.');
+    }
     await this.run(this.python, [path.join(this.scriptsDir, 'download.py'), this.dataDir]);
   }
   start(): ChildProcessWithoutNullStreams {

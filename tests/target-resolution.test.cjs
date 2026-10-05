@@ -60,7 +60,7 @@ const targets = [
     target: 'Visual Studio Code.lnk',
   },
 ];
-test('nome identificado é resolvido ao aplicativo correto sem perder ++ ou inventar substituto', () => {
+test('identified name resolves to the correct application without losing ++ or inventing a substitute', () => {
   assert.equal(resolveTarget('Power Point', targets).id, 'ppt-installed');
   assert.equal(resolveTarget('Notepad++', targets).id, 'npp-installed');
   assert.equal(resolveTarget('Microsoft Word', targets).type, 'reply');
@@ -68,7 +68,7 @@ test('nome identificado é resolvido ao aplicativo correto sem perder ++ ou inve
   for (const name of ['ppt desconhecido', 'Power', 'cmd.exe', 'Calculadora && cmd.exe', 'Meu app'])
     assert.equal(resolveTarget(name, targets).type, 'reply');
 });
-test('ausente, indisponível ou ambíguo pede esclarecimento e não tem ID executável', () => {
+test('missing, unavailable, or ambiguous targets request clarification and have no executable ID', () => {
   for (const list of [
     targets.filter((t) => t.id !== 'ppt-installed'),
     [{ ...targets[1], available: false }],
@@ -83,7 +83,7 @@ test('ausente, indisponível ou ambíguo pede esclarecimento e não tem ID execu
     assert.match(result.text, /\?/);
   }
 });
-test('da decisão da IA à abertura: ppt não pode ser substituído pela primeira opção', async () => {
+test('from AI decision to opening, ppt cannot be replaced by the first available option', async () => {
   const calls = [],
     events = [];
   const ai = new AIService({
@@ -118,7 +118,7 @@ test('da decisão da IA à abertura: ppt não pode ser substituído pela primeir
   await actions.execute(actions.prepare(action.id, 'test').token, 'test');
   assert.deepEqual(calls, [{ command: 'explorer.exe', args: ['PowerPoint.lnk'] }]);
 });
-test('nome de app não encontrado gera pergunta sem abrir calculadora', async () => {
+test('an unknown application name asks a question without opening the calculator', async () => {
   const events = [];
   const ai = new AIService({
     fetchImpl: async (url) =>
@@ -149,7 +149,7 @@ test('nome de app não encontrado gera pergunta sem abrir calculadora', async ()
   assert.match(events.find((e) => e.type === 'delta').text, /PowerPoint/);
 });
 test(
-  'Ollama real entende abreviações no contexto e preserva os IDs de PowerPoint e VS Code',
+  'real Ollama understands contextual abbreviations and preserves PowerPoint and VS Code IDs',
   { skip: !process.env.JARVIS_TEST_LOCAL_MODEL, timeout: 240000 },
   async () => {
     const ai = new AIService();

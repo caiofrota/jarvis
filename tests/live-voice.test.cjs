@@ -43,7 +43,7 @@ function harness() {
   );
   return { api: scope.exports, feed: (samples) => node.port.onmessage({ data: samples }) };
 }
-test('transcrição envia trecho enquanto gravação continua e preserva o texto ao parar', async () => {
+test('transcription sends a segment while recording continues and preserves text on stop', async () => {
   const h = harness();
   let calls = 0,
     text = '';
@@ -70,7 +70,7 @@ test('transcrição envia trecho enquanto gravação continua e preserva o texto
   assert.equal(text, 'Abra a calculadora');
   assert.equal(await capture.stop(), 'Abra a calculadora');
 });
-test('silêncio não envia trechos ao reconhecedor', async () => {
+test('silence does not send segments to the recognizer', async () => {
   const h = harness();
   let calls = 0;
   const capture = await h.api.capture({
@@ -83,7 +83,7 @@ test('silêncio não envia trechos ao reconhecedor', async () => {
   await capture.stop();
   assert.equal(calls, 0);
 });
-test('respostas longas são divididas para começar a falar antes do áudio completo', () => {
+test('long responses are split so speech starts before all audio is ready', () => {
   const { api } = harness();
   const parts = api.chunks('Olá. ' + 'Uma resposta com várias palavras. '.repeat(20));
   assert.equal(parts[0], 'Olá.');
@@ -91,7 +91,7 @@ test('respostas longas são divididas para começar a falar antes do áudio comp
   assert.ok(parts.every((s) => s.length <= 180));
 });
 
-test('pausa envia uma fala completa, preserva parciais e volta a receber outra fala', async () => {
+test('a pause sends a complete utterance, preserves partials, and receives another utterance', async () => {
   const h = harness(),
     utterances = [],
     partials = [];
@@ -123,7 +123,7 @@ test('pausa envia uma fala completa, preserva parciais e volta a receber outra f
   assert.equal(starts, 2);
   session.cancel();
 });
-test('nuvem envia áudio somente ao terminar cada fala, com consentimento explícito', async () => {
+test('cloud mode sends audio only after each utterance ends with explicit consent', async () => {
   const h = harness();
   let calls = 0;
   const session = await h.api.capture({
@@ -151,7 +151,7 @@ test('nuvem envia áudio somente ao terminar cada fala, com consentimento explí
   session.cancel();
 });
 
-test('captura preserva 240 ms antes da fala e a margem de silêncio no fim', async () => {
+test('capture preserves 240 ms before speech and the silence margin at the end', async () => {
   const h = harness(),
     recordings = [];
   const session = await h.api.capture({
@@ -178,7 +178,7 @@ test('captura preserva 240 ms antes da fala e a margem de silêncio no fim', asy
   assert.equal(pcm.readInt16LE(pcm.length - 2), 0);
   session.cancel();
 });
-test('pausar captura descarta transcrição em voo e não processa o áudio do Jarvis', async () => {
+test('pausing capture discards in-flight transcription and does not process Jarvis audio', async () => {
   const h = harness(),
     texts = [];
   let finish,

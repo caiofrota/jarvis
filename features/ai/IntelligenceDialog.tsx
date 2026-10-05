@@ -3,7 +3,8 @@ import type { Provider } from '../../shared/types';
 import { useState } from 'react';
 export default function IntelligenceDialog({ ai, busy }: { ai: IntelligenceController; busy: boolean }) {
   const [key, setKey] = useState(''),
-    [message, setMessage] = useState('');
+    [message, setMessage] = useState(''),
+    [showKey, setShowKey] = useState(false);
   async function connect(value: string) {
     try {
       await ai.connect(value);
@@ -40,7 +41,7 @@ export default function IntelligenceDialog({ ai, busy }: { ai: IntelligenceContr
           <div className="key-row">
             <input
               id="api-key"
-              type="password"
+              type={showKey ? 'text' : 'password'}
               autoComplete="off"
               value={key}
               onChange={(e) => setKey(e.target.value)}
@@ -48,6 +49,15 @@ export default function IntelligenceDialog({ ai, busy }: { ai: IntelligenceContr
             />
             <button className="button" onClick={() => connect(key)}>
               Conectar
+            </button>
+            <button
+              className="button"
+              type="button"
+              aria-label={showKey ? 'Ocultar chave da API' : 'Mostrar chave da API'}
+              aria-pressed={showKey}
+              onClick={() => setShowKey((visible) => !visible)}
+            >
+              {showKey ? 'Ocultar' : 'Mostrar'}
             </button>
           </div>
           <p>

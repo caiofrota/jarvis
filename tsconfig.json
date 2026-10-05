@@ -1,12 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "es2023",
-      "dom.asynciterable"
-    ],
+    "lib": ["dom", "dom.iterable", "es2023", "dom.asynciterable"],
     "strict": true,
     "noEmit": true,
     "allowJs": false,
@@ -23,12 +18,7 @@
         "name": "next"
       }
     ],
-    "types": [
-      "node",
-      "react",
-      "react-dom",
-      "dom-speech-recognition"
-    ]
+    "types": ["node", "react", "react-dom", "dom-speech-recognition"]
   },
   "include": [
     "next-env.d.ts",
@@ -43,10 +33,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "release",
-    "features/voice/pcm-worklet.ts"
-  ]
+  "exclude": ["node_modules", "dist", "release", "features/voice/pcm-worklet.ts"]
 }

@@ -45,7 +45,7 @@ async function turn(ai, state, history, text, extra = {}) {
   return { events, ...result };
 }
 
-test('duas lembranças consecutivas geram duas gravações e recibos distintos após releitura', async () => {
+test('two consecutive reminders create two records and distinct receipts after rereading', async () => {
   const state = workspace(),
     history = [],
     requests = [];
@@ -77,7 +77,7 @@ test('duas lembranças consecutivas geram duas gravações e recibos distintos a
   assert.equal(requests[1].tools, undefined);
 });
 
-test('falha na segunda gravação não gera confirmação nem perde a primeira tarefa', () => {
+test('failure on the second record creates no confirmation and preserves the first task', () => {
   const state = workspace();
   saveTask(state.update, 'Ir ao supermercado');
   state.storage.setItem = () => {
@@ -91,7 +91,7 @@ test('falha na segunda gravação não gera confirmação nem perde a primeira t
   assert.throws(() => saveTask(() => null, 'Escovar os dentes'), /Não consegui salvar/);
 });
 
-test('gravação consulta valor persistido mais recente e evita duplicatas', () => {
+test('recording reads the latest persisted value and avoids duplicates', () => {
   const state = workspace();
   const first = saveTask(state.update, 'Ir ao supermercado');
   const otherWindow = {
@@ -107,7 +107,7 @@ test('gravação consulta valor persistido mais recente e evita duplicatas', () 
   assert.equal(state.read().notes, 'Manter');
 });
 
-test('uma promessa sem ação é rejeitada e reparada sem expor nem falar a promessa', async () => {
+test('an actionless promise is rejected and repaired without exposing or speaking the promise', async () => {
   let calls = 0;
   const ai = new AIService({
     fetchImpl: async (url) =>
@@ -128,7 +128,7 @@ test('uma promessa sem ação é rejeitada e reparada sem expor nem falar a prom
   assert.equal(state.read().tasks.length, 1);
 });
 
-test('resposta inválida repetida e JSON incompleto nunca criam ação ou confirmação', async () => {
+test('repeated invalid responses and incomplete JSON never create an action or confirmation', async () => {
   for (const content of [
     'Adicionei “Escovar os dentes” à sua lista.',
     '{"decision":{"type":"add_task","title":"Escovar',
@@ -154,7 +154,7 @@ test('resposta inválida repetida e JSON incompleto nunca criam ação ou confir
   }
 });
 
-test('decisão conversa não altera lista e relato passado não passa por heurística local', async () => {
+test('a conversation decision does not change the list and past claims bypass no local heuristic', async () => {
   const state = workspace();
   const ai = new AIService({
     fetchImpl: async (url) =>
@@ -175,7 +175,7 @@ test('decisão conversa não altera lista e relato passado não passa por heurí
   assert.equal(state.read().tasks.length, 0);
 });
 
-test('validação rejeita campos extras e operações arbitrárias sem interpretar texto como ação', () => {
+test('validation rejects extra fields and arbitrary operations without interpreting text as an action', () => {
   for (const decision of [
     { type: 'add_task', title: 'Teste', execute: true },
     { type: 'exec', command: 'shutdown' },
@@ -184,7 +184,7 @@ test('validação rejeita campos extras e operações arbitrárias sem interpret
 });
 
 test(
-  'Ollama real: duas frases do usuário persistem e relatos passados não criam tarefas',
+  'real Ollama: two user phrases persist and past reports do not create tasks',
   { skip: !process.env.JARVIS_TEST_LOCAL_MODEL, timeout: 180000 },
   async () => {
     const { ActionService } = require('../dist/lib/actions.js');

@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { AIService } = require('../dist/lib/ai.js');
 const req = { provider: 'local', model: 'small', profile: 'eco' };
 const json = (x) => new Response(JSON.stringify(x));
-test('preparo repetido reutiliza carga recente, mas renova após intervalo', async () => {
+test('repeated preparation reuses recent loading but renews after the interval', async () => {
   const calls = [];
   const ai = new AIService({
     fetchImpl: async (url, o) => {
@@ -22,7 +22,7 @@ test('preparo repetido reutiliza carga recente, mas renova após intervalo', asy
   await ai.warm({ ...req, model: 'other' });
   assert.equal(calls.at(-1).body.model, 'other');
 });
-test('preparos simultâneos de modelos diferentes não recebem falso pronto', async () => {
+test('simultaneous preparation of different models does not report false readiness', async () => {
   let release;
   const loaded = [];
   const ai = new AIService({
@@ -42,7 +42,7 @@ test('preparos simultâneos de modelos diferentes não recebem falso pronto', as
   await Promise.all([one, two]);
   assert.deepEqual(loaded, ['small', 'other']);
 });
-test('falha de preparo permite nova tentativa em vez de marcar pronto', async () => {
+test('preparation failure allows a retry instead of marking the model ready', async () => {
   let failing = true;
   const ai = new AIService({
     fetchImpl: async () => {

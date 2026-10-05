@@ -6,7 +6,7 @@ const { SpeechPipeline } = require('../dist/features/voice/speech-pipeline.js');
 const tick = () => new Promise((r) => setImmediate(r));
 const req = { provider: 'local', model: 'test', messages: [{ role: 'user', content: 'Explique as cores.' }] };
 const line = (value) => new TextEncoder().encode(JSON.stringify(value) + '\n');
-test('resposta validada chega antes do fim do stream, sem JSON nem duplicação', async () => {
+test('validated response arrives before the stream ends without JSON or duplication', async () => {
   let controller;
   const events = [];
   const ai = new AIService({
@@ -50,7 +50,7 @@ test('resposta validada chega antes do fim do stream, sem JSON nem duplicação'
   );
   assert.equal(typeof events.at(-1).firstVisibleMs, 'number');
 });
-test('parser incremental preserva escapes, acentos e não publica ação ou confirmação inventada', () => {
+test('incremental parser preserves escapes and accents without publishing invented actions or confirmations', () => {
   const out = [];
   const stream = new ReplyStream((t) => out.push(t));
   const raw = JSON.stringify({ decision: { type: 'reply', text: 'Uma palavra: "ação". Outra explicação.' } });
@@ -68,7 +68,7 @@ test('parser incremental preserva escapes, acentos e não publica ação ou conf
     assert.deepEqual(values, []);
   }
 });
-test('ação parcial ou stream truncado nunca executa ferramenta', async () => {
+test('partial actions or truncated streams never execute a tool', async () => {
   const events = [];
   const ai = new AIService({
     fetchImpl: async (url) =>
@@ -85,7 +85,7 @@ test('ação parcial ou stream truncado nunca executa ferramenta', async () => {
     false,
   );
 });
-test('voz prepara primeira frase antes da conclusão e mantém margem no último bloco', async () => {
+test('voice prepares the first sentence before completion and keeps the final block margin', async () => {
   const generated = [],
     edges = [];
   let done;

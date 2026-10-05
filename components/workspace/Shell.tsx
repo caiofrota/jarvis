@@ -1,5 +1,6 @@
 import { openWorkspaceWindow } from '../../features/workspace/open-window';
 import type { OpenDialog } from '../../shared/types';
+import Link from 'next/link';
 export default function Shell({
   children,
   primary,
@@ -20,9 +21,9 @@ export default function Shell({
   return (
     <div className="shell">
       <aside className="rail" aria-label="Navegação">
-        <a className="brand" href="./index.html" aria-label="Jarvis início">
+        <Link className="brand" href="./index.html" aria-label="Jarvis início" prefetch={false}>
           J<span>·</span>
-        </a>
+        </Link>
         <button
           className={'rail-button ' + (!focused ? 'selected' : '')}
           onClick={() => setFocused(false)}
