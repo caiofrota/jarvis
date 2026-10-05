@@ -25,6 +25,31 @@ const local = (decision) =>
   new Response(JSON.stringify({ message: { content: JSON.stringify({ decision }) }, done: true }) + '\n');
 const request = { provider: 'local', model: 'fixture', profile: 'balanced' };
 
+test('colloquial spoken commands use validated decisions rather than plain conversation', async () => {
+  for (const phrase of [
+    'Jarvis, adiciona comprar pão',
+    'Anota comprar café',
+    'Bota comprar leite',
+    'Inclui pagar a conta',
+  ]) {
+    let payload;
+    const ai = new AIService({
+      fetchImpl: async (url, options) => {
+        if (url.endsWith('/show')) return new Response('{}');
+        payload = JSON.parse(options.body);
+        return local({ type: 'add_task', title: 'Comprar pão' });
+      },
+    });
+    const events = [];
+    await ai.chat({ ...request, voice: true, messages: [{ role: 'user', content: phrase }] }, (event) =>
+      events.push(event),
+    );
+    assert.ok(payload.format, phrase);
+    assert.equal(events.filter((event) => event.type === 'task').length, 1);
+    assert.equal(events.at(-1).type, 'done');
+  }
+});
+
 async function turn(ai, state, history, text, extra = {}) {
   history.push({ role: 'user', text, status: 'done' });
   const events = [];

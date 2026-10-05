@@ -48,6 +48,7 @@ test('interruption cancels the response before the next send and ending blocks l
     onError: assert.fail,
   });
   turns.speechStart();
+  assert.equal(stopped, 0, 'audio energy alone must not cancel a pending reply');
   turns.partial('Mudei de ideia');
   const pending = turns.utterance('Mudei de ideia');
   assert.equal(stopped, 1);
@@ -58,6 +59,24 @@ test('interruption cancels the response before the next send and ending blocks l
   await pending;
   await turns.utterance('texto tardio');
   assert.equal(sent, 0);
+});
+test('microphone noise during generation does not cancel the pending action', async () => {
+  let stops = 0;
+  const turns = new ConversationTurns({
+    busy: () => true,
+    speaking: () => false,
+    spokenText: () => '',
+    stop: async () => {
+      stops++;
+    },
+    send: async () => {},
+    onError: assert.fail,
+  });
+  turns.speechStart();
+  turns.partial('   ');
+  assert.equal(stops, 0);
+  turns.partial('Jarvis, espere');
+  assert.equal(stops, 1, 'recognized interruption still cancels');
 });
 test('playback echo does not start a new turn or interrupt audio', async () => {
   let stops = 0,

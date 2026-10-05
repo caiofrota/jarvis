@@ -48,7 +48,8 @@ export class ConversationTurns {
     this.interrupt();
   }
   speechStart(): void {
-    if (this.enabled && this.port.busy() && !this.port.speaking() && !this.port.blocked?.()) this.interrupt();
+    // Audio energy is not a confirmed interruption: noise and breath also
+    // trigger capture. Wait for recognized text in partial/utterance.
   }
   private interrupt(): void {
     if (this.interrupting) return;

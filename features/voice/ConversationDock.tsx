@@ -133,9 +133,9 @@ export default function ConversationDock({ voice: v, speech, chat, ai, profile, 
           </button>
         )}
       </div>
-      {(v.error || speech.error) && (
+      {(chat.error || v.error || speech.error) && (
         <p className="feature-error" role="alert">
-          {v.error || speech.error}
+          {[...new Set([chat.error, v.error, speech.error].filter(Boolean))].join(' ')}
         </p>
       )}
       {!v.recording && v.needsLocal && !v.local.ready && (

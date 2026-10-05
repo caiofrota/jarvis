@@ -49,7 +49,9 @@ function isActionRequest(request: ChatRequest) {
     /\b(?:abra|abrir|abre|inicie|iniciar|execute|executar|lance|lancar|rode|rodar|mostre|mostrar|coloca|coloque|poe|ponha)\b/.test(
       value,
     ) ||
-    /\b(?:adicione|adicionar|crie|criar|anote|anotar|registre|registrar)\b/.test(value) ||
+    /\b(?:adiciona|adicione|adicionar|cria|crie|criar|anota|anote|anotar|registra|registre|registrar|bota|bote|botar|inclua|inclui|incluir)\b/.test(
+      value,
+    ) ||
     /\b(?:tarefa|tarefas|lista de tarefas|lembrete|compromisso)\b/.test(value)
   )
     return true;
