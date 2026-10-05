@@ -42,9 +42,26 @@ const api: DesktopAPI = {
   openPanel: (panel) => call('panel', panel),
   openWorkspace: () => call('workspace'),
   chat: (request, callback) => {
-    const listener = (_event: IpcRendererEvent, data: ChatEvent) => callback(data);
+    let complete!: () => void;
+    let fail!: (error: unknown) => void;
+    const delivered = new Promise<void>((resolve, reject) => {
+      complete = resolve;
+      fail = reject;
+    });
+    const listener = (_event: IpcRendererEvent, data: ChatEvent) => {
+      try {
+        callback(data);
+        if (['done', 'error', 'cancelled'].includes(data.type)) complete();
+      } catch (error) {
+        fail(error);
+      }
+    };
     ipcRenderer.on('jarvis:chat-event', listener);
-    return call('chat', request).finally(() => ipcRenderer.removeListener('jarvis:chat-event', listener));
+    // invoke completion and streamed events use separate IPC deliveries.
+    // Keep the listener until both finish so actions and done cannot be lost.
+    return Promise.all([call('chat', request), delivered])
+      .then(([result]) => result)
+      .finally(() => ipcRenderer.removeListener('jarvis:chat-event', listener));
   },
 };
 contextBridge.exposeInMainWorld('jarvisDesktop', api);
