@@ -141,8 +141,11 @@ Ainda não foi medida a experiência de conversa com o seu microfone nesta vers�
 Código e configuração de empacotamento mantidos para Linux.
 Instale Node.js, pnpm, Python 3.11, uv e Ollama para IA local. Execute pnpm install e sh 'Iniciar Jarvis.sh'.
 Para gerar AppImage/deb no Linux: pnpm dist --linux AppImage deb --x64 --publish never.
-O fluxo .github/workflows/ci.yml valida o projeto e gera Windows e Linux em seus sistemas.
-Os instaladores Windows e Linux são verificados pelo CI; testes com microfone
+O fluxo .github/workflows/ci.yml valida o projeto em PRs e na branch principal.
+O fluxo [Build desktop](.github/workflows/build-desktop.yml) gera os instaladores
+Windows/Linux ao enviar uma tag `v*` iniciada por um número (por exemplo, `v0.4.1`).
+Ele valida a revisão da tag antes de empacotar e guarda os binários como artefatos
+por 14 dias. Testes com microfone
 e interface desktop nativa precisam de validação nos sistemas de destino.
 
 ## Organização do código
@@ -181,8 +184,9 @@ Dados do navegador e do aplicativo desktop continuam separados.
 Use `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`
 e `pnpm python:check` (Python 3.11 e uv). A instalação Node no CI usa
 `pnpm install --frozen-lockfile`; Python usa `uv sync --project voice --locked`.
-O workflow [CI](.github/workflows/ci.yml) agrega as validações e o empacotamento
-Windows/Linux no check obrigatório `ci`.
+O workflow [CI](.github/workflows/ci.yml) agrega as validações no check obrigatório
+`ci`. A compilação inclui web, servidor, Electron e worklet; os instaladores
+ficam no workflow separado de tags. Não há publicação automática de release.
 
 Na revisão local de 05/10/2026, build, tipos, lint e formatação passaram, junto
 com 79 testes; 2 testes opcionais com Ollama foram ignorados. As dependências

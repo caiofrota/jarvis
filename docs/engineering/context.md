@@ -25,6 +25,12 @@
 - `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, and `pnpm build` are required validation commands.
 - `uv sync --project voice --locked` provisions the locked Python voice environment.
 
+## CI and desktop artifacts
+
+- Pull-request and main-branch CI validate source, tests, browser export, Node/Electron compilation, and Python; they do not package installers.
+- Version tags matching `v[0-9]*` trigger `.github/workflows/build-desktop.yml`, which reuses CI for the tagged revision before building Windows/Linux installers.
+- Installer artifacts are retained for 14 days. The workflow does not publish a GitHub release.
+
 ## Environment ownership
 
 Provider-specific security controls and their temporary limitation are recorded in

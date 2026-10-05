@@ -21,6 +21,12 @@ for (const file of files) {
   }
   for (const [index, line] of source.split('\n').entries()) {
     const match = line.match(/\buses:\s*([^\s#]+)/);
+    if (match?.[1].startsWith('./')) {
+      if (!fs.existsSync(path.resolve(match[1]))) {
+        problems.push(`${file}:${index + 1}: local workflow or action does not exist: ${match[1]}`);
+      }
+      continue;
+    }
     const reference = match?.[1].split('@').at(-1);
     if (match && !/^[\da-f]{40}$/i.test(reference || '')) {
       problems.push(
