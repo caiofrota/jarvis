@@ -25,16 +25,6 @@ export default function ChatPanel({
 }) {
   return (
     <div className={'assistant-body ' + (chat.messages.length ? 'has-messages' : '')}>
-      <div className="ai-toolbar">
-        <button
-          className="icon-button"
-          aria-label="Nova conversa"
-          disabled={chat.busy}
-          onClick={() => open('clear')}
-        >
-          ↺
-        </button>
-      </div>
       <AssistantTabs value={tab} onChange={setTab} />
       <div
         id="assistant-panel-voice"

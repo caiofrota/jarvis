@@ -33,6 +33,7 @@ export function useChat({
   const [history, setHistory] = useState<{ key: string; messages: Message[] }>({ key: '', messages: [] });
   const [busy, setBusy] = useState(false),
     [status, setStatus] = useState('');
+  const [error, setError] = useState('');
   const active = useRef(false),
     epoch = useRef(0),
     finished = useRef(Promise.resolve());
@@ -92,6 +93,7 @@ export function useChat({
       await stop();
       await finished.current;
     }
+    setError('');
     const previous = currentMessages.current;
     const user: Message = { role: 'user', text, kind: 'ai', status: 'done' };
     let local: LocalReply;
@@ -102,6 +104,8 @@ export function useChat({
       const message = error instanceof Error ? error.message : String(error);
       publish([...previous, user, { role: 'assistant', text: message, kind: 'local', status: 'error' }]);
       setStatus(message);
+      setError(message);
+      if (spoken) speech.read(message);
       return;
     }
     if (local !== null && local !== undefined) {
@@ -201,13 +205,21 @@ export function useChat({
       response.status = 'error';
       response.text = error instanceof Error ? error.message : String(error);
     } finally {
-      if (response.status === 'streaming') response.status = 'error';
+      if (response.status === 'streaming') {
+        response.status = 'error';
+        response.text ||= 'A conexão terminou antes de concluir a resposta. Tente novamente.';
+      }
       response.text = withoutEmoji(response.text);
+      if (response.status === 'error') {
+        setError(response.text);
+        setStatus(response.text);
+      }
       paint();
       active.current = false;
       setBusy(false);
       if (spoken && turn === epoch.current) {
         if (response.status === 'done') speech.finish(response.text);
+        else if (response.status === 'error') speech.read(response.text);
         else speech.stop();
       }
       release();
@@ -217,6 +229,7 @@ export function useChat({
     messages,
     busy,
     status,
+    error,
     send,
     stop,
     clear: () => {

@@ -8,7 +8,6 @@ export default function Shell({
   focused,
   setFocused,
   error,
-  reset,
 }: {
   children: React.ReactNode;
   primary: boolean;
@@ -16,7 +15,6 @@ export default function Shell({
   focused: boolean;
   setFocused: (value: boolean) => void;
   error: string;
-  reset: () => void;
 }) {
   return (
     <div className="shell">
@@ -70,12 +68,7 @@ export default function Shell({
                 Foco
               </button>
             </div>
-            <div className="workspace-tools">
-              {error && <span role="alert">{error}</span>}
-              <button className="icon-button" aria-label="Restaurar disposição" onClick={reset}>
-                ↺
-              </button>
-            </div>
+            <div className="workspace-tools">{error && <span role="alert">{error}</span>}</div>
           </div>
           {children}
         </main>

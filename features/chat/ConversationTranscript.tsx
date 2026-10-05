@@ -22,6 +22,11 @@ export default function ConversationTranscript({
   }, [chat.messages, visible]);
   return (
     <div className="conversation-transcript">
+      <div className="transcript-actions">
+        <button className="button small" disabled={chat.busy} onClick={() => open('clear')}>
+          Nova conversa
+        </button>
+      </div>
       <div className="suggestions">
         <button className="suggestion" onClick={() => chat.send('Minhas tarefas')}>
           O que tenho para fazer? <span>Local ↗</span>

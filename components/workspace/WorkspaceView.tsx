@@ -3,7 +3,6 @@ import type { Preferences, PanelId, DialogId } from '../../shared/types';
 import { useEffect, useRef, useState } from 'react';
 import { useWorkspacePreferences } from '../../features/workspace/useWorkspacePreferences';
 import type { WorkspaceIdentity } from '../../features/workspace/window-layout';
-import { panelIds } from '../../features/workspace/preferences';
 import { useIntelligence } from '../../features/ai/useIntelligence';
 import { useActions } from '../../features/actions/useActions';
 import { useVoiceInput } from '../../features/voice/useVoiceInput';
@@ -139,10 +138,6 @@ export default function WorkspaceView({ identity }: { identity: WorkspaceIdentit
           setFocused(value);
         }}
         error={error}
-        reset={() => {
-          patch({ order: panelIds, hidden: [], wide: [] });
-          setFocused(false);
-        }}
       >
         <WorkspaceStage
           primary={identity.primary}

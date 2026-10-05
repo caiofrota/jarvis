@@ -61,7 +61,7 @@ flutuando nas laterais. O anel existe apenas na janela principal.
 Nas secundárias, todo o espaço é dedicado aos cards. Em telas estreitas,
 Mostrar cards alterna entre o anel e os cards, sem interromper a conversa.
 Configurações > Painéis escolhe os cards desta janela. Ordem, visibilidade e distribuição de espaço
-são salvas separadamente por janela. Restaurar disposição afeta apenas ela.
+são salvas separadamente por janela.
 Nova janela cria um espaço somente de cards, sem anel; a seta de um card abre uma janela
 iniciada com esse card, onde você pode acrescentar outros.
 Tarefas e notas continuam compartilhadas entre janelas da mesma origem.
