@@ -1,19 +1,21 @@
 export type Decision =
   | { type: 'reply'; text: string }
   | { type: 'add-task'; title: string }
+  | { type: 'update-task'; id: string; title: string }
   | { type: 'open-target'; name: string };
 export function validateTool(call: { name?: unknown; arguments?: unknown }): Decision {
   const raw = call.arguments;
   const args: unknown = typeof raw === 'string' ? JSON.parse(raw) : raw;
   if (!args || typeof args !== 'object' || Array.isArray(args)) throw new Error('Ação inválida.');
   const data = args as Record<string, unknown>;
-  if (Object.keys(data).length !== 1) throw new Error('Argumentos inválidos.');
+  if (Object.keys(data).length !== (call.name === 'update_task' ? 2 : 1))
+    throw new Error('Argumentos inválidos.');
   if (call.name === 'open_computer_target') {
     if (typeof data.target !== 'string' || !data.target.trim() || data.target.length > 150)
       throw new Error('Nome do aplicativo inválido.');
     return { type: 'open-target', name: data.target.trim() };
   }
-  if (call.name === 'add_task') {
+  if (call.name === 'add_task' || call.name === 'update_task') {
     const title =
       typeof data.title === 'string'
         ? data.title
@@ -22,7 +24,13 @@ export function validateTool(call: { name?: unknown; arguments?: unknown }): Dec
             .trim()
         : '';
     if (!title || title.length > 180) throw new Error('O título da tarefa é inválido.');
-    return { type: 'add-task', title: title[0].toLocaleUpperCase('pt-BR') + title.slice(1) };
+    const cleaned = title[0].toLocaleUpperCase('pt-BR') + title.slice(1);
+    if (call.name === 'update_task') {
+      if (typeof data.id !== 'string' || !data.id.trim() || data.id.length > 100)
+        throw new Error('Identificador de tarefa inválido.');
+      return { type: 'update-task', id: data.id, title: cleaned };
+    }
+    return { type: 'add-task', title: cleaned };
   }
   throw new Error('Ação desconhecida.');
 }

@@ -177,6 +177,16 @@ Para preparar web exportada e desktop: pnpm build.
 Não há Claude Code nesta versão. Ollama e OpenAI continuam como provedores.
 Trello e calendário conectado ainda são próximos passos; a agenda é demonstrativa.
 Notas, tarefas e históricos existentes no mesmo navegador/origem são preservados.
+
+### Correção de tarefas na conversa
+
+Se a fala foi transcrita incorretamente, diga o que você quis dizer, por exemplo:
+“Eu falei que eu esqueci de ir ao supermercado.” O Jarvis pode corrigir a tarefa
+existente pelo seu identificador, sem criar uma segunda tarefa. A confirmação
+aparece somente após salvar. Se houver dúvida sobre qual tarefa corrigir, ele
+deve perguntar; tarefas excluídas, alteradas em outra janela ou títulos em conflito
+não são sobrescritos. Isso não muda o reconhecimento de áudio: a interpretação
+da correção ainda depende do modelo de IA selecionado.
 Dados do navegador e do aplicativo desktop continuam separados.
 
 ## Validação atual

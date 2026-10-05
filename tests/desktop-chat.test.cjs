@@ -107,6 +107,11 @@ test('real AI service decisions survive delayed desktop delivery for replies, ta
   for (const [text, decision, expected] of [
     ['Olá', { type: 'reply', text: 'Olá, tudo bem?' }, 'delta'],
     ['Adiciona comprar pão', { type: 'add_task', title: 'Comprar pão' }, 'task'],
+    [
+      'Eu quis dizer supermercado',
+      { type: 'update_task', id: 'task-one', title: 'Ir ao supermercado' },
+      'task-update',
+    ],
     ['Abre a calculadora', { type: 'open_computer_target', target: 'Calculadora' }, 'action'],
   ]) {
     const service = new AIService({
@@ -133,6 +138,7 @@ test('real AI service decisions survive delayed desktop delivery for replies, ta
         profile: 'balanced',
         voice: true,
         messages: [{ role: 'user', content: text }],
+        tasks: [{ id: 'task-one', text: 'Ir aos bem-mercados', done: false }],
         targets: [{ id: 'calculator', label: 'Calculadora', kind: 'app', available: true }],
       },
       (event) => events.push(event),

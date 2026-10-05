@@ -9,7 +9,7 @@ import { useVoiceInput } from '../../features/voice/useVoiceInput';
 import { useSpeech } from '../../features/voice/useSpeech';
 import { useChat } from '../../features/chat/useChat';
 import { localCommand } from '../../features/chat/local-commands';
-import { saveTask } from '../../features/tasks/task-actions';
+import { saveTask, updateTask } from '../../features/tasks/task-actions';
 import Shell from './Shell';
 import WorkspaceStage from './WorkspaceStage';
 import WorkspaceDialogs from './WorkspaceDialogs';
@@ -41,6 +41,7 @@ export default function WorkspaceView({ identity }: { identity: WorkspaceIdentit
     speech,
     tasks: prefs.tasks,
     addTask,
+    updateTask: (id, title, previousTitle) => updateTask(setPrefs, id, title, previousTitle),
     onMissingModel: () => open('intelligence'),
     command: (text) =>
       localCommand(text, {
