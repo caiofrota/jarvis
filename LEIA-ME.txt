@@ -131,7 +131,7 @@ LINUX
 Código e configuração de empacotamento mantidos para Linux.
 Instale Node.js, pnpm, Python 3.11, uv e Ollama para IA local. Execute pnpm install e sh 'Iniciar Jarvis.sh'.
 Para gerar AppImage/deb no Linux: pnpm dist --linux AppImage deb --x64 --publish never.
-O fluxo .github/workflows/build-desktop.yml gera Windows e Linux em seus sistemas.
+O fluxo .github/workflows/ci.yml valida o projeto e gera Windows e Linux em seus sistemas.
 Não foi executado um teste real de Linux nesta máquina Windows.
 
 ORGANIZAÇÃO DO CÓDIGO
