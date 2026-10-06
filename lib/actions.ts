@@ -13,13 +13,141 @@ export interface ExecutableTarget extends Target {
   args: string[];
   target: string;
 }
+
+function applicationNameKey(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pt-BR')
+    .replace(/\s+\(\d+\)$/u, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+function isBrowserHostedAppId(appId: string) {
+  return /(?:^|[._-])_?crx_/iu.test(appId);
+}
+
+function preferApplication(existing: ExecutableTarget, candidate: ExecutableTarget) {
+  if (existing.available !== candidate.available) return candidate.available ? candidate : existing;
+  const existingHasWindowsSuffix = /\s+\(\d+\)$/u.test(existing.label);
+  const candidateHasWindowsSuffix = /\s+\(\d+\)$/u.test(candidate.label);
+  return existingHasWindowsSuffix && !candidateHasWindowsSuffix ? candidate : existing;
+}
+
+export function deduplicateApplicationTargets(targets: ExecutableTarget[]) {
+  const groups = new Map<string, ExecutableTarget[]>();
+  const order: (string | ExecutableTarget)[] = [];
+  for (const target of targets) {
+    if (target.kind !== 'app') {
+      order.push(target);
+      continue;
+    }
+    const key = applicationNameKey(target.label);
+    if (!key) {
+      order.push(target);
+      continue;
+    }
+    if (!groups.has(key)) order.push(key);
+    groups.set(key, [...(groups.get(key) || []), target]);
+  }
+  return order.flatMap((entry) => {
+    if (typeof entry !== 'string') return [entry];
+    const group = groups.get(entry) || [];
+    const packaged = group.filter((target) => target.target.includes('!'));
+    if (packaged.length) {
+      // A packaged Windows identity is the authoritative launcher for the
+      // same display name, including the built-in executable alias.
+      return packaged;
+    }
+    const builtIns = group.filter((target) => !target.id.startsWith('installed-app-'));
+    if (builtIns.length) {
+      return [builtIns.reduce((chosen, candidate) => preferApplication(chosen, candidate))];
+    }
+    // Two legacy identities remain ambiguous and must be shown to the user.
+    return group;
+  });
+}
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import * as crypto from 'node:crypto';
 import { spawn, execFileSync } from 'node:child_process';
 import { runtimeInfo } from './runtime';
-function launch(executable: string, args: string[]): Promise<void> {
+function activateExisting(executable: string, args: string[]) {
+  if (process.platform !== 'win32') return false;
+  const argument = args[0] || '';
+  const root = process.env.SystemRoot || 'C:\\Windows';
+  const explorer = path.join(root, 'explorer.exe');
+  if (
+    executable.toLowerCase() === explorer.toLowerCase() &&
+    !/^shell:AppsFolder\\/i.test(argument) &&
+    !/\.lnk$/i.test(argument)
+  )
+    return false;
+  try {
+    const powershell = path.join(root, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+    const script = `
+Add-Type @'
+using System;
+using System.Runtime.InteropServices;
+public static class JarvisWindowActivation {
+  [DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr handle, int command);
+  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr handle);
+}
+'@
+$command = $env:JARVIS_ACTIVATE_COMMAND
+$argument = $env:JARVIS_ACTIVATE_ARGUMENT
+$paths = @()
+if ($command) { $paths += $command }
+if ($argument -match '^shell:AppsFolder\\([^!]+)!') {
+  $family = $Matches[1]
+  $package = Get-AppxPackage -PackageTypeFilter Main -ErrorAction SilentlyContinue | Where-Object PackageFamilyName -eq $family | Select-Object -First 1
+  if ($package.InstallLocation) { $paths += $package.InstallLocation }
+}
+if ($argument -like '*.lnk') {
+  try {
+    $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut($argument)
+    if ($shortcut.TargetPath) { $paths += $shortcut.TargetPath }
+  } catch {}
+}
+Get-Process -ErrorAction SilentlyContinue | ForEach-Object {
+  $process = $_
+  $handle = $process.MainWindowHandle
+  if ($handle -eq 0) { return }
+  try { $processPath = $process.Path } catch { return }
+  if (!$processPath) { return }
+  foreach ($pathCandidate in $paths) {
+    if (!$pathCandidate) { continue }
+    $prefix = $pathCandidate.TrimEnd('\\') + '\\'
+    if ($processPath -ieq $pathCandidate -or $processPath.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)) {
+      [JarvisWindowActivation]::ShowWindowAsync($handle, 9) > $null
+      [JarvisWindowActivation]::SetForegroundWindow($handle) > $null
+      exit 0
+    }
+  }
+}
+exit 1
+`;
+    execFileSync(powershell, ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', script], {
+      env: {
+        ...process.env,
+        JARVIS_ACTIVATE_COMMAND: executable,
+        JARVIS_ACTIVATE_ARGUMENT: argument,
+      },
+      encoding: 'utf8',
+      timeout: 1200,
+      windowsHide: true,
+      stdio: 'ignore',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+function launch(executable: string, args: string[], newInstance = false): Promise<void> {
+  if (!newInstance && activateExisting(executable, args)) return Promise.resolve();
   return new Promise<void>((resolve, reject) => {
     const child = spawn(executable, args, {
       shell: false,
@@ -58,7 +186,7 @@ interface CatalogOptions {
 export function windowsRegisteredTargets(value: unknown, opener: string): ExecutableTarget[] {
   const rows = Array.isArray(value) ? value : value ? [value] : [];
   const seen = new Set<string>();
-  return rows.slice(0, 600).flatMap((row) => {
+  const candidates = rows.slice(0, 600).flatMap((row) => {
     if (!row || typeof row !== 'object') return [];
     const { Name: label, AppID: appId } = row;
     if (
@@ -69,6 +197,7 @@ export function windowsRegisteredTargets(value: unknown, opener: string): Execut
       !appId ||
       appId.length > 1000 ||
       /[\p{Cc}"]/u.test(appId) ||
+      isBrowserHostedAppId(appId) ||
       seen.has(appId.toLowerCase())
     )
       return [];
@@ -78,13 +207,7 @@ export function windowsRegisteredTargets(value: unknown, opener: string): Execut
         id:
           'installed-app-' +
           crypto.createHash('sha256').update(appId.toLowerCase()).digest('hex').slice(0, 16),
-        label:
-          label.trim() +
-          (rows.filter((candidate) => candidate?.Name === label).length > 1
-            ? appId.includes('!')
-              ? ' (Microsoft Store)'
-              : ' (desktop)'
-            : ''),
+        label: label.trim(),
         kind: 'app' as const,
         target: appId,
         command: opener,
@@ -93,6 +216,7 @@ export function windowsRegisteredTargets(value: unknown, opener: string): Execut
       },
     ];
   });
+  return deduplicateApplicationTargets(candidates);
 }
 function createCatalog({
   platform = process.platform,
@@ -181,11 +305,7 @@ function createCatalog({
       env.APPDATA && path.join(env.APPDATA, 'Microsoft', 'Windows', 'Start Menu', 'Programs'),
     ].filter((value): value is string => typeof value === 'string' && !!value);
     const reserved = new Set(['calculadora', 'bloco de notas']);
-    const seen = new Set(
-      installedApps.map((item) =>
-        item.label.toLocaleLowerCase('pt-BR').replace(/ \((?:Microsoft Store|desktop)\)$/i, ''),
-      ),
-    );
+    const seen = new Set(installedApps.map((item) => applicationNameKey(item.label)));
     const visit = (directory: string, depth = 0) => {
       if (depth > 5 || installedApps.length >= 600) return;
       let entries;
@@ -199,14 +319,13 @@ function createCatalog({
         if (entry.isDirectory()) visit(file, depth + 1);
         else if (entry.isFile() && path.extname(entry.name).toLowerCase() === '.lnk') {
           const label = path.basename(entry.name, path.extname(entry.name)).trim(),
-            normalized = label
-              .normalize('NFD')
-              .replace(/[\u0300-\u036f]/g, '')
-              .toLocaleLowerCase('pt-BR');
+            normalized = applicationNameKey(label),
+            parent = path.basename(path.dirname(file));
           if (
             !label ||
             reserved.has(normalized) ||
             seen.has(normalized) ||
+            /\s+Apps$/iu.test(parent) ||
             /^(?:add a new|help for|ajuda do|administrative tools|uninstall)\b/i.test(label)
           )
             continue;
@@ -247,8 +366,7 @@ function createCatalog({
     } catch {}
   }
   return [
-    ...apps,
-    ...installedApps,
+    ...deduplicateApplicationTargets([...apps, ...installedApps]),
     ...[
       ['documents', 'Documentos', folders.documents || userDirs.documents || path.join(home, 'Documents')],
       ['downloads', 'Downloads', folders.downloads || userDirs.downloads || path.join(home, 'Downloads')],
@@ -281,7 +399,15 @@ class ActionService {
   items: ExecutableTarget[];
   launcher: typeof launch;
   now: () => number;
-  pending = new Map<string, { item: ExecutableTarget; owner: Owner; expiresAt: number }>();
+  pending = new Map<
+    string,
+    {
+      item: ExecutableTarget;
+      owner: Owner;
+      expiresAt: number;
+      newInstance: boolean;
+    }
+  >();
   history: ActionRecord[] = [];
   constructor({
     catalog = createCatalog(),
@@ -313,7 +439,8 @@ class ActionService {
       history: this.history.slice(-20).reverse(),
     };
   }
-  prepare(id: string, owner: Owner): PreparedAction {
+  prepare(id: string, owner: Owner, newInstance = false): PreparedAction {
+    if (typeof newInstance !== 'boolean') throw new Error('Opção de nova instância inválida.');
     const item = this.items.find((i) => i.id === id);
     if (!item || !item.available) throw new Error('Esse destino não está disponível neste computador.');
     for (const [token, p] of this.pending)
@@ -322,7 +449,12 @@ class ActionService {
       throw new Error('Há muitas confirmações pendentes. Tente novamente em dois minutos.');
     const token = crypto.randomBytes(24).toString('hex'),
       expiresAt = this.now() + 120000;
-    this.pending.set(token, { item: { ...item, args: [...item.args] }, owner, expiresAt });
+    this.pending.set(token, {
+      item: { ...item, args: [...item.args] },
+      owner,
+      expiresAt,
+      newInstance,
+    });
     return { token, expiresAt, id: item.id, label: item.label, kind: item.kind, target: item.target };
   }
   cancel(owner: Owner) {
@@ -347,7 +479,8 @@ class ActionService {
     this.history = this.history.slice(-30);
     try {
       if (!item.command) throw new Error('Aplicativo indisponível.');
-      await this.launcher(item.command, item.args);
+      if (pending.newInstance) await this.launcher(item.command, item.args, true);
+      else await this.launcher(item.command, item.args);
       record.status = 'sent';
       return { status: 'sent', message: 'Pedido de abertura enviado ao sistema.', label: item.label };
     } catch (errorCause) {

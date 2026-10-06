@@ -15,6 +15,7 @@ import {
   DECISION_INSTRUCTIONS,
   FAST_DECISION_INSTRUCTIONS,
   REPLY_INSTRUCTIONS,
+  OPEN_TARGET_INSTRUCTIONS,
   contextForDecision,
   contextForPersonalProfile,
   isActionRequest,
@@ -293,6 +294,7 @@ class AIService {
           contextForDecision(request, spoken || profile === 'eco')
         : contextForDecision(request, spoken || profile === 'eco')) +
       contextForPersonalProfile(request.personalProfile) +
+      (structured ? '\n' + OPEN_TARGET_INSTRUCTIONS : '') +
       (spoken
         ? '\nConversa falada: em reply use até duas frases curtas. O último pedido veio de reconhecimento de voz, não de digitação. Palavras estranhas podem ser erros de transcrição. Use a lista atual e o contexto para compreender, mas não invente nomes nem execute ações se houver ambiguidade: peça esclarecimento. Uma menção a um aplicativo não é um pedido para abri-lo. Não diga que houve erro de digitação.'
         : '');
@@ -438,7 +440,7 @@ class AIService {
         onEvent({ type: 'task-update', id: task.id, title: decision.title, previousTitle: task.text });
       } else if (decision.type === 'open-target') {
         const target = resolveTarget(decision.name, request.targets || []);
-        if (target.type === 'action') onEvent(target);
+        if (target.type === 'action') onEvent({ ...target, newInstance: decision.newInstance });
         else onEvent({ type: 'delta', text: target.text });
       } else {
         const remaining = decision.text.slice(reply.text.length);

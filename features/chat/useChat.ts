@@ -153,7 +153,8 @@ export function useChat({
     });
     const response: Message = { role: 'assistant', text: '', kind: 'ai', status: 'streaming' };
     const next = [...previous, user];
-    let action: { id: string; label: string } | undefined, taskTitle: string | undefined;
+    let action: { id: string; label: string; newInstance?: boolean } | undefined,
+      taskTitle: string | undefined;
     let taskUpdate: { id: string; title: string; previousTitle: string } | undefined;
     let taskCheck: string | undefined, taskComplete: { id: string; title: string } | undefined;
     const paint = () => publish([...next, { ...response }]);
@@ -181,7 +182,7 @@ export function useChat({
             response.text = event.text;
             paint();
           }
-          if (event.type === 'action') action = { id: event.id, label: event.label };
+          if (event.type === 'action') action = event;
           if (event.type === 'task') taskTitle = event.title;
           if (event.type === 'task-update') taskUpdate = event;
           if (event.type === 'task-check') taskCheck = event.title;
@@ -211,7 +212,7 @@ export function useChat({
         if ([action, taskTitle, taskUpdate, taskCheck, taskComplete].filter(Boolean).length > 1)
           throw new Error('A resposta trouxe ações incompatíveis. Nada foi executado.');
         if (action) {
-          response.text = await actions.execute(action.id);
+          response.text = await actions.execute(action.id, action.newInstance === true);
           response.receipt = { type: 'open_computer', ...action, status: 'sent' };
         }
         if (taskTitle) {

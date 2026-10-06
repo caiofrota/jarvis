@@ -1,6 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { resolveTarget } = require('../dist/shared/target-resolver.js');
+const { validateTool } = require('../dist/lib/computer-tools.js');
 const { AIService } = require('../dist/lib/ai.js');
 const { ActionService } = require('../dist/lib/actions.js');
 
@@ -67,6 +68,22 @@ test('identified name resolves to the correct application without losing ++ or i
   assert.equal(resolveTarget('Word', [{ ...targets[2], label: 'Microsoft Word' }]).id, 'word-installed');
   for (const name of ['ppt desconhecido', 'Power', 'cmd.exe', 'Calculadora && cmd.exe', 'Meu app'])
     assert.equal(resolveTarget(name, targets).type, 'reply');
+});
+test('opening reuses an existing app by default and accepts an explicit new-instance request', () => {
+  assert.deepEqual(validateTool({ name: 'open_computer_target', arguments: { target: 'Spotify' } }), {
+    type: 'open-target',
+    name: 'Spotify',
+    newInstance: false,
+  });
+  assert.deepEqual(
+    validateTool({ name: 'open_computer_target', arguments: { target: 'Spotify', new_instance: true } }),
+    { type: 'open-target', name: 'Spotify', newInstance: true },
+  );
+  assert.throws(
+    () =>
+      validateTool({ name: 'open_computer_target', arguments: { target: 'Spotify', new_instance: 'yes' } }),
+    /nova instância/,
+  );
 });
 test('missing, unavailable, or ambiguous targets request clarification and have no executable ID', () => {
   for (const list of [
