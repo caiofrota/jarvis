@@ -1,4 +1,12 @@
-import type { Save, Preferences, TaskReceipt, TaskUpdateReceipt } from '../../shared/types';
+import type {
+  Save,
+  Preferences,
+  Task,
+  TaskReceipt,
+  TaskUpdateReceipt,
+  TaskCheckReceipt,
+  TaskCompleteReceipt,
+} from '../../shared/types';
 function normalize(value: string) {
   return value
     .normalize('NFD')
@@ -33,6 +41,57 @@ export function updateTask(
   return {
     receipt: { type: 'update_task', id, title, previousTitle, status: 'updated' },
     text: `Corrigi a tarefa para “${title}”.`,
+  };
+}
+
+export function checkTask(
+  readTasks: () => Task[],
+  title: string,
+): { receipt: TaskCheckReceipt; text: string } {
+  const matches = readTasks().filter((task) => normalize(task.text) === normalize(title));
+  if (matches.length > 1)
+    throw new Error('Há mais de uma tarefa com esse título. Qual delas você quer verificar?');
+  const task = matches[0];
+  return task
+    ? {
+        receipt: { type: 'check_task', title: task.text, id: task.id, done: task.done, status: 'present' },
+        text: `“${task.text}” está na sua lista atual${task.done ? ' e já está concluída' : ' como pendente'}.`,
+      }
+    : {
+        receipt: { type: 'check_task', title, status: 'absent' },
+        text: `Não encontrei “${title}” na sua lista atual.`,
+      };
+}
+
+export function completeTask(
+  updatePrefs: Save<Preferences>,
+  id: string,
+  expectedTitle: string,
+): { receipt: TaskCompleteReceipt; text: string } {
+  let alreadyDone = false;
+  const saved = updatePrefs((current) => {
+    const task = current.tasks.find((item) => item.id === id);
+    if (!task) throw new Error('A tarefa não existe mais. Nada foi concluído.');
+    if (task.text !== expectedTitle)
+      throw new Error('A tarefa mudou desde o pedido. Confira antes de concluir.');
+    alreadyDone = task.done;
+    return {
+      ...current,
+      tasks: current.tasks.map((item) => (item.id === id ? { ...item, done: true } : item)),
+    };
+  });
+  if (!saved?.tasks.some((task) => task.id === id && task.text === expectedTitle && task.done))
+    throw new Error('Não consegui salvar a conclusão. Nenhuma conclusão foi confirmada.');
+  return {
+    receipt: {
+      type: 'complete_task',
+      id,
+      title: expectedTitle,
+      status: alreadyDone ? 'already_done' : 'completed',
+    },
+    text: alreadyDone
+      ? `“${expectedTitle}” já está concluída na sua lista.`
+      : `Marquei “${expectedTitle}” como concluída.`,
   };
 }
 

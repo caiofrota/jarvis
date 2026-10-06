@@ -19,6 +19,7 @@ import {
   contextForPersonalProfile,
   isActionRequest,
   TASK_CORRECTION_INSTRUCTIONS,
+  TASK_STATE_INSTRUCTIONS,
   parseDecision,
 } from './chat-decision';
 import { lines, readDecisionStream } from './decision-stream';
@@ -285,8 +286,12 @@ class AIService {
           : DECISION_INSTRUCTIONS
         : REPLY_INSTRUCTIONS) +
       (structured
-        ? '\n' + TASK_CORRECTION_INSTRUCTIONS + contextForDecision(request, spoken || profile === 'eco')
-        : '') +
+        ? '\n' +
+          TASK_STATE_INSTRUCTIONS +
+          '\n' +
+          TASK_CORRECTION_INSTRUCTIONS +
+          contextForDecision(request, spoken || profile === 'eco')
+        : contextForDecision(request, spoken || profile === 'eco')) +
       contextForPersonalProfile(request.personalProfile) +
       (spoken ? '\nConversa falada: em reply use até duas frases curtas.' : '');
     const maxOutput = spoken ? Math.min(p.maxOutput, 128) : p.maxOutput;
@@ -389,11 +394,11 @@ class AIService {
             if (decision.type !== 'reply') throw new Error('Resposta local não é uma conversa.');
             reply.pushPlain(decision.text, true);
           } else decision = parseDecision(generation.text);
-          if (decision.type === 'update-task') {
+          if (decision.type === 'update-task' || decision.type === 'complete-task') {
             const id = decision.id;
             if (!request.tasks?.some((task) => task.id === id))
               throw new Error(
-                'A tarefa a corrigir não existe na lista fornecida. Pergunte qual tarefa corrigir.',
+                'A tarefa não existe na lista atual. Consulte com check_task ou pergunte; não altere um id do histórico.',
               );
           }
           break;
@@ -407,7 +412,7 @@ class AIService {
             system +
             '\nCorreção obrigatória: ' +
             error.message +
-            ' Reavalie a última mensagem. Para corrigir tarefa existente use update_task com id; somente uma nova pendência usa add_task. Se há ambiguidade, pergunte em reply sem afirmar nenhuma alteração. JSON somente.';
+            ' Reavalie a última mensagem: consulta usa check_task; conclusão usa complete_task; correção usa update_task. Só uma nova pendência usa add_task. Confirmações pertencem ao executor; em dúvida pergunte em reply. JSON somente.';
           onEvent({ type: 'status', message: 'Conferindo a ação antes de responder…' });
         }
       }
@@ -418,6 +423,12 @@ class AIService {
       if (decision.type === 'add-task') {
         onEvent({ type: 'status', message: 'Salvando tarefa…' });
         onEvent({ type: 'task', title: decision.title });
+      } else if (decision.type === 'check-task') {
+        onEvent({ type: 'task-check', title: decision.title });
+      } else if (decision.type === 'complete-task') {
+        const task = request.tasks?.find((task) => task.id === decision.id);
+        if (!task) fail('A tarefa não existe mais. Nenhuma conclusão foi feita.');
+        onEvent({ type: 'task-complete', id: task.id, title: task.text });
       } else if (decision.type === 'update-task') {
         const task = request.tasks?.find((task) => task.id === decision.id);
         if (!task) fail('A tarefa a corrigir não existe. Nenhuma alteração foi feita.');

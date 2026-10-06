@@ -18,7 +18,13 @@ import { VoiceService, MAX_AUDIO_BYTES } from './lib/voice';
 function createServer({
   ai = new AIService(),
   actions = new ActionService(),
-  voice = new VoiceService({ ai }),
+  voice = new VoiceService({
+    ai,
+    vocabulary: () => [
+      'Jarvis',
+      ...actions.items.filter((item) => item.available && item.kind === 'app').map((item) => item.label),
+    ],
+  }),
   fallback = null,
 }: {
   ai?: AIService;

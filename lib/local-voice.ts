@@ -284,6 +284,7 @@ export class LocalVoiceService {
       voice?: string;
       audio?: string;
       live?: boolean;
+      vocabulary?: string[];
     } = { op, engine: this.engine };
     if (op === 'speak') {
       const input = request as SpeechRequest;
@@ -313,6 +314,9 @@ export class LocalVoiceService {
         throw new Error('Áudio inválido ou maior que 4 MB.');
       payload.audio = input.audio;
       payload.live = input.live === true;
+      payload.vocabulary = Array.isArray(input.vocabulary)
+        ? input.vocabulary.filter((word) => typeof word === 'string').slice(0, 100)
+        : [];
     }
     clearTimeout(this.idle);
     const child = this.start();

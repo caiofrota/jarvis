@@ -28,7 +28,8 @@ class VoiceWorkerTests(unittest.TestCase):
 
         module = ModuleType("faster_whisper")
         module.WhisperModel = WhisperModel
-        request = json.dumps({"op": "transcribe", "audio": "AAAA"}) + "\n"
+        vocabulary = ["Assistente Exemplo", "Produto Novo 2030", "Editor Diferente"]
+        request = json.dumps({"op": "transcribe", "audio": "AAAA", "vocabulary": vocabulary}) + "\n"
         output = io.StringIO()
         worker = Path(__file__).resolve().parents[2] / "voice" / "worker.py"
         with (
@@ -46,7 +47,10 @@ class VoiceWorkerTests(unittest.TestCase):
         self.assertTrue(all(result["ok"] for result in results))
         self.assertEqual(len(models), 1)
         for call in calls:
-            self.assertEqual(call["hotwords"], "Jarvis")
+            self.assertEqual(
+                call["hotwords"],
+                ", ".join(vocabulary),
+            )
             self.assertEqual(call["language"], "pt")
             self.assertFalse(call["condition_on_previous_text"])
             self.assertTrue(call["vad_filter"])

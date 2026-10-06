@@ -45,13 +45,26 @@ export interface TaskUpdateReceipt {
   previousTitle: string;
   status: 'updated';
 }
+export interface TaskCheckReceipt {
+  type: 'check_task';
+  title: string;
+  status: 'present' | 'absent';
+  id?: string;
+  done?: boolean;
+}
+export interface TaskCompleteReceipt {
+  type: 'complete_task';
+  id: string;
+  title: string;
+  status: 'completed' | 'already_done';
+}
 export interface OpenReceipt {
   type: 'open_computer';
   id: string;
   label: string;
   status: 'sent';
 }
-export type Receipt = TaskReceipt | TaskUpdateReceipt | OpenReceipt;
+export type Receipt = TaskReceipt | TaskUpdateReceipt | TaskCheckReceipt | TaskCompleteReceipt | OpenReceipt;
 export interface Message {
   role: 'user' | 'assistant';
   text: string;
@@ -169,6 +182,8 @@ export type ChatEvent =
   | { type: 'status' | 'error' | 'cancelled'; message: string }
   | { type: 'task'; title: string }
   | { type: 'task-update'; id: string; title: string; previousTitle: string }
+  | { type: 'task-check'; title: string }
+  | { type: 'task-complete'; id: string; title: string }
   | { type: 'action'; id: string; label: string }
   | ({ type: 'done' } & ChatStats);
 export type InputMode = 'browser' | 'local' | 'cloud';
@@ -193,6 +208,7 @@ export interface TranscribeRequest {
   mime: string;
   live?: boolean;
   consent?: boolean;
+  vocabulary?: string[];
 }
 export interface AudioResult {
   audio: string;

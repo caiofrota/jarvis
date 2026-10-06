@@ -107,6 +107,8 @@ test('real AI service decisions survive delayed desktop delivery for replies, ta
   for (const [text, decision, expected] of [
     ['Olá', { type: 'reply', text: 'Olá, tudo bem?' }, 'delta'],
     ['Adiciona comprar pão', { type: 'add_task', title: 'Comprar pão' }, 'task'],
+    ['Verifique a tarefa do supermercado', { type: 'check_task', title: 'Ir ao supermercado' }, 'task-check'],
+    ['Eu já fui ao supermercado', { type: 'complete_task', id: 'task-one' }, 'task-complete'],
     [
       'Eu quis dizer supermercado',
       { type: 'update_task', id: 'task-one', title: 'Ir ao supermercado' },

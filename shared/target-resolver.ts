@@ -1,8 +1,11 @@
 import type { Target } from './types';
 export type TargetResolution =
   { type: 'action'; id: string; label: string } | { type: 'reply'; text: string };
-function normalize(name: string): string {
-  return name
+function normalize(name: string, compound = true): string {
+  const separated = compound
+    ? name.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
+    : name;
+  return separated
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
@@ -23,7 +26,13 @@ export function resolveTarget(identifiedName: string, targets: Target[]): Target
   const words = name.split(' ');
   const matches = exact.length
     ? exact
-    : available.filter((target) => words.every((word) => normalize(target.label).split(' ').includes(word)));
+    : available.filter((target) =>
+        words.every((word) =>
+          normalize(target.label, words.length > 1)
+            .split(' ')
+            .includes(word),
+        ),
+      );
   if (matches.length === 1) return { type: 'action', id: matches[0].id, label: matches[0].label };
   if (matches.length > 1)
     return {

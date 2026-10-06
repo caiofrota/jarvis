@@ -20,6 +20,7 @@
     "scripts/**/*.ts",
     "client/stored-value.ts",
     "features/tasks/task-actions.ts",
+    "features/workspace/task-state.ts",
     "features/chat/conversation.ts",
     "features/chat/local-commands.ts",
     "features/voice/browser-recognition.ts",
@@ -27,6 +28,7 @@
     "features/voice/speech-pipeline.ts",
     "types/**/*.d.ts",
     "features/voice/conversation-turns.ts",
+    "features/voice/orb/scene.ts",
     "features/voice/audio-output.ts",
     "features/voice/playback-guard.ts"
   ],

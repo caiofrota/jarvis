@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { Profile } from '../../../shared/types';
 import type { VoiceFrame } from '../audio-meter';
-import { drawOrb, type OrbPhase } from './scene';
+import { drawOrb, orbSpeed, type OrbPhase } from './scene';
 
 interface Props {
   phase: OrbPhase;
@@ -54,7 +54,7 @@ export default function EnergyRing(props: Props) {
           element.height = Math.round(height * ratio);
           context.setTransform(ratio, 0, 0, ratio, 0, 0);
         }
-        if (animate) clock += delta * (current.phase === 'thinking' ? 1.8 : 1);
+        clock += delta * orbSpeed(current.phase, animate);
         const sample = animate ? current.sample() : { level: 0, bass: 0, mid: 0, high: 0 };
         const mix = 1 - Math.exp(-delta * 16);
         for (const key of ['level', 'bass', 'mid', 'high'] as const)
