@@ -1,5 +1,5 @@
-import type { PanelId, Preferences } from '../../shared/types';
-import { panelNames } from '../workspace/preferences';
+import type { PanelId, Preferences } from '../../../shared/types';
+import { panelNames } from '../preferences';
 
 export default function PanelsDialog({
   prefs,

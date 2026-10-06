@@ -7,22 +7,19 @@ import ConversationSettings from '../../voice/ConversationSettings';
 import SpeechDialog from '../../voice/SpeechDialog';
 import PersonalProfileDialog from '../../profile/PersonalProfileDialog';
 import SettingsDialog from '../SettingsDialog';
-import PanelsDialog from '../PanelsDialog';
 import AddonsDialog from '../AddonsDialog';
 
-export type SettingsSection = 'intelligence' | 'speech' | 'profile' | 'settings' | 'panels' | 'addons';
+export type SettingsSection = 'intelligence' | 'speech' | 'profile' | 'settings' | 'addons';
 const sections: [SettingsSection, string][] = [
   ['intelligence', 'Inteligência'],
   ['speech', 'Voz'],
   ['profile', 'Perfil'],
   ['settings', 'Aparência'],
-  ['panels', 'Painéis'],
   ['addons', 'Integrações'],
 ];
 
 export default function SettingsHub({
   initialSection,
-  primary,
   prefs,
   patch,
   personalProfile,
@@ -34,7 +31,6 @@ export default function SettingsHub({
   voice,
 }: {
   initialSection: SettingsSection;
-  primary: boolean;
   prefs: Preferences;
   patch(values: Partial<Preferences>): void;
   personalProfile: PersonalProfile;
@@ -63,7 +59,6 @@ export default function SettingsHub({
       />
     ),
     settings: <SettingsDialog prefs={prefs} patch={patch} />,
-    panels: <PanelsDialog prefs={prefs} patch={patch} primary={primary} />,
     addons: <AddonsDialog />,
   };
   return (

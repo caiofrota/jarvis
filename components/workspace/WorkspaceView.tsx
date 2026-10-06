@@ -2,7 +2,13 @@
 import type { Preferences, PanelId, DialogId } from '../../shared/types';
 import { useEffect, useRef, useState } from 'react';
 import { useWorkspacePreferences } from '../../features/workspace/useWorkspacePreferences';
-import type { WorkspaceIdentity } from '../../features/workspace/window-layout';
+import {
+  defaultWindowView,
+  viewKey,
+  validateWindowView,
+  type WorkspaceIdentity,
+} from '../../features/workspace/window-layout';
+import { useStored } from '../../client/storage';
 import { useIntelligence } from '../../features/ai/useIntelligence';
 import { useActions } from '../../features/actions/useActions';
 import { useVoiceInput } from '../../features/voice/useVoiceInput';
@@ -26,9 +32,17 @@ import { usePersonalProfile } from '../../features/profile/usePersonalProfile';
 export default function WorkspaceView({ identity }: { identity: WorkspaceIdentity }) {
   const [prefs, setPrefs, ready, error] = useWorkspacePreferences(identity);
   const [personalProfile, savePersonalProfile, profileReady, profileError] = usePersonalProfile();
-  const [assistantTab, setAssistantTab] = useState<AssistantTab>('voice');
+  const [view, saveView, viewReady, viewError] = useStored(
+    viewKey(identity.id),
+    defaultWindowView,
+    validateWindowView,
+  );
+  const focused = view.focused;
+  const assistantTab = view.assistantTab;
+  const setFocused = (focused: boolean) => saveView((current) => ({ ...current, focused }));
+  const setAssistantTab = (assistantTab: AssistantTab) =>
+    saveView((current) => ({ ...current, assistantTab }));
   const [dialog, setDialog] = useState<DialogId | null>(null),
-    [focused, setFocused] = useState(false),
     drag = useRef<PanelId | null>(null);
   const ai = useIntelligence(),
     actions = useActions(),
@@ -105,7 +119,7 @@ export default function WorkspaceView({ identity }: { identity: WorkspaceIdentit
     document.documentElement.style.setProperty('--accent', colors[prefs.color][0]);
     document.documentElement.style.setProperty('--accent-rgb', colors[prefs.color][1]);
   }, [prefs.profile, prefs.motion, prefs.color, focused]);
-  if (!ready || !profileReady)
+  if (!ready || !profileReady || !viewReady)
     return (
       <main aria-busy="true">
         <p className="eyebrow">JARVIS STUDIO</p>
@@ -141,10 +155,9 @@ export default function WorkspaceView({ identity }: { identity: WorkspaceIdentit
           if (value) patch({ hidden: prefs.hidden.filter((id) => id !== 'assistant') });
           setFocused(value);
         }}
-        error={error}
+        error={error || viewError}
       >
         <WorkspaceStage
-          primary={identity.primary}
           contents={contents}
           prefs={prefs}
           patch={patch}

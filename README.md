@@ -57,22 +57,29 @@ O instalador ainda não tem assinatura digital nem atualização automática.
 ## Janelas e cards
 
 O fundo quadriculado ocupa toda a tela, com o anel centralizado e os cards
-flutuando nas laterais. O anel existe apenas na janela principal.
-Nas secundárias, todo o espaço é dedicado aos cards. Em telas estreitas,
+flutuando nas laterais. Novos espaços secundários começam somente com cards;
+destacar o Assistente abre uma janela com o anel. Em telas estreitas,
 Mostrar cards alterna entre o anel e os cards, sem interromper a conversa.
-Configurações > Painéis escolhe os cards desta janela. Ordem, visibilidade e distribuição de espaço
-são salvas separadamente por janela.
-Nova janela cria um espaço somente de cards, sem anel; a seta de um card abre uma janela
+Cada painel tem uma engrenagem discreta com suas opções. Ampliar, mover, ocultar e
+abrir em nova janela ficam nesse controle, não em Configurações.
+Mostrar painéis, no topo da janela, permite recuperar cards ocultos.
+Ordem, visibilidade e distribuição de espaço são salvas separadamente por janela.
+Nova janela cria um espaço somente de cards, sem anel; a engrenagem de um card abre uma janela
 iniciada com esse card, onde você pode acrescentar outros.
 Tarefas e notas continuam compartilhadas entre janelas da mesma origem.
 No navegador, o endereço identifica a janela: recarregar preserva sua configuração;
 salve esse endereço nos favoritos se quiser reabrir o mesmo espaço mais tarde.
-Uma nova janela começa com seu próprio layout. No desktop, a janela principal
-mantém seu layout entre inicializações. Ocultar o assistente encerra a escuta
+Uma nova janela começa com seu próprio layout. No desktop, fechar a janela principal
+fecha todas as janelas. Ao iniciar novamente, o conjunto que estava aberto volta com
+os mesmos identificadores, layouts, tamanhos, posições, maximização e tela cheia.
+Janelas fechadas individualmente antes disso não são reabertas. Se um monitor tiver
+sido desconectado, as janelas retornam para uma área visível.
+O modo Foco e a aba do Assistente também são preservados por janela; o microfone
+não é ligado automaticamente ao reabrir. Ocultar o assistente encerra a escuta
 naquela janela.
 Os cards dividem a altura disponível e rolam seu conteúdo por dentro. Quando
 não há espaço para todos, as setas de páginas dão acesso aos demais cards.
-O controle vertical dá mais espaço à linha do card, mantendo tudo dentro da tela.
+A opção Ampliar painel dá mais espaço à linha do card, mantendo tudo dentro da tela.
 O teste com três janelas do navegador confirmou layouts independentes, recarga,
 tarefas/notas compartilhadas e configuração de cards nas janelas destacadas.
 

@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { IPCChannels } from '../shared/ipc';
 import type { IpcMainInvokeEvent } from 'electron';
 import { projectRoot } from '../lib/paths';
-import { app, BrowserWindow, ipcMain, session, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, session, shell, screen } from 'electron';
 import * as path from 'node:path';
 import { isAppURL, MicrophoneGate } from '../lib/permissions';
 import { AIService } from '../lib/ai';
@@ -11,11 +11,13 @@ import { VoiceService } from '../lib/voice';
 import { DuplexVoiceService } from '../lib/local-voice';
 import { SecretStore } from '../lib/secret-store';
 import { WakeWordService } from '../lib/wakeword';
+import { WindowSession, reachableBounds, windowPanels, type WindowState } from './window-session';
 const ai = new AIService(),
   windows = new Map<string, BrowserWindow>();
 let actions: ActionService;
 let secrets: SecretStore | null = null;
 if (process.env.JARVIS_TEST_DATA && !app.isPackaged) app.setPath('userData', process.env.JARVIS_TEST_DATA);
+const windowSession = new WindowSession(path.join(app.getPath('userData'), 'window-session.json'), windows);
 const voice: VoiceService = new VoiceService({
   ai,
   vocabulary: () => [
@@ -64,7 +66,8 @@ function trusted(event: IpcMainInvokeEvent) {
   if (event.senderFrame !== event.sender.mainFrame) throw new Error('Origem não autorizada.');
   if (!isAppURL(event.senderFrame?.url || '', entry)) throw new Error('Origem não autorizada.');
 }
-function createWindow(panel = 'main', windowId = 'main') {
+function createWindow(panel: WindowState['panel'] = 'main', windowId = 'main', saved?: WindowState) {
+  if (windowSession.closing) return;
   if (windows.get(windowId) && !windows.get(windowId)!.isDestroyed()) {
     windows.get(windowId)!.show();
     windows.get(windowId)!.focus();
@@ -73,6 +76,12 @@ function createWindow(panel = 'main', windowId = 'main') {
   const win = new BrowserWindow({
     width: panel === 'main' ? 1440 : 1100,
     height: panel === 'main' ? 960 : 820,
+    ...(saved?.bounds
+      ? reachableBounds(
+          saved.bounds,
+          screen.getAllDisplays().map((display) => display.workArea),
+        )
+      : {}),
     minWidth: panel === 'main' ? 800 : 360,
     minHeight: panel === 'main' ? 650 : 420,
     title: panel === 'main' ? 'Jarvis Studio' : 'Jarvis — ' + panel,
@@ -88,11 +97,20 @@ function createWindow(panel = 'main', windowId = 'main') {
     },
   });
   windows.set(windowId, win);
+  windowSession.register(windowId, panel, saved);
+  const changed = () => windowSession.changed();
+  win.on('move', changed);
+  win.on('resize', changed);
+  win.on('maximize', changed);
+  win.on('unmaximize', changed);
+  win.on('enter-full-screen', changed);
+  win.on('leave-full-screen', changed);
   win.setMenuBarVisibility(false);
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   win.webContents.on('will-navigate', (event) => event.preventDefault());
   win.webContents.on('will-attach-webview', (event) => event.preventDefault());
   win.on('close', () => {
+    if (windowId === 'main') windowSession.closeAll(windowId);
     const id = win.webContents.id;
     ai.cancel(id);
     voice.cancel(id);
@@ -101,10 +119,20 @@ function createWindow(panel = 'main', windowId = 'main') {
     microphones.set(id, false);
     wakeword.stop(id);
   });
-  win.on('closed', () => windows.delete(windowId));
+  win.on('closed', () => {
+    windows.delete(windowId);
+    windowSession.removed(windowId);
+  });
   win.once('ready-to-show', () => {
+    if (windowSession.closing || win.isDestroyed()) return;
+    if (saved?.maximized) win.maximize();
+    if (saved?.fullscreen) {
+      win.once('enter-full-screen', () => windowSession.restored(windowId));
+      win.setFullScreen(true);
+    } else windowSession.restored(windowId);
     if (!process.env.JARVIS_TEST_HIDE || app.isPackaged) win.show();
   });
+  windowSession.changed();
   win.loadFile(entry, {
     query:
       windowId === 'main'
@@ -163,8 +191,7 @@ handle('key', (_, key) => {
 });
 handle('cancel', (event) => ai.cancel(event.sender.id));
 handle('panel', (_, panel) => {
-  if (!['assistant', 'calendar', 'tasks', 'notes', 'system', 'computer'].includes(panel))
-    throw new Error('Painel desconhecido.');
+  if (!windowPanels.slice(1).some((id) => id === panel)) throw new Error('Painel desconhecido.');
   createWindow(panel, randomUUID());
   return true;
 });
@@ -206,11 +233,12 @@ app.whenReady().then(() => {
   session.defaultSession.setPermissionCheckHandler((contents, permission, _origin, details) =>
     microphones.allows(contents, permission, details, 'check'),
   );
-  createWindow();
+  for (const saved of windowSession.read()) createWindow(saved.panel, saved.id, saved);
   app.on('activate', () => {
     if (!BrowserWindow.getAllWindows().length) createWindow();
   });
 });
+app.on('before-quit', () => windowSession.closeAll());
 app.on('window-all-closed', () => {
   ai.cloudKey = '';
   wakeword.dispose();

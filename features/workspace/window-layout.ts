@@ -8,6 +8,19 @@ export interface WorkspaceIdentity {
 }
 export const sharedPreferencesKey = 'jarvis-studio-v1';
 export const layoutKey = (id: string) => 'jarvis-window-layout-v1:' + id;
+export const viewKey = (id: string) => 'jarvis-window-view-v1:' + id;
+export interface WindowView {
+  focused: boolean;
+  assistantTab: 'voice' | 'transcript';
+}
+export const defaultWindowView: WindowView = { focused: false, assistantTab: 'voice' };
+export function validateWindowView(value: unknown): WindowView {
+  const raw = value as Partial<WindowView> | null;
+  return {
+    focused: raw?.focused === true,
+    assistantTab: raw?.assistantTab === 'transcript' ? 'transcript' : 'voice',
+  };
+}
 export function validateLayout(input: unknown): WindowLayout {
   const raw = input as Partial<WindowLayout> | null;
   const validIds = (value: unknown): PanelId[] =>
