@@ -8,6 +8,11 @@ export interface OrbScene {
 }
 const TAU = Math.PI * 2;
 
+export function orbSpeed(phase: OrbPhase, motion: boolean): number {
+  if (!motion) return 0;
+  return phase === 'speaking' ? 3.4 : phase === 'thinking' ? 1.8 : 1;
+}
+
 /** Flowing filaments around an empty center. No intersecting atomic orbits. */
 function radiusAt(angle: number, layer: number, time: number, energy: number, detail: number) {
   return (
@@ -21,14 +26,16 @@ function radiusAt(angle: number, layer: number, time: number, energy: number, de
 export function drawOrb(ctx: CanvasRenderingContext2D, width: number, height: number, scene: OrbScene) {
   const { time: t, phase, frame: f, simple } = scene;
   const r = Math.min(width * 0.385, height * 0.39);
-  const energy = phase === 'speaking' ? f.level : 0;
+  // System voices do not expose PCM: maintain a speaking glow and add real
+  // audio dynamics when available, without altering the rendering budget.
+  const energy = phase === 'speaking' ? 0.35 + Math.max(0, Math.min(1, f.level)) * 0.8 : 0;
   ctx.clearRect(0, 0, width, height);
   ctx.save();
   ctx.translate(width / 2, height / 2);
   const glow = ctx.createRadialGradient(0, 0, r * 0.5, 0, 0, r * 1.48);
   glow.addColorStop(0, 'rgba(0,58,203,0)');
-  glow.addColorStop(0.55, 'rgba(0,92,255,0.12)');
-  glow.addColorStop(0.72, 'rgba(0,150,255,0.18)');
+  glow.addColorStop(0.55, `rgba(0,92,255,${0.12 + energy * 0.16})`);
+  glow.addColorStop(0.72, `rgba(0,175,255,${0.18 + energy * 0.25})`);
   glow.addColorStop(1, 'rgba(0,70,244,0)');
   ctx.fillStyle = glow;
   ctx.fillRect(-width / 2, -height / 2, width, height);
@@ -41,7 +48,7 @@ export function drawOrb(ctx: CanvasRenderingContext2D, width: number, height: nu
     const distance = r * (0.4 + (((i * 37) % 97) / 97) * 1.12);
     const x = Math.cos(angle) * distance,
       y = Math.sin(angle) * distance;
-    ctx.fillStyle = 'rgba(67,183,255,' + (0.12 + (i % 5) * 0.045) + ')';
+    ctx.fillStyle = 'rgba(67,183,255,' + (0.12 + (i % 5) * 0.045 + energy * 0.2) + ')';
     ctx.fillRect(x, y, i % 6 === 0 ? 1.5 : 0.7, i % 6 === 0 ? 1.5 : 0.7);
   }
 
@@ -61,10 +68,12 @@ export function drawOrb(ctx: CanvasRenderingContext2D, width: number, height: nu
     }
     ctx.closePath();
     const bright = layer % 4 === 0;
-    ctx.strokeStyle = bright ? 'rgba(25,208,255,' + (0.52 + energy * 0.3) + ')' : 'rgba(14,133,255,0.35)';
-    ctx.lineWidth = bright ? 1.05 + energy * 0.5 : 0.65;
-    ctx.shadowColor = '#008cff';
-    ctx.shadowBlur = !simple && bright ? 7 : 0;
+    ctx.strokeStyle = bright
+      ? 'rgba(75,225,255,' + Math.min(0.95, 0.52 + energy * 0.4) + ')'
+      : `rgba(14,155,255,${0.35 + energy * 0.2})`;
+    ctx.lineWidth = bright ? 1.05 + energy * 1.1 : 0.65 + energy * 0.3;
+    ctx.shadowColor = '#00b7ff';
+    ctx.shadowBlur = !simple && bright ? 7 + energy * 14 : 0;
     ctx.stroke();
   }
   ctx.shadowBlur = 0;
@@ -79,7 +88,7 @@ export function drawOrb(ctx: CanvasRenderingContext2D, width: number, height: nu
     const radius = r * (radiusAt(angle, layer, t, energy, f.mid) + spread + energy * 0.035);
     const x = Math.cos(angle + rotation) * radius,
       y = Math.sin(angle + rotation) * radius;
-    const size = 7 + energy * (7 + f.high * 4);
+    const size = 7 + energy * (11 + f.high * 5);
     const flare = ctx.createRadialGradient(x, y, 0, x, y, size);
     flare.addColorStop(0, 'rgba(149,247,255,0.85)');
     flare.addColorStop(0.18, 'rgba(0,199,255,0.6)');

@@ -41,6 +41,19 @@ def load_voice():
     return pipeline
 
 
+def recognition_vocabulary(values):
+    if not isinstance(values, list):
+        return None
+    words = []
+    for value in values[:100]:
+        if not isinstance(value, str):
+            continue
+        word = " ".join(value.split())[:100]
+        if word and word not in words:
+            words.append(word)
+    return ", ".join(words)[:1500] or None
+
+
 def load_whisper():
     name = "whisper-base"
     if name not in whispers:
@@ -100,7 +113,7 @@ for line in sys.stdin:
                 beam_size=3,
                 vad_filter=True,
                 condition_on_previous_text=False,
-                hotwords="Jarvis",
+                hotwords=recognition_vocabulary(req.get("vocabulary", [])),
             )
             if info.duration > 65:
                 raise ValueError("A gravação deve ter no máximo 60 segundos.")

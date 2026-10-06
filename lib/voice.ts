@@ -23,16 +23,24 @@ class VoiceService {
   fetch: typeof fetch;
   active: { owner: Owner; controller: AbortController } | null;
   speechActive: { owner: Owner; controller: AbortController } | null;
+  vocabulary: () => string[];
   constructor({
     ai = { cloudKey: '' },
     fetchImpl = fetch,
     local = new DuplexVoiceService(),
-  }: { ai?: { cloudKey: string }; fetchImpl?: typeof fetch; local?: VoiceDriver } = {}) {
+    vocabulary = () => ['Jarvis'],
+  }: {
+    ai?: { cloudKey: string };
+    fetchImpl?: typeof fetch;
+    local?: VoiceDriver;
+    vocabulary?: () => string[];
+  } = {}) {
     this.local = local;
     this.ai = ai;
     this.fetch = fetchImpl;
     this.active = null;
     this.speechActive = null;
+    this.vocabulary = vocabulary;
   }
   warmLocal(owner: Owner, engine: VoiceEngine = 'tts') {
     return this.local.warm(owner, engine);
@@ -118,7 +126,8 @@ class VoiceService {
     }
   }
   async transcribe(request: TranscribeRequest, owner: Owner): Promise<Transcript> {
-    if (request?.provider === 'local') return this.local.request('transcribe', request, owner);
+    if (request?.provider === 'local')
+      return this.local.request('transcribe', { ...request, vocabulary: this.vocabulary() }, owner);
     if (this.active) throw new Error('Uma transcrição está em andamento. Aguarde ou cancele.');
     if (request?.provider !== 'cloud' || request.consent !== true)
       throw new Error('Confirme o envio do áudio para a nuvem.');

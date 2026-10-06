@@ -18,6 +18,12 @@ let secrets: SecretStore | null = null;
 if (process.env.JARVIS_TEST_DATA && !app.isPackaged) app.setPath('userData', process.env.JARVIS_TEST_DATA);
 const voice: VoiceService = new VoiceService({
   ai,
+  vocabulary: () => [
+    'Jarvis',
+    ...(actions?.items || [])
+      .filter((item) => item.available && item.kind === 'app')
+      .map((item) => item.label),
+  ],
   local: app.isPackaged
     ? new DuplexVoiceService({
         root: app.getPath('userData'),

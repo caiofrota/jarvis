@@ -94,6 +94,8 @@ frequências do áudio Kokoro/OpenAI. O centro mostra o estado real da conversa.
 A voz do sistema usa movimento ambiente (não fornece áudio para análise).
 O visual não usa uma biblioteca 3D: perfis limitam o desenho a 20/30/45 quadros por
 segundo; ele pausa fora da tela e respeita a preferência de movimento reduzido.
+Durante a fala, os filamentos ficam mais brilhantes e intensos e giram mais rápido,
+sem aumentar o limite de quadros nem ativar movimento quando ele está desabilitado.
 Alto-falantes (padrão): pausa o reconhecimento antes de reproduzir a resposta e
 volta a ouvir 900 ms após o fim do áudio. Aguarde "Estou ouvindo" para falar.
 Durante a resposta, use Interromper resposta para parar a fala do Jarvis.
@@ -105,6 +107,12 @@ A conversa continua ouvindo ao alternar entre aplicativos. Clique em Encerrar
 conversa para desligar a escuta.
 Ditar mensagem continua disponível para revisar texto antes de enviar.
 Local/offline: Whisper base em português, com parciais durante a gravação.
+O vocabulário de reconhecimento recebe os nomes disponíveis no catálogo da máquina,
+sem substituir palavras na transcrição. Isso fornece contexto ao decoder, mas não
+garante a precisão de nomes próprios; a validação acústica depende do microfone real.
+No Windows, o catálogo também consulta `Get-StartApps`, incluindo aplicativos da
+Microsoft Store. Instalações com o mesmo nome exigem escolher qual abrir.
+O catálogo é carregado ao iniciar o Jarvis; reinicie após instalar outro aplicativo.
 Saída gratuita: Kokoro neural local ou vozes locais instaladas no sistema.
 OpenAI de voz continua opcional, identificada como API paga. Não há troca
 silenciosa para a nuvem quando uma opção local falha.
@@ -187,6 +195,12 @@ aparece somente após salvar. Se houver dúvida sobre qual tarefa corrigir, ele
 deve perguntar; tarefas excluídas, alteradas em outra janela ou títulos em conflito
 não são sobrescritos. Isso não muda o reconhecimento de áudio: a interpretação
 da correção ainda depende do modelo de IA selecionado.
+Consultas de existência releem a lista atual, inclusive após exclusão manual;
+o histórico não comprova que uma tarefa ainda existe. Ao relatar “Eu já fui ao
+supermercado”, o Jarvis pode marcar a tarefa correspondente como concluída e
+confirma somente depois de salvar. Se não houver uma correspondência única, deve
+consultar ou perguntar, sem criar outra tarefa. “Sim!” após duas opções não autoriza
+uma ação por si só.
 Dados do navegador e do aplicativo desktop continuam separados.
 
 ## Validação atual

@@ -17,7 +17,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import * as crypto from 'node:crypto';
-import { spawn } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
 import { runtimeInfo } from './runtime';
 function launch(executable: string, args: string[]): Promise<void> {
   return new Promise<void>((resolve, reject) => {
@@ -53,6 +53,46 @@ interface CatalogOptions {
   env?: NodeJS.ProcessEnv;
   folders?: Partial<Record<'documents' | 'downloads' | 'desktop', string>>;
   project?: string;
+  registeredApps?: unknown;
+}
+export function windowsRegisteredTargets(value: unknown, opener: string): ExecutableTarget[] {
+  const rows = Array.isArray(value) ? value : value ? [value] : [];
+  const seen = new Set<string>();
+  return rows.slice(0, 600).flatMap((row) => {
+    if (!row || typeof row !== 'object') return [];
+    const { Name: label, AppID: appId } = row;
+    if (
+      typeof label !== 'string' ||
+      !label.trim() ||
+      label.length > 200 ||
+      typeof appId !== 'string' ||
+      !appId ||
+      appId.length > 1000 ||
+      /[\p{Cc}"]/u.test(appId) ||
+      seen.has(appId.toLowerCase())
+    )
+      return [];
+    seen.add(appId.toLowerCase());
+    return [
+      {
+        id:
+          'installed-app-' +
+          crypto.createHash('sha256').update(appId.toLowerCase()).digest('hex').slice(0, 16),
+        label:
+          label.trim() +
+          (rows.filter((candidate) => candidate?.Name === label).length > 1
+            ? appId.includes('!')
+              ? ' (Microsoft Store)'
+              : ' (desktop)'
+            : ''),
+        kind: 'app' as const,
+        target: appId,
+        command: opener,
+        args: ['shell:AppsFolder\\' + appId],
+        available: true,
+      },
+    ];
+  });
 }
 function createCatalog({
   platform = process.platform,
@@ -60,6 +100,7 @@ function createCatalog({
   env = process.env,
   folders = {},
   project = projectRoot,
+  registeredApps,
 }: CatalogOptions = {}): ExecutableTarget[] {
   const stat = (p: string, type: 'isFile' | 'isDirectory') => {
     try {
@@ -107,6 +148,28 @@ function createCatalog({
       : [];
   const installedApps: ExecutableTarget[] = [];
   if (windows && opener && stat(opener, 'isFile')) {
+    let registrations = registeredApps;
+    if (registrations === undefined) {
+      try {
+        const powershell = path.join(root, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+        registrations = JSON.parse(
+          execFileSync(
+            powershell,
+            [
+              '-NoLogo',
+              '-NoProfile',
+              '-NonInteractive',
+              '-Command',
+              '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; @(Get-StartApps | Select-Object Name, AppID) | ConvertTo-Json -Compress',
+            ],
+            { encoding: 'utf8', timeout: 5000, maxBuffer: 1024 * 1024, windowsHide: true },
+          ),
+        );
+      } catch {
+        // Start-menu shortcuts remain usable when registration discovery is unavailable.
+      }
+    }
+    installedApps.push(...windowsRegisteredTargets(registrations, opener));
     const roots = [
       path.join(
         env.ProgramData || path.join(root, 'ProgramData'),
@@ -118,7 +181,11 @@ function createCatalog({
       env.APPDATA && path.join(env.APPDATA, 'Microsoft', 'Windows', 'Start Menu', 'Programs'),
     ].filter((value): value is string => typeof value === 'string' && !!value);
     const reserved = new Set(['calculadora', 'bloco de notas']);
-    const seen = new Set();
+    const seen = new Set(
+      installedApps.map((item) =>
+        item.label.toLocaleLowerCase('pt-BR').replace(/ \((?:Microsoft Store|desktop)\)$/i, ''),
+      ),
+    );
     const visit = (directory: string, depth = 0) => {
       if (depth > 5 || installedApps.length >= 600) return;
       let entries;
