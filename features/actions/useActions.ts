@@ -21,11 +21,11 @@ export function useActions() {
   useEffect(() => {
     refresh();
   }, []);
-  async function execute(id: string) {
+  async function execute(id: string, newInstance = false) {
     setBusy(true);
     setError('');
     try {
-      const prepared = await getAPI().prepareAction(id);
+      const prepared = await getAPI().prepareAction(id, newInstance);
       const result = await getAPI().executeAction(prepared.token);
       await refresh();
       return result.label + ': ' + result.message;

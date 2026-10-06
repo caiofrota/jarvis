@@ -33,7 +33,7 @@ export function getAPI(): JarvisAPI {
       setElevenLabsKey: async (key) => (await api('voice/elevenlabs/key', { key })).json(),
       elevenLabsVoices: async () => (await api('voice/elevenlabs/voices')).json(),
       actions: async () => (await api('actions')).json(),
-      prepareAction: async (id) => (await api('actions/prepare', { id })).json(),
+      prepareAction: async (id, newInstance) => (await api('actions/prepare', { id, newInstance })).json(),
       cancelAction: async () => (await api('actions/cancel')).json(),
       executeAction: async (token) => (await api('actions/execute', { token })).json(),
       warmLocalVoice: async (engine) => (await api('voice/local-warm', { engine })).json(),

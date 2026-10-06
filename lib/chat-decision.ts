@@ -24,7 +24,16 @@ const DECISION_SCHEMA = object({
         id: { type: 'string' },
         title: { type: 'string' },
       }),
-      object({ type: { type: 'string', enum: ['open_computer_target'] }, target: { type: 'string' } }),
+      {
+        type: 'object',
+        properties: {
+          type: { type: 'string', enum: ['open_computer_target'] },
+          target: { type: 'string' },
+          new_instance: { type: 'boolean' },
+        },
+        required: ['type', 'target'],
+        additionalProperties: false,
+      },
     ],
   },
 });
@@ -49,6 +58,7 @@ Use open_computer_target somente quando a pessoa pedir para abrir um aplicativo 
 Use reply para conversa, explicação, recomendação, pergunta, hipótese ou lembrança já resolvida. Em reply nunca diga que registrou, salvou, abriu ou executou algo. Seja natural, breve, sem emoji, Markdown ou asteriscos.
 Formato: {"decision":{"type":"reply","text":"..."}} ou {"decision":{"type":"add_task","title":"..."}} ou {"decision":{"type":"update_task","id":"...","title":"..."}} ou {"decision":{"type":"check_task","title":"..."}} ou {"decision":{"type":"complete_task","id":"..."}} ou {"decision":{"type":"open_computer_target","target":"..."}}.`;
 const REPLY_INSTRUCTIONS = `Você é Jarvis, assistente pessoal em português do Brasil. Responda diretamente à última mensagem, em no máximo duas frases curtas. Seja natural e objetivo. Não use JSON, Markdown ou asteriscos; responda sem emojis. Não diga que registrou, salvou, abriu ou executou uma ação. Se a mensagem pedir para abrir algo ou guardar uma tarefa, isso deveria ter sido encaminhado como ação; responda brevemente sem afirmar que fez isso.`;
+const OPEN_TARGET_INSTRUCTIONS = `Ao abrir um aplicativo, use new_instance: true somente quando a pessoa pedir explicitamente uma nova instância, outra janela ou duplicar o aplicativo. Caso contrário, omita new_instance para ativar a janela existente quando possível.`;
 function normalized(value: string) {
   return value
     .normalize('NFD')
@@ -210,6 +220,7 @@ export {
   TASK_CORRECTION_INSTRUCTIONS,
   TASK_STATE_INSTRUCTIONS,
   REPLY_INSTRUCTIONS,
+  OPEN_TARGET_INSTRUCTIONS,
   contextForDecision,
   contextForPersonalProfile,
   isActionRequest,

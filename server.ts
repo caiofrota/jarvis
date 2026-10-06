@@ -20,10 +20,15 @@ function createServer({
   actions = new ActionService(),
   voice = new VoiceService({
     ai,
-    vocabulary: () => [
-      'Jarvis',
-      ...actions.items.filter((item) => item.available && item.kind === 'app').map((item) => item.label),
-    ],
+    vocabulary: () => {
+      const catalog = actions.list();
+      return [
+        'Jarvis',
+        ...[...catalog.items, ...catalog.apps]
+          .filter((item) => item.available && item.kind === 'app')
+          .map((item) => item.label),
+      ];
+    },
   }),
   fallback = null,
 }: {
@@ -76,6 +81,7 @@ function createServer({
           owner: string;
           id: string;
           token: string;
+          newInstance?: unknown;
           engine: VoiceEngine;
           provider: Provider;
           key: string;
@@ -98,7 +104,9 @@ function createServer({
             json(res, 200, actions.list());
             return;
           case '/api/actions/prepare':
-            json(res, 200, actions.prepare(body.id, owner));
+            if (body.newInstance !== undefined && typeof body.newInstance !== 'boolean')
+              throw new Error('Opção de nova instância inválida.');
+            json(res, 200, actions.prepare(body.id, owner, body.newInstance === true));
             return;
           case '/api/actions/cancel':
             json(res, 200, { cancelled: actions.cancel(owner) });

@@ -80,6 +80,23 @@ test('simultaneous clicks do not duplicate actions and failures record an error'
   assert.equal(calls, 1);
   assert.equal(service.list().history[0].status, 'error');
 });
+
+test('opening an application reuses the existing window unless a new instance is explicit', async () => {
+  const calls = [];
+  const service = new ActionService({
+    catalog: [{ id: 'calculator', label: 'Calculadora', available: true, args: [], command: 'calc.exe' }],
+    environment: { restricted: false },
+    launcher: async (...args) => calls.push(args),
+  });
+  const first = service.prepare('calculator', 'one');
+  await service.execute(first.token, 'one');
+  const second = service.prepare('calculator', 'one', true);
+  await service.execute(second.token, 'one');
+  assert.deepEqual(calls, [
+    ['calc.exe', []],
+    ['calc.exe', [], true],
+  ]);
+});
 test('voice requires consent, a key, a valid format, and a size limit before network access', async () => {
   let calls = 0;
   const ai = { cloudKey: 'fake' },

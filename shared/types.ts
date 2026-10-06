@@ -63,6 +63,7 @@ export interface OpenReceipt {
   id: string;
   label: string;
   status: 'sent';
+  newInstance?: boolean;
 }
 export type Receipt = TaskReceipt | TaskUpdateReceipt | TaskCheckReceipt | TaskCompleteReceipt | OpenReceipt;
 export interface Message {
@@ -184,7 +185,7 @@ export type ChatEvent =
   | { type: 'task-update'; id: string; title: string; previousTitle: string }
   | { type: 'task-check'; title: string }
   | { type: 'task-complete'; id: string; title: string }
-  | { type: 'action'; id: string; label: string }
+  | { type: 'action'; id: string; label: string; newInstance?: boolean }
   | ({ type: 'done' } & ChatStats);
 export type VoiceProvider = Provider | 'elevenlabs';
 export type InputMode = 'browser' | VoiceProvider;
@@ -247,7 +248,7 @@ export interface JarvisAPI {
   setElevenLabsKey(key: string): Promise<{ configured: boolean }>;
   elevenLabsVoices(): Promise<{ id: string; name: string }[]>;
   actions(): Promise<ActionCatalog>;
-  prepareAction(id: string): Promise<PreparedAction>;
+  prepareAction(id: string, newInstance?: boolean): Promise<PreparedAction>;
   executeAction(token: string): Promise<ActionResult>;
   cancelAction(): Promise<unknown>;
   warmLocalVoice(engine: VoiceEngine): Promise<{ ready: boolean }>;

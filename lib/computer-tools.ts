@@ -4,18 +4,27 @@ export type Decision =
   | { type: 'update-task'; id: string; title: string }
   | { type: 'check-task'; title: string }
   | { type: 'complete-task'; id: string }
-  | { type: 'open-target'; name: string };
+  | { type: 'open-target'; name: string; newInstance: boolean };
 export function validateTool(call: { name?: unknown; arguments?: unknown }): Decision {
   const raw = call.arguments;
   const args: unknown = typeof raw === 'string' ? JSON.parse(raw) : raw;
   if (!args || typeof args !== 'object' || Array.isArray(args)) throw new Error('Ação inválida.');
   const data = args as Record<string, unknown>;
-  if (Object.keys(data).length !== (call.name === 'update_task' ? 2 : 1))
+  const keys = Object.keys(data);
+  const keyCount = keys.length;
+  const validOpenTargetShape =
+    call.name === 'open_computer_target' &&
+    keyCount === 2 &&
+    keys.includes('target') &&
+    keys.includes('new_instance');
+  if (keyCount !== (call.name === 'update_task' ? 2 : 1) && !validOpenTargetShape)
     throw new Error('Argumentos inválidos.');
   if (call.name === 'open_computer_target') {
     if (typeof data.target !== 'string' || !data.target.trim() || data.target.length > 150)
       throw new Error('Nome do aplicativo inválido.');
-    return { type: 'open-target', name: data.target.trim() };
+    if (data.new_instance !== undefined && typeof data.new_instance !== 'boolean')
+      throw new Error('Opção de nova instância inválida.');
+    return { type: 'open-target', name: data.target.trim(), newInstance: data.new_instance === true };
   }
   if (call.name === 'complete_task') {
     if (typeof data.id !== 'string' || !data.id.trim() || data.id.length > 100)

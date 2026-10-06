@@ -158,7 +158,7 @@ const handle = <K extends keyof IPCChannels>(
     }
   });
 handle('actions', () => actions.list());
-handle('actions-prepare', (event, id) => actions.prepare(id, event.sender.id));
+handle('actions-prepare', (event, id, newInstance) => actions.prepare(id, event.sender.id, newInstance));
 handle('actions-execute', (event, token) => actions.execute(token, event.sender.id));
 handle('actions-cancel', (event) => actions.cancel(event.sender.id));
 handle('voice-local-warm', (event, engine) => voice.warmLocal(event.sender.id, engine));
