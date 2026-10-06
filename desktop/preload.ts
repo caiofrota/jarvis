@@ -14,6 +14,9 @@ async function call<K extends keyof IPCChannels>(
   return result.value;
 }
 const api: DesktopAPI = {
+  elevenLabsStatus: () => call('elevenlabs-status'),
+  setElevenLabsKey: (key) => call('elevenlabs-key', key),
+  elevenLabsVoices: () => call('elevenlabs-voices'),
   actions: () => call('actions'),
   prepareAction: (id) => call('actions-prepare', id),
   executeAction: (token) => call('actions-execute', token),

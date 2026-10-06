@@ -76,6 +76,9 @@ test('voice uses short responses without changing context or reloading the model
   assert.equal(payload.options.num_ctx, 2048);
   assert.equal(payload.options.num_predict, 128);
   assert.match(payload.messages[0].content, /duas frases/);
+  assert.match(payload.messages[0].content, /reconhecimento de voz, não de digitação/);
+  assert.match(payload.messages[0].content, /peça esclarecimento/);
+  assert.match(payload.messages[0].content, /não é um pedido para abri-lo/);
 });
 test('preparation sends no conversation and does not charge the cloud API', async () => {
   const calls = [];

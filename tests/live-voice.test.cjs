@@ -43,6 +43,82 @@ function harness() {
   );
   return { api: scope.exports, feed: (samples) => node.port.onmessage({ data: samples }) };
 }
+test('uncertain speech is not submitted as a command and context is read for each request', async () => {
+  const h = harness(),
+    utterances = [],
+    reviews = [],
+    requests = [];
+  let context = ['Preparar uma refeição'];
+  const session = await h.api.capture({
+    stream: {},
+    recognitionContext: () => context,
+    api: {
+      transcribe: async (request) => {
+        requests.push(request);
+        return { text: 'Uma atividade desconhecida', needsReview: true };
+      },
+      cancelVoice: async () => {},
+    },
+    onText() {},
+    onError(error) {
+      throw new Error(error);
+    },
+    onReview: (message) => reviews.push(message),
+    onUtterance: (text) => utterances.push(text),
+  });
+  h.feed(new Float32Array(24000).fill(0.1));
+  await new Promise((resolve) => setImmediate(resolve));
+  context = ['Nova tarefa persistida'];
+  h.feed(new Float32Array(14400));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(utterances, []);
+  assert.equal(reviews.length, 1);
+  assert.deepEqual(requests[0].context, ['Preparar uma refeição']);
+  assert.deepEqual(requests.at(-1).context, context);
+  session.cancel();
+});
+test('dictation cannot submit an uncertain transcript on stop', async () => {
+  const h = harness(),
+    reviews = [];
+  const session = await h.api.capture({
+    stream: {},
+    api: {
+      transcribe: async () => ({ text: 'Texto incerto', needsReview: true }),
+      cancelVoice: async () => {},
+    },
+    onText() {},
+    onError(error) {
+      throw new Error(error);
+    },
+    onReview: (message) => reviews.push(message),
+  });
+  h.feed(new Float32Array(24000).fill(0.1));
+  assert.equal(await session.stop(), '');
+  assert.equal(reviews.length, 1);
+});
+test('final transcription supersedes an uncertain partial', async () => {
+  const h = harness(),
+    utterances = [];
+  let calls = 0;
+  const session = await h.api.capture({
+    stream: {},
+    api: {
+      transcribe: async () => ({ text: 'Preparar a refeição', needsReview: ++calls === 1 }),
+      cancelVoice: async () => {},
+    },
+    onText() {},
+    onError(error) {
+      throw new Error(error);
+    },
+    onUtterance: (text) => utterances.push(text),
+  });
+  h.feed(new Float32Array(24000).fill(0.1));
+  await new Promise((resolve) => setImmediate(resolve));
+  h.feed(new Float32Array(14400));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(utterances, ['Preparar a refeição']);
+  session.cancel();
+});
 test('transcription sends a segment while recording continues and preserves text on stop', async () => {
   const h = harness();
   let calls = 0,
@@ -148,6 +224,41 @@ test('cloud mode sends audio only after each utterance ends with explicit consen
   h.feed(new Float32Array(14400));
   await new Promise((r) => setImmediate(r));
   assert.equal(calls, 1);
+  session.cancel();
+});
+test('ElevenLabs sends each ended utterance once, with consent, and ignores playback audio', async () => {
+  const h = harness(),
+    requests = [],
+    utterances = [];
+  const session = await h.api.capture({
+    stream: {},
+    provider: 'elevenlabs',
+    api: {
+      transcribe: async (request) => {
+        requests.push(request);
+        return { text: 'Preparar uma refeição' };
+      },
+      cancelVoice: async () => {},
+    },
+    onText() {},
+    onError: assert.fail,
+    onUtterance: (text) => utterances.push(text),
+  });
+  h.feed(new Float32Array(24000).fill(0.1));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(requests.length, 0);
+  h.feed(new Float32Array(14400));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].provider, 'elevenlabs');
+  assert.equal(requests[0].consent, true);
+  assert.equal(requests[0].live, false);
+  assert.deepEqual(utterances, ['Preparar uma refeição']);
+  session.setPaused(true);
+  h.feed(new Float32Array(24000).fill(0.1));
+  h.feed(new Float32Array(14400));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(requests.length, 1);
   session.cancel();
 });
 

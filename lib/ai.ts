@@ -293,7 +293,9 @@ class AIService {
           contextForDecision(request, spoken || profile === 'eco')
         : contextForDecision(request, spoken || profile === 'eco')) +
       contextForPersonalProfile(request.personalProfile) +
-      (spoken ? '\nConversa falada: em reply use até duas frases curtas.' : '');
+      (spoken
+        ? '\nConversa falada: em reply use até duas frases curtas. O último pedido veio de reconhecimento de voz, não de digitação. Palavras estranhas podem ser erros de transcrição. Use a lista atual e o contexto para compreender, mas não invente nomes nem execute ações se houver ambiguidade: peça esclarecimento. Uma menção a um aplicativo não é um pedido para abri-lo. Não diga que houve erro de digitação.'
+        : '');
     const maxOutput = spoken ? Math.min(p.maxOutput, 128) : p.maxOutput;
     const controller = new AbortController();
     this.active = { owner, controller };

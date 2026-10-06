@@ -5,6 +5,7 @@ import type { ReturnTypeVoiceInput } from '../../voice/voice-types';
 import IntelligenceDialog from '../../ai/IntelligenceDialog';
 import ConversationSettings from '../../voice/ConversationSettings';
 import SpeechDialog from '../../voice/SpeechDialog';
+import ElevenLabsSettings from '../../voice/ElevenLabsSettings/ElevenLabsSettings';
 import PersonalProfileDialog from '../../profile/PersonalProfileDialog';
 import SettingsDialog from '../SettingsDialog';
 import AddonsDialog from '../AddonsDialog';
@@ -48,6 +49,9 @@ export default function SettingsHub({
       <>
         <ConversationSettings voice={voice} />
         <SpeechDialog speech={speech} chat={chat} />
+        {(voice.mode === 'elevenlabs' || speech.options.mode === 'elevenlabs') && (
+          <ElevenLabsSettings speech={speech} busy={voice.recording || voice.processing || chat.busy} />
+        )}
       </>
     ),
     profile: (

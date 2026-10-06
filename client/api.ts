@@ -29,6 +29,9 @@ export function getAPI(): JarvisAPI {
       return response;
     }
     return {
+      elevenLabsStatus: async () => (await api('voice/elevenlabs/status')).json(),
+      setElevenLabsKey: async (key) => (await api('voice/elevenlabs/key', { key })).json(),
+      elevenLabsVoices: async () => (await api('voice/elevenlabs/voices')).json(),
       actions: async () => (await api('actions')).json(),
       prepareAction: async (id) => (await api('actions/prepare', { id })).json(),
       cancelAction: async () => (await api('actions/cancel')).json(),

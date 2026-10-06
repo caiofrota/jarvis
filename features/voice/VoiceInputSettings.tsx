@@ -26,6 +26,7 @@ export default function VoiceInputSettings({
           </option>
           <option value="local">Local/offline · Whisper base</option>
           <option value="cloud">OpenAI · API paga</option>
+          <option value="elevenlabs">ElevenLabs · Scribe v2 · API paga</option>
         </select>
       </label>
       <p className="voice-disclosure">
@@ -33,9 +34,11 @@ export default function VoiceInputSettings({
           ? 'Áudio enviado ao serviço do navegador. Grátis.'
           : v.mode === 'local'
             ? 'Áudio processado neste computador. Grátis.'
-            : continuous
-              ? 'Envia cada fala à OpenAI. API paga.'
-              : 'Envia a gravação à OpenAI. API paga.'}
+            : v.mode === 'elevenlabs'
+              ? 'Envia cada fala à ElevenLabs ao terminar. API paga.'
+              : continuous
+                ? 'Envia cada fala à OpenAI. API paga.'
+                : 'Envia a gravação à OpenAI. API paga.'}
       </p>
       <label className="setting-row">
         <span>
