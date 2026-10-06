@@ -10,6 +10,7 @@ import type {
 import type { VoiceDriver } from './local-voice';
 import { DuplexVoiceService } from './local-voice';
 import { forSpeech } from '../shared/text';
+import { ElevenLabsService } from './elevenlabs';
 const MAX_AUDIO_BYTES = 4 * 1024 * 1024;
 const FORMATS: Record<string, string> = {
   'audio/webm': 'webm',
@@ -24,6 +25,7 @@ class VoiceService {
   active: { owner: Owner; controller: AbortController } | null;
   speechActive: { owner: Owner; controller: AbortController } | null;
   vocabulary: () => string[];
+  elevenlabs: ElevenLabsService;
   constructor({
     ai = { cloudKey: '' },
     fetchImpl = fetch,
@@ -38,6 +40,7 @@ class VoiceService {
     this.local = local;
     this.ai = ai;
     this.fetch = fetchImpl;
+    this.elevenlabs = new ElevenLabsService(fetchImpl);
     this.active = null;
     this.speechActive = null;
     this.vocabulary = vocabulary;
@@ -52,18 +55,21 @@ class VoiceService {
     return this.local.install();
   }
   cancel(owner: Owner) {
+    if (this.elevenlabs.cancel(owner, 'transcribe')) return true;
     if (this.local.cancel(owner, 'transcribe')) return true;
     if (this.active?.owner !== owner) return false;
     this.active.controller.abort();
     return true;
   }
   cancelSpeech(owner: Owner) {
+    if (this.elevenlabs.cancel(owner, 'speak')) return true;
     if (this.local.cancel(owner, 'speak')) return true;
     if (this.speechActive?.owner !== owner) return false;
     this.speechActive.controller.abort();
     return true;
   }
   async speak(request: SpeechRequest, owner: Owner): Promise<AudioResult> {
+    if (request?.provider === 'elevenlabs') return this.elevenlabs.speak(request, owner);
     if (request?.provider === 'local') return this.local.request('speak', request, owner);
     if (this.speechActive) throw new Error('Uma voz já está sendo gerada. Aguarde ou cancele.');
     if (request?.provider !== 'cloud' || request.consent !== true)
@@ -126,6 +132,7 @@ class VoiceService {
     }
   }
   async transcribe(request: TranscribeRequest, owner: Owner): Promise<Transcript> {
+    if (request?.provider === 'elevenlabs') return this.elevenlabs.transcribe(request, owner);
     if (request?.provider === 'local')
       return this.local.request('transcribe', { ...request, vocabulary: this.vocabulary() }, owner);
     if (this.active) throw new Error('Uma transcrição está em andamento. Aguarde ou cancele.');

@@ -1,5 +1,5 @@
 import { VOICE_TIMING } from './timing';
-import type { JarvisAPI, Provider } from '../../shared/types';
+import type { JarvisAPI, VoiceProvider } from '../../shared/types';
 export interface CaptureSession {
   stop(): Promise<string | undefined> | string;
   cancel?(): void;
@@ -9,9 +9,11 @@ export interface CaptureSession {
 interface Options {
   stream: MediaStream;
   api: Pick<JarvisAPI, 'transcribe' | 'cancelVoice'>;
-  provider?: Provider;
+  provider?: VoiceProvider;
+  recognitionContext?(): string[];
   onText(text: string): void;
   onError(message: string): void;
+  onReview?(message: string): void;
   onUtterance?(text: string): void;
   onSpeechStart?(): void;
 }
@@ -27,6 +29,7 @@ interface Segment {
   version: number;
   transcribed: number;
   ended: boolean;
+  needsReview?: boolean;
 }
 interface Job {
   epoch: number;
@@ -63,8 +66,10 @@ export async function capture({
   stream,
   api,
   provider = 'local',
+  recognitionContext,
   onText,
   onError,
+  onReview = onError,
   onUtterance,
   onSpeechStart,
 }: Options): Promise<CaptureSession> {
@@ -131,7 +136,11 @@ export async function capture({
         .trim();
       closedGroups.delete(id);
       segments = segments.filter((segment) => segment.group !== id);
-      if (text) onUtterance(text);
+      if (text && parts.some((segment) => segment.needsReview))
+        onReview(
+          'Não consegui reconhecer sua fala com segurança. Repita o pedido; nenhuma ação foi executada.',
+        );
+      else if (text) onUtterance(text);
     }
   }
   async function drain() {
@@ -146,10 +155,12 @@ export async function capture({
             mime: 'audio/wav',
             audio: wav(job.samples, context.sampleRate),
             live: provider === 'local',
-            consent: provider === 'cloud',
+            consent: provider !== 'local',
+            context: provider === 'local' ? recognitionContext?.() : undefined,
           });
           if (!cancelled && job.epoch === captureEpoch) {
             job.segment.text = result.text;
+            job.segment.needsReview = result.needsReview;
             job.segment.transcribed = job.version;
             update();
             emitReady();
@@ -289,6 +300,12 @@ export async function capture({
       finishSegment(true);
       await close();
       if (busy || queue.length) await new Promise<void>((resolve) => waiters.push(resolve));
+      if (segments.some((segment) => segment.needsReview)) {
+        onReview(
+          'Não consegui reconhecer sua fala com segurança. Repita o pedido; nenhuma ação foi executada.',
+        );
+        return '';
+      }
       return allText();
     },
     cancel() {

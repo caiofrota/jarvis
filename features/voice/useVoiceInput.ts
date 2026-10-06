@@ -82,7 +82,11 @@ export function useVoiceInput({ chat, speech, ai, profile, conversation = false 
       saved = localStorage.getItem('jarvis-input-engine');
     } catch {}
     setMode(
-      saved === 'local' || saved === 'cloud' || saved === 'browser' ? saved : online ? 'browser' : 'local',
+      saved === 'local' || saved === 'cloud' || saved === 'browser' || saved === 'elevenlabs'
+        ? saved
+        : online
+          ? 'browser'
+          : 'local',
     );
     setInitialized(true);
     return cleanup;
@@ -279,6 +283,8 @@ export function useVoiceInput({ chat, speech, ai, profile, conversation = false 
       void turns.current?.utterance(phrase);
     };
     try {
+      if (mode === 'elevenlabs' && !(await getAPI().elevenLabsStatus()).configured)
+        throw new Error('Conecte sua chave ElevenLabs em Configurações → Voz.');
       if (mode === 'browser') {
         const recognizer = new BrowserRecognition({
           onText,
@@ -307,13 +313,20 @@ export function useVoiceInput({ chat, speech, ai, profile, conversation = false 
           if (valid()) fail(message);
         };
         const captured =
-          mode === 'local' || conversation
+          mode === 'local' || mode === 'elevenlabs' || conversation
             ? await capture({
                 stream: media,
                 api: getAPI(),
-                provider: mode === 'cloud' ? 'cloud' : 'local',
+                provider: mode === 'elevenlabs' ? 'elevenlabs' : mode === 'cloud' ? 'cloud' : 'local',
+                recognitionContext: () => latest.current.chat.recognitionContext(),
                 onText,
                 onError,
+                onReview: (message) => {
+                  if (valid()) {
+                    setError(message);
+                    latest.current.speech.read(message);
+                  }
+                },
                 onUtterance: conversation ? onUtterance : undefined,
                 onSpeechStart: conversation ? () => turns.current?.speechStart() : undefined,
               })
@@ -323,7 +336,13 @@ export function useVoiceInput({ chat, speech, ai, profile, conversation = false 
           return;
         }
         session.current = captured;
-        setState(mode === 'local' ? 'Ouvindo neste computador.' : 'Ouvindo · áudio enviado à OpenAI.');
+        setState(
+          mode === 'local'
+            ? 'Ouvindo neste computador.'
+            : mode === 'elevenlabs'
+              ? 'Ouvindo · áudio enviado à ElevenLabs.'
+              : 'Ouvindo · áudio enviado à OpenAI.',
+        );
       }
       if (!valid()) return;
       if (conversation) {

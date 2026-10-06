@@ -85,6 +85,15 @@ function createServer({
         if (typeof owner !== 'string' || !/^[a-z0-9-]{1,80}$/i.test(owner))
           throw new Error('Sessão inválida.');
         switch (url.pathname) {
+          case '/api/voice/elevenlabs/status':
+            json(res, 200, voice.elevenlabs.status());
+            return;
+          case '/api/voice/elevenlabs/key':
+            json(res, 200, voice.elevenlabs.setKey(body.key));
+            return;
+          case '/api/voice/elevenlabs/voices':
+            json(res, 200, await voice.elevenlabs.voices());
+            return;
           case '/api/actions':
             json(res, 200, actions.list());
             return;

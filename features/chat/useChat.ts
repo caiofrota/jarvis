@@ -263,6 +263,15 @@ export function useChat({
     status,
     error,
     send,
+    recognitionContext: () => [
+      ...readTasks()
+        .slice(0, 12)
+        .map((task) => task.text),
+      ...currentMessages.current
+        .filter((message) => message.role === 'user')
+        .slice(-4)
+        .map((message) => message.text),
+    ],
     stop,
     clear: () => {
       if (!active.current) publish([]);

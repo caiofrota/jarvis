@@ -12,7 +12,12 @@ from unittest.mock import patch
 
 class VoiceWorkerTests(unittest.TestCase):
     def test_transcription_provides_name_hint_without_rewriting_decoded_text(self):
-        transcripts = ["E aí Jarvis, tudo bem?", "Eu já vi tudo, bem obrigado.", ""]
+        transcripts = [
+            "E aí Jarvis, tudo bem?",
+            "Eu já vi tudo, bem obrigado.",
+            "",
+            "Fazer uma atividade desconhecida",
+        ]
         calls = []
         models = []
 
@@ -23,13 +28,28 @@ class VoiceWorkerTests(unittest.TestCase):
             def transcribe(self, audio, **kwargs):
                 calls.append(kwargs)
                 text = transcripts[len(calls) - 1]
-                segments = [SimpleNamespace(text=text, no_speech_prob=0.1)] if text else []
+                segments = (
+                    [
+                        SimpleNamespace(
+                            text=text,
+                            no_speech_prob=0.1,
+                            avg_logprob=-1.5 if len(calls) == 4 else -0.2,
+                            compression_ratio=1,
+                        )
+                    ]
+                    if text
+                    else []
+                )
                 return iter(segments), SimpleNamespace(duration=1)
 
         module = ModuleType("faster_whisper")
         module.WhisperModel = WhisperModel
         vocabulary = ["Assistente Exemplo", "Produto Novo 2030", "Editor Diferente"]
-        request = json.dumps({"op": "transcribe", "audio": "AAAA", "vocabulary": vocabulary}) + "\n"
+        context = ["Preparar uma refeição", "Revisar o documento"]
+        request = (
+            json.dumps({"op": "transcribe", "audio": "AAAA", "vocabulary": vocabulary, "context": context})
+            + "\n"
+        )
         output = io.StringIO()
         worker = Path(__file__).resolve().parents[2] / "voice" / "worker.py"
         with (
@@ -46,10 +66,11 @@ class VoiceWorkerTests(unittest.TestCase):
         self.assertEqual([result["value"]["text"] for result in results], transcripts)
         self.assertTrue(all(result["ok"] for result in results))
         self.assertEqual(len(models), 1)
+        self.assertEqual([result["value"]["needsReview"] for result in results], [False, False, False, True])
         for call in calls:
             self.assertEqual(
                 call["hotwords"],
-                ", ".join(vocabulary),
+                ", ".join(context + vocabulary),
             )
             self.assertEqual(call["language"], "pt")
             self.assertFalse(call["condition_on_previous_text"])

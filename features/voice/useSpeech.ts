@@ -17,7 +17,8 @@ export function useSpeech() {
       return {
         rate: Math.max(0.7, Math.min(1.3, Number(raw?.rate) || 1)),
         voiceURI: typeof raw?.voiceURI === 'string' ? raw.voiceURI : '',
-        mode: raw?.mode && ['local', 'system', 'cloud'].includes(raw.mode) ? raw.mode : 'local',
+        mode: raw?.mode && ['local', 'system', 'cloud', 'elevenlabs'].includes(raw.mode) ? raw.mode : 'local',
+        elevenLabsVoice: typeof raw?.elevenLabsVoice === 'string' ? raw.elevenLabsVoice : '',
         localVoice:
           raw?.localVoice && ['alex', 'santa', 'dora'].includes(raw.localVoice) ? raw.localVoice : 'alex',
       };
@@ -124,11 +125,17 @@ export function useSpeech() {
           text,
           audio: await audio.current!.prepare(
             await getAPI().speak({
-              provider: selected.mode === 'cloud' ? 'cloud' : 'local',
+              provider:
+                selected.mode === 'elevenlabs' ? 'elevenlabs' : selected.mode === 'cloud' ? 'cloud' : 'local',
               text,
               speed: selected.rate,
-              voice: selected.mode === 'cloud' ? 'marin' : selected.localVoice,
-              consent: selected.mode === 'cloud',
+              voice:
+                selected.mode === 'elevenlabs'
+                  ? selected.elevenLabsVoice
+                  : selected.mode === 'cloud'
+                    ? 'marin'
+                    : selected.localVoice,
+              consent: selected.mode === 'cloud' || selected.mode === 'elevenlabs',
             }),
           ),
         };

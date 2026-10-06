@@ -113,12 +113,25 @@ for line in sys.stdin:
                 beam_size=3,
                 vad_filter=True,
                 condition_on_previous_text=False,
-                hotwords=recognition_vocabulary(req.get("vocabulary", [])),
+                # Share one decoder hint budget: two independently truncated
+                # prompts can leave no tokens available for the transcription.
+                hotwords=recognition_vocabulary(
+                    (req.get("context", []) if isinstance(req.get("context"), list) else [])
+                    + (req.get("vocabulary", []) if isinstance(req.get("vocabulary"), list) else [])
+                ),
             )
             if info.duration > 65:
                 raise ValueError("A gravação deve ter no máximo 60 segundos.")
+            decoded = list(segments)
             result = {
-                "text": " ".join(s.text.strip() for s in segments if s.no_speech_prob < 0.8).strip()[:16000]
+                "text": " ".join(s.text.strip() for s in decoded if s.no_speech_prob < 0.8).strip()[:16000],
+                # Decoder failure thresholds, not a calibrated confidence percentage.
+                "needsReview": any(
+                    getattr(s, "avg_logprob", 0) < -1.0
+                    or s.no_speech_prob > 0.6
+                    or getattr(s, "compression_ratio", 0) > 2.4
+                    for s in decoded
+                ),
             }
         else:
             raise ValueError("Operação inválida.")

@@ -16,6 +16,7 @@ const ai = new AIService(),
   windows = new Map<string, BrowserWindow>();
 let actions: ActionService;
 let secrets: SecretStore | null = null;
+let elevenLabsSecrets: SecretStore | null = null;
 if (process.env.JARVIS_TEST_DATA && !app.isPackaged) app.setPath('userData', process.env.JARVIS_TEST_DATA);
 const windowSession = new WindowSession(path.join(app.getPath('userData'), 'window-session.json'), windows);
 const voice: VoiceService = new VoiceService({
@@ -161,6 +162,18 @@ handle('actions-prepare', (event, id) => actions.prepare(id, event.sender.id));
 handle('actions-execute', (event, token) => actions.execute(token, event.sender.id));
 handle('actions-cancel', (event) => actions.cancel(event.sender.id));
 handle('voice-local-warm', (event, engine) => voice.warmLocal(event.sender.id, engine));
+handle('elevenlabs-status', () => voice.elevenlabs.status());
+handle('elevenlabs-voices', () => voice.elevenlabs.voices());
+handle('elevenlabs-key', (_, key) => {
+  const result = voice.elevenlabs.setKey(key);
+  try {
+    elevenLabsSecrets?.write(key);
+  } catch (cause) {
+    voice.elevenlabs.setKey('');
+    throw cause;
+  }
+  return result;
+});
 handle('voice-local-status', () => voice.localStatus());
 handle('voice-local-install', () => voice.installLocal());
 handle('speak', (event, request) => voice.speak(request, event.sender.id));
@@ -213,6 +226,8 @@ app.whenReady().then(() => {
   if (!singleInstance) return;
   secrets = new SecretStore(path.join(app.getPath('userData'), 'openai-api-key.bin'));
   ai.setKey(secrets.read());
+  elevenLabsSecrets = new SecretStore(path.join(app.getPath('userData'), 'elevenlabs-api-key.bin'));
+  voice.elevenlabs.setKey(elevenLabsSecrets.read());
   actions = new ActionService({
     catalog: createCatalog({
       folders: {

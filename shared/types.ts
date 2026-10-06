@@ -186,29 +186,32 @@ export type ChatEvent =
   | { type: 'task-complete'; id: string; title: string }
   | { type: 'action'; id: string; label: string }
   | ({ type: 'done' } & ChatStats);
-export type InputMode = 'browser' | 'local' | 'cloud';
-export type OutputMode = 'system' | 'local' | 'cloud';
+export type VoiceProvider = Provider | 'elevenlabs';
+export type InputMode = 'browser' | VoiceProvider;
+export type OutputMode = 'system' | VoiceProvider;
 export type LocalVoice = 'alex' | 'santa' | 'dora';
 export interface SpeechSettings {
   rate: number;
   voiceURI: string;
   mode: OutputMode;
   localVoice: LocalVoice;
+  elevenLabsVoice?: string;
 }
 export interface SpeechRequest {
-  provider: Provider;
+  provider: VoiceProvider;
   text: string;
   speed: number;
   voice?: string;
   consent?: boolean;
 }
 export interface TranscribeRequest {
-  provider: Provider;
+  provider: VoiceProvider;
   audio: string;
   mime: string;
   live?: boolean;
   consent?: boolean;
   vocabulary?: string[];
+  context?: string[];
 }
 export interface AudioResult {
   audio: string;
@@ -216,6 +219,7 @@ export interface AudioResult {
 }
 export interface Transcript {
   text: string;
+  needsReview?: boolean;
 }
 export interface LocalVoiceStatus {
   ready: boolean;
@@ -239,6 +243,9 @@ export interface WakewordStatus {
 }
 export type VoiceEngine = 'tts' | 'stt';
 export interface JarvisAPI {
+  elevenLabsStatus(): Promise<{ configured: boolean }>;
+  setElevenLabsKey(key: string): Promise<{ configured: boolean }>;
+  elevenLabsVoices(): Promise<{ id: string; name: string }[]>;
   actions(): Promise<ActionCatalog>;
   prepareAction(id: string): Promise<PreparedAction>;
   executeAction(token: string): Promise<ActionResult>;

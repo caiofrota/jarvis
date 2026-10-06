@@ -19,6 +19,7 @@ export default function SpeechDialog({ speech, chat }: { speech: SpeechControlle
           <option value="local">Kokoro · neural local grátis</option>
           <option value="system">Vozes locais do sistema · grátis</option>
           <option value="cloud">OpenAI · API paga</option>
+          <option value="elevenlabs">ElevenLabs · Flash v2.5 · API paga</option>
         </select>
       </label>
       <p className="voice-disclosure">
@@ -26,7 +27,9 @@ export default function SpeechDialog({ speech, chat }: { speech: SpeechControlle
           ? 'Local, sem cobrança.'
           : options.mode === 'system'
             ? 'Usa as vozes instaladas neste dispositivo.'
-            : 'Envia texto à OpenAI. API paga.'}
+            : options.mode === 'elevenlabs'
+              ? 'Envia texto à ElevenLabs. API paga.'
+              : 'Envia texto à OpenAI. API paga.'}
       </p>
       {options.mode === 'system' && (
         <label className="setting-row">

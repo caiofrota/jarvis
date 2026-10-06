@@ -114,15 +114,47 @@ A conversa continua ouvindo ao alternar entre aplicativos. Clique em Encerrar
 conversa para desligar a escuta.
 Ditar mensagem continua disponível para revisar texto antes de enviar.
 Local/offline: Whisper base em português, com parciais durante a gravação.
-O vocabulário de reconhecimento recebe os nomes disponíveis no catálogo da máquina,
+O vocabulário de reconhecimento recebe as tarefas atuais, os pedidos recentes e
+os nomes disponíveis no catálogo da máquina, em um único contexto limitado,
 sem substituir palavras na transcrição. Isso fornece contexto ao decoder, mas não
 garante a precisão de nomes próprios; a validação acústica depende do microfone real.
+Se o decodificador sinalizar baixa probabilidade, silêncio provável ou repetição
+excessiva, a fala não é enviada à execução e o Jarvis pede uma repetição.
+Esses sinais não são uma porcentagem de confiança e não detectam todo erro de
+transcrição. O modelo recebe a indicação de que o pedido foi falado e deve pedir
+esclarecimento diante de ambiguidade, sem presumir erro de digitação.
 No Windows, o catálogo também consulta `Get-StartApps`, incluindo aplicativos da
 Microsoft Store. Instalações com o mesmo nome exigem escolher qual abrir.
 O catálogo é carregado ao iniciar o Jarvis; reinicie após instalar outro aplicativo.
 Saída gratuita: Kokoro neural local ou vozes locais instaladas no sistema.
 OpenAI de voz continua opcional, identificada como API paga. Não há troca
 silenciosa para a nuvem quando uma opção local falha.
+
+### ElevenLabs
+
+Em **Configurações → Voz**, selecione ElevenLabs para reconhecimento e/ou voz de
+resposta. Conecte sua chave ElevenLabs, clique em **Atualizar vozes** e escolha
+uma voz da sua conta. A chave precisa de permissão para Speech to Text, Text to
+Speech e leitura de vozes; é independente da chave e do modelo de inteligência.
+O Jarvis não cria nem clona vozes.
+
+O reconhecimento usa `scribe_v2`, enviando cada fala ao terminar (ou ao parar o
+ditado), sem reenviar parciais. Esta integração usa transcrição por arquivo, não
+`scribe_v2_realtime` por WebSocket. A resposta usa `eleven_flash_v2_5` em português,
+no fluxo de síntese por blocos já existente. Não há garantia de precisão ou
+latência sem teste real com sua conta, microfone e conexão.
+
+Áudio e texto são enviados à ElevenLabs e podem ser retidos pelo provedor. O uso
+da API pode gerar cobrança conforme seu plano. Recursos extras como edição de
+transcrição, vocabulário pago e identificação de falantes não são habilitados.
+Confira a [API de transcrição](https://elevenlabs.io/docs/api-reference/speech-to-text/convert)
+e a [API de voz](https://elevenlabs.io/docs/api-reference/text-to-speech/convert).
+Não ocorre troca automática para outro provedor em caso de falha.
+
+No desktop, a chave é persistida usando o armazenamento protegido do sistema.
+No navegador, permanece somente na memória do servidor local: reiniciar o
+servidor exige conectar novamente. O identificador da voz e a escolha dos
+provedores são salvos no perfil, mas a chave ElevenLabs não vai para localStorage.
 
 A primeira instalação de voz local baixa pacotes e modelos. Precisa de internet
 nessa instalação e de Python 3.11 com uv. O ambiente usa as dependências bloqueadas

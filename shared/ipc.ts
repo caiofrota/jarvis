@@ -1,5 +1,8 @@
 import type { JarvisAPI, DesktopAPI } from './types';
 export interface IPCChannels {
+  'elevenlabs-status': JarvisAPI['elevenLabsStatus'];
+  'elevenlabs-key': JarvisAPI['setElevenLabsKey'];
+  'elevenlabs-voices': JarvisAPI['elevenLabsVoices'];
   actions: JarvisAPI['actions'];
   'actions-prepare': JarvisAPI['prepareAction'];
   'actions-execute': JarvisAPI['executeAction'];

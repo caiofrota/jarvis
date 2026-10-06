@@ -91,6 +91,7 @@ async function boot(directory, actionOptions) {
     },
     '../lib/voice': {
       VoiceService: class {
+        elevenlabs = { setKey() {} };
         local = { dispose() {} };
         cancel = cancel;
         cancelSpeech = cancel;
