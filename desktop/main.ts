@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { IPCChannels } from '../shared/ipc';
 import type { IpcMainInvokeEvent } from 'electron';
 import { projectRoot } from '../lib/paths';
-import { app, BrowserWindow, ipcMain, session, shell, screen } from 'electron';
+import { app, BrowserWindow, ipcMain, session, screen } from 'electron';
 import * as path from 'node:path';
 import { isAppURL, MicrophoneGate } from '../lib/permissions';
 import { AIService } from '../lib/ai';
@@ -214,10 +214,6 @@ app.whenReady().then(() => {
   secrets = new SecretStore(path.join(app.getPath('userData'), 'openai-api-key.bin'));
   ai.setKey(secrets.read());
   actions = new ActionService({
-    launcher: async (command, args) => {
-      const error = await shell.openPath(args[0] || command);
-      if (error) throw new Error(error);
-    },
     catalog: createCatalog({
       folders: {
         documents: app.getPath('documents'),

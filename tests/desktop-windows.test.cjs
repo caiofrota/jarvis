@@ -6,7 +6,7 @@ const path = require('node:path');
 const os = require('node:os');
 const vm = require('node:vm');
 
-async function boot(directory) {
+async function boot(directory, actionOptions) {
   const app = new EventEmitter();
   app.isPackaged = false;
   app.getPath = () => directory;
@@ -77,7 +77,11 @@ async function boot(directory) {
       ipcMain: { handle: (name, handler) => handlers.set(name, handler) },
       screen: { getAllDisplays: () => [{ workArea: { x: 0, y: 0, width: 1920, height: 1080 } }] },
       session: { defaultSession: { setPermissionRequestHandler() {}, setPermissionCheckHandler() {} } },
-      shell: { openPath: async () => '' },
+      shell: {
+        openPath: async () => {
+          throw new Error('The desktop must use the catalog command and arguments.');
+        },
+      },
     },
     '../lib/ai': {
       AIService: class {
@@ -122,6 +126,31 @@ async function boot(directory) {
       },
     },
   };
+  if (actionOptions) {
+    const actionFile = require.resolve('../dist/lib/actions.js');
+    const actionExports = {};
+    vm.runInNewContext(fs.readFileSync(actionFile, 'utf8'), {
+      exports: actionExports,
+      console,
+      process,
+      setTimeout,
+      clearTimeout,
+      require: (name) =>
+        name === 'node:child_process'
+          ? { ...require(name), spawn: actionOptions.spawn || require(name).spawn }
+          : name.startsWith('.')
+            ? require(path.resolve(path.dirname(actionFile), name))
+            : require(name),
+    });
+    modules['../lib/actions'] = {
+      ActionService: class extends actionExports.ActionService {
+        constructor(options) {
+          super({ ...options, environment: { restricted: false } });
+        }
+      },
+      createCatalog: () => actionOptions.catalog,
+    };
+  }
   const file = require.resolve('../dist/desktop/main.js');
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), {
     exports: {},
@@ -173,4 +202,130 @@ test('compiled desktop closes the complete workspace and restores stable window 
   assert.equal(second.active()[1].query.secondary, '1');
   second.app.emit('before-quit');
   assert.equal(second.active().length, 0);
+});
+
+test('compiled desktop executes the actual catalog launcher for registered apps, binaries, shortcuts and folders', async (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'jarvis-desktop-launch-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const calls = [];
+  const catalog = [
+    {
+      id: 'registered',
+      label: 'Registered Application',
+      kind: 'app',
+      command: 'C:\\Windows\\explorer.exe',
+      args: ['shell:AppsFolder\\Example.Package!App'],
+    },
+    {
+      id: 'executable',
+      label: 'An Executable',
+      kind: 'app',
+      command: 'C:\\Program Files\\Example Editor\\editor.exe',
+      args: ['--new-window', 'C:\\My Projects'],
+    },
+    {
+      id: 'shortcut',
+      label: 'A Shortcut',
+      kind: 'app',
+      command: 'C:\\Windows\\explorer.exe',
+      args: ['C:\\Start Menu\\Example Editor.lnk'],
+    },
+    {
+      id: 'folder',
+      label: 'A Folder',
+      kind: 'folder',
+      command: 'C:\\Windows\\explorer.exe',
+      args: ['C:\\My Documents'],
+    },
+  ].map((item) => ({ ...item, target: item.args[0], available: true }));
+  const desktop = await boot(directory, {
+    catalog,
+    spawn: (command, args, options) => {
+      calls.push({ command, args: Array.from(args), options });
+      const child = new EventEmitter();
+      child.unref = () => {};
+      setImmediate(() => child.emit('exit', 0));
+      return child;
+    },
+  });
+  t.after(() => desktop.app.emit('before-quit'));
+  for (const target of catalog) {
+    const prepared = await desktop.invoke('actions-prepare', target.id);
+    assert.equal(prepared.ok, true);
+    const result = await desktop.invoke('actions-execute', prepared.value.token);
+    assert.equal(result.ok, true, result.error);
+    assert.equal(result.value.status, 'sent');
+    const call = calls.at(-1);
+    assert.equal(call.command, target.command);
+    assert.deepEqual(call.args, target.args);
+    assert.equal(call.options.shell, false);
+    assert.equal((await desktop.invoke('actions-execute', prepared.value.token)).ok, false);
+  }
+  assert.equal((await desktop.invoke('actions-prepare', 'not-in-catalog')).ok, false);
+  assert.equal(calls.length, catalog.length);
+});
+
+test('compiled desktop launches a real disposable process with intact arguments through action IPC', async (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'jarvis-desktop-real-launch-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const output = path.join(directory, 'argument result.txt');
+  const desktop = await boot(directory, {
+    catalog: [
+      {
+        id: 'probe',
+        label: 'Disposable Test Process',
+        kind: 'app',
+        available: true,
+        command: process.execPath,
+        target: process.execPath,
+        args: [
+          '-e',
+          "require('node:fs').writeFileSync(process.argv[1],process.argv[2])",
+          output,
+          'argument with spaces',
+        ],
+      },
+    ],
+  });
+  t.after(() => desktop.app.emit('before-quit'));
+  const prepared = await desktop.invoke('actions-prepare', 'probe');
+  const result = await desktop.invoke('actions-execute', prepared.value.token);
+  assert.equal(result.ok, true, result.error);
+  assert.equal(result.value.status, 'sent');
+  assert.equal(fs.readFileSync(output, 'utf8'), 'argument with spaces');
+});
+
+test('compiled desktop reports process creation and exit failures instead of confirming an opening', async (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'jarvis-desktop-launch-failure-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  let failure = 'error';
+  const desktop = await boot(directory, {
+    catalog: [
+      {
+        id: 'failing',
+        label: 'Unavailable Application',
+        kind: 'app',
+        command: 'example.exe',
+        args: [],
+        target: 'example.exe',
+        available: true,
+      },
+    ],
+    spawn: () => {
+      const child = new EventEmitter();
+      child.unref = () => {};
+      setImmediate(() =>
+        failure === 'error' ? child.emit('error', new Error('ENOENT')) : child.emit('exit', 1),
+      );
+      return child;
+    },
+  });
+  t.after(() => desktop.app.emit('before-quit'));
+  for (const mode of ['error', 'exit']) {
+    failure = mode;
+    const prepared = await desktop.invoke('actions-prepare', 'failing');
+    const result = await desktop.invoke('actions-execute', prepared.value.token);
+    assert.equal(result.ok, false);
+    assert.match(result.error, mode === 'error' ? /iniciar/ : /recusou/);
+  }
 });
