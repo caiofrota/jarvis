@@ -1,4 +1,4 @@
-import { openWorkspaceWindow } from '../../features/workspace/open-window';
+import PanelSettings from '../../features/workspace/PanelSettings/PanelSettings';
 import type { PanelId, Preferences } from '../../shared/types';
 import { panelNames } from '../../features/workspace/preferences';
 export default function Panel({
@@ -27,9 +27,6 @@ export default function Panel({
     order.splice(order.indexOf(id), 0, source);
     drag.current = null;
     patch({ order });
-  }
-  function detach() {
-    openWorkspaceWindow(id);
   }
   return (
     <section
@@ -64,20 +61,7 @@ export default function Panel({
           >
             ⠿
           </button>
-          <button
-            className="icon-button"
-            onClick={() =>
-              patch({
-                wide: prefs.wide.includes(id) ? prefs.wide.filter((x) => x !== id) : [...prefs.wide, id],
-              })
-            }
-            aria-label={'Dar mais espaço a ' + panelNames[id]}
-          >
-            ↕
-          </button>
-          <button className="icon-button" onClick={detach} aria-label={'Destacar ' + panelNames[id]}>
-            ↗
-          </button>
+          <PanelSettings id={id} prefs={prefs} patch={patch} />
         </div>
       </header>
       {children}

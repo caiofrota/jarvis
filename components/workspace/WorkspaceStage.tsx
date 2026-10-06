@@ -2,23 +2,22 @@ import { useState } from 'react';
 import type { PanelId, Preferences } from '../../shared/types';
 import { useCardGrid } from '../../features/workspace/useCardGrid';
 import Panel from './Panel';
+import PanelSettings from '../../features/workspace/PanelSettings/PanelSettings';
 export default function WorkspaceStage({
   contents,
   prefs,
   patch,
   drag,
   openPanels,
-  primary,
 }: {
   contents: Record<PanelId, React.ReactNode>;
   prefs: Preferences;
   patch(values: Partial<Preferences>): void;
   drag: React.RefObject<PanelId | null>;
   openPanels(): void;
-  primary: boolean;
 }) {
   const cards = prefs.order.filter((id) => id !== 'assistant' && !prefs.hidden.includes(id));
-  const assistant = primary && !prefs.hidden.includes('assistant');
+  const assistant = !prefs.hidden.includes('assistant');
   const grid = useCardGrid(assistant, cards.length);
   const [mobileCards, setMobileCards] = useState(false);
   const isPage = (index: number) => index >= grid.start && index < grid.start + grid.capacity;
@@ -50,6 +49,9 @@ export default function WorkspaceStage({
           data-panel="assistant"
           aria-label="Assistente"
         >
+          <div className="core-panel-tools">
+            <PanelSettings id="assistant" prefs={prefs} patch={patch} />
+          </div>
           {contents.assistant}
         </section>
       )}

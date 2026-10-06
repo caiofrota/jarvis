@@ -40,6 +40,27 @@
   width: 23px;
   height: 24px;
 }
+.core-panel-tools {
+  position: fixed;
+  left: calc(50% + 130px);
+  top: 140px;
+  z-index: 5;
+  pointer-events: auto;
+}
+@media (max-width: 700px) {
+  .core-panel-tools {
+    left: auto;
+    right: 16px;
+    top: 145px;
+  }
+}
+.panel-settings-button {
+  color: var(--muted);
+}
+.panel-settings-button:hover,
+.panel-settings-button:focus-visible {
+  color: var(--accent);
+}
 .panel.dragging {
   opacity: 0.4;
 }

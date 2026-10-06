@@ -49,6 +49,15 @@ export default function Shell({
         <header className="topbar">
           <div className="wordmark">JARVIS</div>
           <div className="top-actions">
+            <button
+              className="icon-button"
+              type="button"
+              onClick={() => open('panels')}
+              aria-label="Mostrar painéis"
+              aria-haspopup="dialog"
+            >
+              ▦
+            </button>
             <button className="button small new-workspace" onClick={() => openWorkspaceWindow()}>
               Nova janela
             </button>

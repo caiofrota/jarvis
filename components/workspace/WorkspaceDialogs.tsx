@@ -10,6 +10,7 @@ import VoiceDialog from '../../features/voice/VoiceDialog';
 import ComputerPanel from '../../features/actions/ComputerPanel';
 import SettingsHub, { type SettingsSection } from '../../features/settings/SettingsHub/SettingsHub';
 import type { ReturnTypeVoiceInput } from '../../features/voice/voice-types';
+import PanelsDialog from '../../features/workspace/PanelsDialog/PanelsDialog';
 const titles = {
   intelligence: 'Inteligência, à sua escolha.',
   profile: 'Seu briefing e a personalidade do Jarvis.',
@@ -18,7 +19,7 @@ const titles = {
   speech: 'Uma voz para suas ideias.',
   computer: 'Meu computador',
   settings: 'Seu ambiente, seu ritmo.',
-  panels: 'Seu espaço, do seu jeito.',
+  panels: 'Painéis desta janela',
   addons: 'Conecte suas possibilidades.',
   clear: 'Começar uma nova conversa?',
   commands: 'O que vamos fazer?',
@@ -53,13 +54,12 @@ export default function WorkspaceDialogs({
   voice: ReturnTypeVoiceInput;
 }) {
   if (!dialog) return null;
-  if (['intelligence', 'profile', 'speech', 'settings', 'panels', 'addons'].includes(dialog)) {
+  if (['intelligence', 'profile', 'speech', 'settings', 'addons'].includes(dialog)) {
     return (
       <Dialog title="Configurações" className="settings-dialog" onClose={() => open(null)}>
         <SettingsHub
           key={dialog}
           initialSection={dialog as SettingsSection}
-          primary={primary}
           prefs={prefs}
           patch={patch}
           personalProfile={personalProfile}
@@ -75,6 +75,9 @@ export default function WorkspaceDialogs({
   }
   let body;
   switch (dialog) {
+    case 'panels':
+      body = <PanelsDialog primary={primary} prefs={prefs} patch={patch} />;
+      break;
     case 'conversation':
       return null;
     case 'voice':
