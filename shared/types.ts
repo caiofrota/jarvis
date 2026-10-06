@@ -38,13 +38,20 @@ export interface TaskReceipt {
   title: string;
   status: 'saved' | 'existing';
 }
+export interface TaskUpdateReceipt {
+  type: 'update_task';
+  id: string;
+  title: string;
+  previousTitle: string;
+  status: 'updated';
+}
 export interface OpenReceipt {
   type: 'open_computer';
   id: string;
   label: string;
   status: 'sent';
 }
-export type Receipt = TaskReceipt | OpenReceipt;
+export type Receipt = TaskReceipt | TaskUpdateReceipt | OpenReceipt;
 export interface Message {
   role: 'user' | 'assistant';
   text: string;
@@ -161,6 +168,7 @@ export type ChatEvent =
   | { type: 'delta' | 'replace'; text: string }
   | { type: 'status' | 'error' | 'cancelled'; message: string }
   | { type: 'task'; title: string }
+  | { type: 'task-update'; id: string; title: string; previousTitle: string }
   | { type: 'action'; id: string; label: string }
   | ({ type: 'done' } & ChatStats);
 export type InputMode = 'browser' | 'local' | 'cloud';

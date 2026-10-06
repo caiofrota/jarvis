@@ -1,4 +1,4 @@
-import type { Save, Preferences, TaskReceipt } from '../../shared/types';
+import type { Save, Preferences, TaskReceipt, TaskUpdateReceipt } from '../../shared/types';
 function normalize(value: string) {
   return value
     .normalize('NFD')
@@ -6,6 +6,34 @@ function normalize(value: string) {
     .trim()
     .replace(/\s+/g, ' ')
     .toLowerCase();
+}
+
+export function updateTask(
+  updatePrefs: Save<Preferences>,
+  id: string,
+  value: string,
+  previousTitle: string,
+): { receipt: TaskUpdateReceipt; text: string } {
+  const title = typeof value === 'string' ? value.trim() : '';
+  if (!title || title.length > 180) throw new Error('Informe uma tarefa com até 180 caracteres.');
+  const saved = updatePrefs((current) => {
+    const task = current.tasks.find((item) => item.id === id);
+    if (!task) throw new Error('A tarefa a corrigir não existe mais. Nenhuma alteração foi feita.');
+    if (task.text !== previousTitle)
+      throw new Error('A tarefa mudou desde o pedido. Confira o título antes de corrigir.');
+    if (current.tasks.some((item) => item.id !== id && normalize(item.text) === normalize(title)))
+      throw new Error('Já existe outra tarefa com esse título. Qual delas você quer manter?');
+    return {
+      ...current,
+      tasks: current.tasks.map((item) => (item.id === id ? { ...item, text: title } : item)),
+    };
+  });
+  if (!saved?.tasks.some((task) => task.id === id && task.text === title))
+    throw new Error('Não consegui salvar a correção. Nenhuma alteração foi confirmada.');
+  return {
+    receipt: { type: 'update_task', id, title, previousTitle, status: 'updated' },
+    text: `Corrigi a tarefa para “${title}”.`,
+  };
 }
 
 export function saveTask(

@@ -3,7 +3,14 @@ import { getAPI } from '../../client/api';
 import { readStored } from '../../client/storage';
 import { withoutEmoji } from '../../client/text';
 import { chatMessages } from './conversation';
-import type { Message, PersonalProfile, Profile, Task, TaskReceipt } from '../../shared/types';
+import type {
+  Message,
+  PersonalProfile,
+  Profile,
+  Task,
+  TaskReceipt,
+  TaskUpdateReceipt,
+} from '../../shared/types';
 import type { IntelligenceController, ActionsController, SpeechController } from '../controllers';
 import type { LocalReply } from './local-commands';
 
@@ -17,6 +24,7 @@ interface Options {
   onMissingModel(): void;
   command(text: string, history: Message[]): LocalReply;
   addTask(title: string): { text: string; receipt: TaskReceipt };
+  updateTask(id: string, title: string, previousTitle: string): { text: string; receipt: TaskUpdateReceipt };
 }
 export function useChat({
   ai,
@@ -28,6 +36,7 @@ export function useChat({
   command,
   tasks,
   addTask,
+  updateTask,
 }: Options) {
   const key = 'jarvis-chat-v2:' + ai.config.provider + ':' + ai.model;
   const [history, setHistory] = useState<{ key: string; messages: Message[] }>({ key: '', messages: [] });
@@ -139,6 +148,7 @@ export function useChat({
     const response: Message = { role: 'assistant', text: '', kind: 'ai', status: 'streaming' };
     const next = [...previous, user];
     let action: { id: string; label: string } | undefined, taskTitle: string | undefined;
+    let taskUpdate: { id: string; title: string; previousTitle: string } | undefined;
     const paint = () => publish([...next, { ...response }]);
     paint();
     if (spoken) speech.begin();
@@ -166,6 +176,7 @@ export function useChat({
           }
           if (event.type === 'action') action = { id: event.id, label: event.label };
           if (event.type === 'task') taskTitle = event.title;
+          if (event.type === 'task-update') taskUpdate = event;
           if (event.type === 'status') setStatus(event.message);
           if (event.type === 'done') {
             response.status = 'done';
@@ -188,7 +199,7 @@ export function useChat({
         response.text ||= 'Resposta interrompida.';
       }
       if (response.status === 'done' && turn === epoch.current) {
-        if (action && taskTitle)
+        if ([action, taskTitle, taskUpdate].filter(Boolean).length > 1)
           throw new Error('A resposta trouxe ações incompatíveis. Nada foi executado.');
         if (action) {
           response.text = await actions.execute(action.id);
@@ -196,6 +207,11 @@ export function useChat({
         }
         if (taskTitle) {
           const result = addTask(taskTitle);
+          response.text = result.text;
+          response.receipt = result.receipt;
+        }
+        if (taskUpdate) {
+          const result = updateTask(taskUpdate.id, taskUpdate.title, taskUpdate.previousTitle);
           response.text = result.text;
           response.receipt = result.receipt;
         }

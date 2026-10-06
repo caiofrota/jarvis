@@ -18,6 +18,7 @@ import {
   contextForDecision,
   contextForPersonalProfile,
   isActionRequest,
+  TASK_CORRECTION_INSTRUCTIONS,
   parseDecision,
 } from './chat-decision';
 import { lines, readDecisionStream } from './decision-stream';
@@ -283,7 +284,9 @@ class AIService {
           ? FAST_DECISION_INSTRUCTIONS
           : DECISION_INSTRUCTIONS
         : REPLY_INSTRUCTIONS) +
-      (structured ? contextForDecision(request, spoken || profile === 'eco') : '') +
+      (structured
+        ? '\n' + TASK_CORRECTION_INSTRUCTIONS + contextForDecision(request, spoken || profile === 'eco')
+        : '') +
       contextForPersonalProfile(request.personalProfile) +
       (spoken ? '\nConversa falada: em reply use até duas frases curtas.' : '');
     const maxOutput = spoken ? Math.min(p.maxOutput, 128) : p.maxOutput;
@@ -386,18 +389,25 @@ class AIService {
             if (decision.type !== 'reply') throw new Error('Resposta local não é uma conversa.');
             reply.pushPlain(decision.text, true);
           } else decision = parseDecision(generation.text);
+          if (decision.type === 'update-task') {
+            const id = decision.id;
+            if (!request.tasks?.some((task) => task.id === id))
+              throw new Error(
+                'A tarefa a corrigir não existe na lista fornecida. Pergunte qual tarefa corrigir.',
+              );
+          }
           break;
         } catch (errorCause) {
           const error = errorCause instanceof Error ? errorCause : new Error(String(errorCause));
           if (reply.text) fail('A resposta não passou na validação final. Nenhuma ação foi executada.');
           if (attempt === 1)
-            fail('Não consegui validar a ação. Nenhuma tarefa foi adicionada. Tente novamente.');
+            fail('Não consegui validar a ação. Nenhuma tarefa foi adicionada ou alterada. Tente novamente.');
           // Retry a decision, never infer or execute an action from a prose claim.
           payload.messages[0].content =
             system +
             '\nCorreção obrigatória: ' +
             error.message +
-            ' Reavalie a última mensagem. Se há tarefa pendente a registrar, emita add_task com título; caso contrário use reply sem afirmar nem prometer registro. JSON somente.';
+            ' Reavalie a última mensagem. Para corrigir tarefa existente use update_task com id; somente uma nova pendência usa add_task. Se há ambiguidade, pergunte em reply sem afirmar nenhuma alteração. JSON somente.';
           onEvent({ type: 'status', message: 'Conferindo a ação antes de responder…' });
         }
       }
@@ -408,6 +418,11 @@ class AIService {
       if (decision.type === 'add-task') {
         onEvent({ type: 'status', message: 'Salvando tarefa…' });
         onEvent({ type: 'task', title: decision.title });
+      } else if (decision.type === 'update-task') {
+        const task = request.tasks?.find((task) => task.id === decision.id);
+        if (!task) fail('A tarefa a corrigir não existe. Nenhuma alteração foi feita.');
+        onEvent({ type: 'status', message: 'Corrigindo tarefa…' });
+        onEvent({ type: 'task-update', id: task.id, title: decision.title, previousTitle: task.text });
       } else if (decision.type === 'open-target') {
         const target = resolveTarget(decision.name, request.targets || []);
         if (target.type === 'action') onEvent(target);
