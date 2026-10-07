@@ -61,3 +61,6 @@ native/.venv/
 
 # Private central development setup
 apps/web/.local/
+
+# Synthetic speech fixture required by native VAD regression tests
+!native/tests/fixtures/local-greeting.wav
