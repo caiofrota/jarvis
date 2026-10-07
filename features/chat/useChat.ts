@@ -201,6 +201,7 @@ export function useChat({
           if (event.type === 'error') {
             response.status = 'error';
             response.text = event.message;
+            if (spoken) speech.stop();
           }
           if (event.type === 'cancelled') response.status = 'cancelled';
         },

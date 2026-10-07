@@ -121,15 +121,60 @@ test('ElevenLabs voice catalog follows opaque pagination and filters invalid ide
 
 test('ElevenLabs reports authentication, permissions and quota errors without exposing provider bodies', async () => {
   for (const [status, expected] of [
-    [401, /Chave ElevenLabs inválida/],
+    [401, /acesso recusado/],
     [403, /permissão/],
-    [429, /saldo/],
+    [429, /limite de requisições/],
     [500, /recusou/],
   ]) {
     const service = new ElevenLabsService(async () => new Response('secret-provider-body', { status }));
     service.setKey('test-key');
     await assert.rejects(service.transcribe(audio, 'one'), expected);
     await assert.rejects(service.speak(speech, 'one'), expected);
+  }
+});
+
+test('ElevenLabs diagnoses provider codes independently of HTTP status and identifies the operation', async () => {
+  for (const [code, expected] of [
+    ['invalid_api_key', /chave inválida/],
+    ['missing_permissions', /não tem permissão/],
+    ['quota_exceeded', /saldo ou cota insuficiente/],
+  ]) {
+    for (const field of ['status', 'code']) {
+      const service = new ElevenLabsService(async () =>
+        Response.json({ detail: { [field]: code, message: 'secret-provider-body' } }, { status: 401 }),
+      );
+      service.setKey('test-key');
+      for (const [work, operation] of [
+        [() => service.transcribe(audio, 'one'), 'Speech to Text'],
+        [() => service.speak(speech, 'one'), 'Text to Speech'],
+        [() => service.voices(), 'catálogo de vozes'],
+      ]) {
+        await assert.rejects(work(), (error) => {
+          assert.match(error.message, expected);
+          assert.ok(error.message.includes(operation));
+          assert.ok(!error.message.includes('secret-provider-body'));
+          return true;
+        });
+      }
+    }
+  }
+});
+
+test('ElevenLabs bounds error bodies and does not leak unknown codes or mislabel unknown 401s', async () => {
+  for (const body of [
+    '',
+    'not-json',
+    'x'.repeat(16 * 1024 + 1),
+    JSON.stringify({ detail: { status: 'secret-unknown-code', message: 'private' } }),
+    'null',
+  ]) {
+    const service = new ElevenLabsService(async () => new Response(body, { status: 401 }));
+    service.setKey('test-key');
+    await assert.rejects(service.transcribe(audio, 'one'), (error) => {
+      assert.match(error.message, /HTTP 401/);
+      assert.doesNotMatch(error.message, /chave inválida|secret|private|not-json/);
+      return true;
+    });
   }
 });
 

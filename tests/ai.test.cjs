@@ -3,6 +3,33 @@ const { test } = require('node:test'),
   assert = require('node:assert/strict');
 const { AIService, validateMessages, lines } = require('../dist/lib/ai.js');
 const { createServer } = require('../dist/server.js');
+const { DECISION_SCHEMA, parseDecision } = require('../dist/lib/chat-decision.js');
+
+test('every decision schema object satisfies strict required fields, including new_instance', () => {
+  function check(schema) {
+    if (schema.type === 'object') {
+      assert.deepEqual([...schema.required].sort(), Object.keys(schema.properties).sort());
+      assert.equal(schema.additionalProperties, false);
+      Object.values(schema.properties).forEach(check);
+    }
+    schema.anyOf?.forEach(check);
+  }
+  check(DECISION_SCHEMA);
+  for (const value of [false, true]) {
+    assert.deepEqual(
+      parseDecision(
+        JSON.stringify({
+          decision: {
+            type: 'open_computer_target',
+            target: 'Unfamiliar application',
+            new_instance: value,
+          },
+        }),
+      ),
+      { type: 'open-target', name: 'Unfamiliar application', newInstance: value },
+    );
+  }
+});
 const json = (data) =>
   new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } });
 const request = {
