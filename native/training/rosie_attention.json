@@ -1,0 +1,53 @@
+{
+  "id": "rosie_attention_20260925",
+  "seed": 20260925,
+  "status": "experimental_user_authorized_training_not_acoustic_approval",
+  "voice_groups": {
+    "training": ["pf_dora", "pm_alex", "af_heart", "af_bella", "am_michael", "am_adam"],
+    "validation": ["pm_santa", "af_sarah"],
+    "testing": ["af_nicole", "am_echo"]
+  },
+  "speeds": [0.85, 1.0, 1.15],
+  "names": [
+    {"id": "american_rosie", "phonemes": "ɹˈOzi"},
+    {"id": "brazilian_rozi", "phonemes": "hˈozi"}
+  ],
+  "wake_prefixes": [
+    {"phrase": "Acorda Rosie", "variant": "brazilian_h", "phonemes": "akˈɔhdɐ"},
+    {"phrase": "Acorda Rosie", "variant": "brazilian_tap", "phonemes": "akˈɔɾdɐ"},
+    {"phrase": "Acorde Rosie", "variant": "brazilian_h", "phonemes": "akˈɔhdʒi"},
+    {"phrase": "Acorde Rosie", "variant": "brazilian_tap", "phonemes": "akˈɔɾdʒi"},
+    {"phrase": "Ei Rosie", "variant": "pt_br", "phonemes": "ˈej"},
+    {"phrase": "Oi Rosie", "variant": "pt_br", "phonemes": "ˈoj"},
+    {"phrase": "Olá Rosie", "variant": "pt_br", "phonemes": "olˈa"},
+    {"phrase": "Hello Rosie", "variant": "en_us", "phonemes": "həlˈO"},
+    {"phrase": "Hello Rosie", "variant": "pt_br_accent", "phonemes": "helˈow"},
+    {"phrase": "Hi Rosie", "variant": "en_us", "phonemes": "hˈI"},
+    {"phrase": "Hi Rosie", "variant": "pt_br_accent", "phonemes": "hˈaj"}
+  ],
+  "stop_orders": ["name_first", "name_last"],
+  "stop_phonemes": ["pˈaɾɐ", "pˈaɾa"],
+  "negative_texts": [
+    "Ajusta o ar para vinte e dois", "O ar para vinte e dois graus", "Ar para vinte e dois",
+    "É para amanhã", "Isso é para amanhã de manhã", "Para mim está bom", "Vai para casa",
+    "Para", "Parar", "Cancelar", "Cancele", "Pode parar", "Pode dormir", "Não para agora",
+    "Rosie", "Rose", "Rosa", "Rôzi", "Rosie é muito engraçada", "A Rosie está dormindo",
+    "Ela falou com a Rosie", "Eu vi a Rose no mercado", "Pode perguntar para a Rosie",
+    "Dê o presente para a Rose", "Rosie prepara o café", "Rosie parece estar feliz",
+    "Para José", "Para Rosa", "Para o carro", "A cor da rosa", "A cor da roseira",
+    "Acorda cedo", "Acorda José", "Acorde maior", "Agora eu sei", "Agora pode ir",
+    "Oi José", "Oi Rosa", "Olá Rodrigo", "Ei você", "Hello world", "Hi Robert",
+    "Bom dia", "Boa noite", "Que horas são", "Qual é a temperatura lá fora",
+    "Liga a luz", "Apaga a luz do escritório", "Conta uma piada", "Você fica brava",
+    "Faz cara de feliz", "Muito obrigado", "Está tudo bem", "Eu vou sair agora",
+    "Onde está meu celular", "Tem alguém na porta", "Vamos almoçar", "A televisão está ligada",
+    "Eu não entendi", "Repete por favor", "O café está pronto", "Você conhece essa música",
+    "Amanhã vai chover", "A janela está aberta", "O vídeo começou", "Ele foi embora sem falar"
+  ],
+  "limitations": [
+    "Synthetic Kokoro styles are not held-out human speakers",
+    "Name phonemes reuse the approved September 22 drafts; new prefixes are unverified",
+    "The classifier alone cannot distinguish identical words from the robot's own playback",
+    "Standalone para, cancelar and cancele remain server text commands, not this acoustic stop class"
+  ]
+}

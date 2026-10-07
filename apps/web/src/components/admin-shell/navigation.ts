@@ -1,0 +1,39 @@
+import {
+  faDoorOpen,
+  faFaceSmile,
+  faGauge,
+  faHouse,
+  faLightbulb,
+  faMicrophoneLines,
+  faMoon,
+  faRobot,
+  faSliders,
+  faUser,
+  faUserShield,
+  faUsers,
+  faWandMagicSparkles,
+} from "@fortawesome/free-solid-svg-icons";
+import { labels } from "../../i18n/pt-BR";
+export const navigation = [
+  { id: "studio", label: "Conversa", icon: faRobot, permission: "robot.control" },
+  { id: "overview", label: "Visão geral", icon: faGauge, permission: "status.read" },
+  ...Object.entries(labels).map(([id, label]) => ({
+    id,
+    label,
+    icon: {
+      homes: faHouse,
+      rooms: faDoorOpen,
+      assistants: faRobot,
+      endpoints: faMicrophoneLines,
+      devices: faLightbulb,
+      residents: faUsers,
+      modes: faMoon,
+      routines: faWandMagicSparkles,
+      intents: faFaceSmile,
+    }[id as keyof typeof labels],
+    permission: "catalog.read",
+  })),
+  { id: "settings", label: "Voz e conexões", icon: faSliders, permission: "settings.manage" },
+  { id: "users", label: "Usuários", icon: faUserShield, permission: "users.manage" },
+  { id: "account", label: "Minha conta", icon: faUser, permission: "status.read" },
+];

@@ -32,3 +32,11 @@ Regression tests may reproduce specific reports, but must also cover unfamiliar 
 adjacent cases to demonstrate that the implementation generalizes. Do not describe decoder hints
 or pronunciation changes as proven improvements without real audio validation. Any necessary
 exception requires an explicit project decision with its limitation and removal condition.
+
+## Shared brain and robot endpoints
+
+Read `docs/engineering/rosie-context.md` and `docs/engineering/decisions.md` for imported
+server boundaries. Before native firmware or installation changes, read
+`native/docs/architecture.md` and `native/docs/validation.md`. Private credentials,
+catalogs, databases, recordings, model weights and compiled firmware are not source
+artifacts. Native GPL notices remain applicable; do not replace them with the root MIT license.

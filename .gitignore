@@ -33,3 +33,28 @@ out/
 
 dist/
 *.tsbuildinfo
+
+# Shared brain and robot private runtime
+secrets.yaml
+.esphome/
+.cache/
+artifacts/
+__pycache__/
+node_modules/
+.next/
+.next-users/
+.turbo/
+dist/
+*.tsbuildinfo
+.env
+.env.local
+*.sqlite
+*.sqlite-*
+packages/db/generated/
+playwright-report/
+test-results/
+
+.mypy_cache/
+
+native/.venv/
+.cache/

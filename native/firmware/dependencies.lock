@@ -1,0 +1,54 @@
+dependencies:
+  espressif/esp-nn:
+    component_hash: 3b3411b0e4ad1717a72870fde9f9b67cef6f3f97491cc64fcfc1910a8fd8a246
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.1'
+    source:
+      registry_url: https://components.espressif.com
+      type: service
+    version: 1.4.1
+  espressif/esp-tflite-micro:
+    component_hash: bdb2625ed976d5b861177cdc295abc6738724f84f4c7c60fc58c721d2b30bed6
+    dependencies:
+    - name: espressif/esp-nn
+      registry_url: https://components.espressif.com
+      require: private
+      version: '>=1.3.0'
+    - name: idf
+      require: private
+      version: '>=5.1'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.4.1
+  espressif/esp_websocket_client:
+    component_hash: dc00233af846f3a744ada283a300e0d586040aadc3ee67361645ecdce4523672
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.0'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.8.0
+  idf:
+    source:
+      type: idf
+    version: 5.4.2
+  speech_features:
+    component_hash: c2f7dc1f2c78b05a4ab46bb10ef761ebeeb2c119ff38088547d5ba387dedc43f
+    dependencies: []
+    source:
+      git: https://github.com/0xD34D/ESPMicroSpeechFeatures.git
+      path: .
+      type: git
+    version: c2a077454c24d71fc84be377bb6e28725f05c333
+direct_dependencies:
+- espressif/esp-tflite-micro
+- espressif/esp_websocket_client
+- speech_features
+manifest_hash: 3700d57749a184739924507b05ae6aa61dd334cdeae3e499f3f494331c2f0c7f
+target: esp32
+version: 2.0.0

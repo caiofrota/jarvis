@@ -1,0 +1,22 @@
+[Unit]
+Description=Rosie native voice server
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/workspace/desk-robot/native
+ExecStart=%h/workspace/desk-robot/native/.venv/bin/uvicorn server.app:app --host 0.0.0.0 --port 8765 --ws-max-size 8192 --ws-max-queue 8
+Environment=TZ=America/Fortaleza
+Environment=OMP_NUM_THREADS=2
+Environment=OPENBLAS_NUM_THREADS=1
+Environment=ROSIE_PREWARM=1
+Restart=on-failure
+RestartSec=5
+Nice=10
+MemoryHigh=1200M
+MemoryMax=1800M
+NoNewPrivileges=true
+UMask=0077
+
+[Install]
+WantedBy=default.target

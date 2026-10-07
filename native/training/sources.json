@@ -1,0 +1,16 @@
+{
+  "python_image": "python@sha256:fd95fa221297a88e1cf49c55ec1828edd7c5a428187e67b5d1805692d11588db",
+  "trainer": {
+    "revision": "4665173cd35f1cff9a61e06fc427f124766c488e",
+    "archive_sha256": "726c3dbf80bd7f5f0b76d05c80bbd91a31740c5fd3df2f25a15dd157781c6402"
+  },
+  "background": {
+    "repository": "https://huggingface.co/datasets/kahrendt/microwakeword",
+    "revision": "0da95f94302ca2f4aae3b18fc6560fa6d2bba3d1",
+    "license": "CC-BY-NC-4.0",
+    "files": {
+      "dinner_party.zip": "18a0885d595ced7faa73736a8680206f5ba6e80113ca3e6ce43130e510aac18f",
+      "dinner_party_eval.zip": "e08e23a5e654dd4415a1c41a4b6cd02d1f983c821512367ad937bac1aeed8299"
+    }
+  }
+}

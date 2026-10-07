@@ -1,0 +1,496 @@
+substitutions:
+  device_name: desk-robot
+  friendly_name: "Robô de Mesa"
+  mic_bclk_pin: GPIO25
+  mic_lrclk_pin: GPIO26
+  mic_data_pin: GPIO33
+  mic_channel: left
+  speaker_bclk_pin: GPIO27
+  speaker_lrclk_pin: GPIO14
+  speaker_data_pin: GPIO32
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  min_version: 2026.9.0
+  compile_process_limit: 1
+  includes:
+    - conversation_session.h
+  on_boot:
+    priority: -100
+    then:
+      - speaker.volume_set:
+          id: robot_speaker
+          volume: 25%
+
+esp32:
+  board: esp32dev
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+
+logger:
+  level: INFO
+
+api:
+  encryption:
+    key: !secret desk_robot_api_key
+
+ota:
+  - platform: esphome
+    encryption:
+
+wifi:
+  ssid: !secret desk_robot_wifi_ssid
+  password: !secret desk_robot_wifi_password
+  power_save_mode: none
+
+# The INMP441 and MAX98357A use separate I2S controllers and clocks.
+# This avoids sharing a driver between 32-bit input and 16-bit output.
+i2s_audio:
+  - id: microphone_bus
+    i2s_bclk_pin: ${mic_bclk_pin}
+    i2s_lrclk_pin: ${mic_lrclk_pin}
+  - id: speaker_bus
+    i2s_bclk_pin: ${speaker_bclk_pin}
+    i2s_lrclk_pin: ${speaker_lrclk_pin}
+
+microphone:
+  - platform: i2s_audio
+    id: robot_microphone
+    i2s_audio_id: microphone_bus
+    adc_type: external
+    i2s_din_pin: ${mic_data_pin}
+    pdm: false
+    channel: ${mic_channel}
+    sample_rate: 16000
+    bits_per_sample: 32bit
+
+speaker:
+  - platform: i2s_audio
+    id: robot_speaker
+    i2s_audio_id: speaker_bus
+    dac_type: external
+    i2s_dout_pin: ${speaker_data_pin}
+    channel: mono
+    sample_rate: 16000
+    bits_per_sample: 16bit
+    buffer_duration: 500ms
+    timeout: 500ms
+
+globals:
+  # 0: disconnected, 1: waiting, 2: listening, 3: thinking,
+  # 4: speaking, 5: muted, 6: error.
+  - id: assistant_phase
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: conversation_closing
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+
+voice_assistant:
+  id: assistant
+  microphone:
+    microphone: robot_microphone
+    channels: 0
+    gain_factor: 1
+  speaker: robot_speaker
+  use_wake_word: true
+  noise_suppression_level: 0
+  auto_gain: 0dBFS
+  volume_multiplier: 1
+  conversation_timeout: 300s
+  on_client_connected:
+    - if:
+        condition:
+          switch.is_on: listening_enabled
+        then:
+          - script.execute: resume_listening
+        else:
+          - globals.set:
+              id: assistant_phase
+              value: '5'
+  on_client_disconnected:
+    - script.execute: close_conversation
+    - globals.set:
+        id: assistant_phase
+        value: '0'
+  on_listening:
+    - lambda: |-
+        if (id(conversation_closing) || !id(listening_enabled).state) {
+          id(assistant).request_stop();
+          return;
+        }
+        if (id(conversation_enabled).state && !desk_robot::conversation_session.active()) {
+          desk_robot::conversation_session.begin();
+          id(assistant).set_use_wake_word(false);
+          ESP_LOGI("main", "Conversation opened; further replies do not need a wake word");
+        }
+        desk_robot::conversation_session.wait_for_reply(millis());
+        id(assistant_phase) = 2;
+  on_wake_word_detected:
+    - globals.set:
+        id: assistant_phase
+        value: '2'
+  on_stt_vad_start:
+    - lambda: desk_robot::conversation_session.speech_started();
+    - globals.set:
+        id: assistant_phase
+        value: '2'
+  on_stt_end:
+    - if:
+        condition:
+          lambda: return desk_robot::is_stop_phrase(x);
+        then:
+          - logger.log:
+              level: INFO
+              format: "Conversation stop phrase recognized"
+          - script.execute: close_conversation
+        else:
+          - lambda: desk_robot::conversation_session.text_accepted();
+  on_intent_start:
+    - globals.set:
+        id: assistant_phase
+        value: '3'
+  on_intent_end:
+    # A late HA follow-up flag must not reopen an explicitly closed conversation.
+    - if:
+        condition:
+          lambda: return id(conversation_closing);
+        then:
+          - voice_assistant.stop:
+  on_tts_stream_start:
+    - lambda: desk_robot::conversation_session.response_started();
+    - globals.set:
+        id: assistant_phase
+        value: '4'
+  on_tts_stream_end:
+    - if:
+        condition:
+          lambda: return id(conversation_closing);
+        then:
+          - voice_assistant.stop:
+        else:
+          - lambda: desk_robot::conversation_session.wait_for_reply(millis());
+    - globals.set:
+        id: assistant_phase
+        value: '1'
+  on_idle:
+    - lambda: |-
+        desk_robot::conversation_session.wait_for_reply(millis());
+        id(assistant_phase) = !id(listening_enabled).state ? 5 :
+                              (desk_robot::conversation_session.active() ? 2 : 1);
+  on_error:
+    - if:
+        condition:
+          lambda: |-
+            return code == "stt-no-text-recognized" &&
+                   desk_robot::conversation_session.active() && !id(conversation_closing);
+        then:
+          - lambda: desk_robot::conversation_session.no_text();
+        else:
+          # Set the cooldown before close can call resume. ESPHome reports a
+          # failed start synchronously, then finishes returning the pipeline to idle.
+          - lambda: desk_robot::voice_retry_cooldown.failed(millis());
+          - script.execute: close_conversation
+          - globals.set:
+              id: assistant_phase
+              value: '6'
+    - text_sensor.template.publish:
+        id: last_voice_error
+        state: !lambda return code;
+    - logger.log:
+        level: WARN
+        format: "Voice pipeline error: %s"
+        args: ['code.c_str()']
+
+switch:
+  - platform: template
+    id: listening_enabled
+    name: "Escuta por palavra de ativação"
+    icon: mdi:microphone
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    turn_on_action:
+      - script.execute: resume_listening
+    turn_off_action:
+      - script.execute: close_conversation
+      - globals.set:
+          id: assistant_phase
+          value: '5'
+  - platform: template
+    id: conversation_enabled
+    name: "Conversa contínua"
+    icon: mdi:chat-processing
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    turn_off_action:
+      - script.execute: close_conversation
+
+# Some network and pipeline errors stop continuous listening. Recover only when
+# the pipeline is idle and Home Assistant has subscribed; never interrupt a turn.
+interval:
+  - interval: 250ms
+    then:
+      - if:
+          condition:
+            lambda: |-
+              return !id(conversation_closing) && desk_robot::conversation_session.expired(
+                  millis(), static_cast<uint32_t>(id(conversation_wait_seconds).state * 1000));
+          then:
+            - logger.log:
+                level: INFO
+                format: "Conversation closed after waiting for speech"
+            - script.execute: close_conversation
+  - interval: 10s
+    then:
+      - if:
+          condition:
+            lambda: return id(conversation_closing);
+          then:
+            - script.execute: close_conversation
+      - script.execute: resume_listening
+
+script:
+  - id: apply_speaker_buffer
+    mode: restart
+    then:
+      # The I2S task allocates its ring buffer at startup. Change its next-start
+      # setting only while stopped; never resize or stop an active response.
+      - wait_until:
+          condition:
+            lambda: return id(robot_speaker).is_stopped();
+      - lambda: |-
+          const auto duration_ms = static_cast<uint32_t>(id(speaker_buffer_ms).state);
+          id(robot_speaker).set_buffer_duration(duration_ms);
+          ESP_LOGI("main", "Speaker buffer set to %u ms for next playback",
+                   static_cast<unsigned>(duration_ms));
+  - id: resume_listening
+    mode: single
+    then:
+      - if:
+          condition:
+            and:
+              - switch.is_on: listening_enabled
+              - voice_assistant.connected:
+              - not:
+                  voice_assistant.is_running:
+              - not:
+                  script.is_running: audio_test
+              - lambda: return !id(conversation_closing);
+              - lambda: return desk_robot::voice_retry_cooldown.ready(millis());
+          then:
+            - lambda: |-
+                id(assistant).set_use_wake_word(!desk_robot::conversation_session.active());
+            - voice_assistant.start_continuous:
+  - id: close_conversation
+    mode: single
+    then:
+      - lambda: |-
+          id(conversation_closing) = true;
+          desk_robot::conversation_session.close();
+          id(assistant).set_use_wake_word(true);
+          id(assistant).reset_conversation_id();
+      - voice_assistant.stop:
+      - if:
+          condition:
+            lambda: return !id(robot_speaker).is_stopped();
+          then:
+            - speaker.stop: robot_speaker
+      - wait_until:
+          condition:
+            and:
+              - not:
+                  voice_assistant.is_running:
+              - lambda: return id(robot_speaker).is_stopped();
+          timeout: 5s
+      - if:
+          condition:
+            and:
+              - not:
+                  voice_assistant.is_running:
+              - lambda: return id(robot_speaker).is_stopped();
+          then:
+            - lambda: |-
+                id(assistant).request_stop();
+                id(assistant).reset_conversation_id();
+                id(conversation_closing) = false;
+                id(assistant_phase) = !id(listening_enabled).state ? 5 :
+                    (id(assistant).get_api_connection() != nullptr ? 1 : 0);
+            - script.execute: resume_listening
+          else:
+            - logger.log:
+                level: WARN
+                format: "Conversation stop still pending; waiting before listening again"
+  - id: audio_test
+    mode: single
+    then:
+      - logger.log:
+          level: INFO
+          format: "Speaker test requested"
+      - script.execute: close_conversation
+      - script.wait: close_conversation
+      # An idle I2S speaker retains a stop request until its next loop. Sending
+      # stop unconditionally can cancel RTTTL's start in that same loop.
+      - if:
+          condition:
+            lambda: return !id(robot_speaker).is_stopped();
+          then:
+            - speaker.stop: robot_speaker
+      - wait_until:
+          condition:
+            and:
+              - not:
+                  voice_assistant.is_running:
+              - lambda: return id(robot_speaker).is_stopped();
+          timeout: 3s
+      - if:
+          condition:
+            and:
+              - not:
+                  voice_assistant.is_running:
+              - lambda: return id(robot_speaker).is_stopped();
+          then:
+            - lambda: id(diagnostic_tone).set_gain(id(speaker_volume).state / 100.0f);
+            - logger.log:
+                level: INFO
+                format: "Speaker test: playing three notes at %.0f%% volume"
+                args: ['id(speaker_volume).state']
+            - rtttl.play: "test:d=8,o=5,b=120:c,e,g"
+            - wait_until:
+                condition:
+                  not:
+                    rtttl.is_playing:
+                timeout: 5s
+            - if:
+                condition:
+                  rtttl.is_playing:
+                then:
+                  - logger.log:
+                      level: WARN
+                      format: "Speaker test timed out"
+                  - rtttl.stop:
+                else:
+                  - logger.log:
+                      level: INFO
+                      format: "Speaker test playback finished"
+            # RTTTL sets the speaker volume to its own gain. Restore the voice
+            # volume selected in Home Assistant after the diagnostic tone.
+            - speaker.volume_set:
+                id: robot_speaker
+                volume: !lambda return id(speaker_volume).state / 100.0f;
+          else:
+            - logger.log:
+                level: WARN
+                format: "Audio test skipped: voice pipeline or speaker did not stop"
+
+rtttl:
+  id: diagnostic_tone
+  speaker: robot_speaker
+  gain: 25%
+
+number:
+  - platform: template
+    id: speaker_buffer_ms
+    name: "Buffer de áudio"
+    icon: mdi:waveform
+    unit_of_measurement: ms
+    min_value: 100
+    max_value: 1000
+    step: 100
+    initial_value: 500
+    restore_value: true
+    optimistic: true
+    on_value:
+      - script.execute: apply_speaker_buffer
+  - platform: template
+    id: conversation_wait_seconds
+    name: "Tempo de espera da conversa"
+    icon: mdi:timer-sand
+    unit_of_measurement: s
+    min_value: 5
+    max_value: 120
+    step: 5
+    initial_value: 30
+    restore_value: true
+    optimistic: true
+  - platform: template
+    name: "Volume da voz"
+    id: speaker_volume
+    icon: mdi:volume-high
+    unit_of_measurement: "%"
+    min_value: 0
+    max_value: 100
+    step: 5
+    initial_value: 25
+    optimistic: true
+    set_action:
+      - speaker.volume_set:
+          id: robot_speaker
+          volume: !lambda return x / 100.0f;
+
+button:
+  - platform: template
+    name: "Encerrar conversa"
+    icon: mdi:chat-remove
+    on_press:
+      - script.execute: close_conversation
+  - platform: template
+    name: "Testar alto-falante"
+    entity_category: diagnostic
+    on_press:
+      - script.execute: audio_test
+  - platform: restart
+    name: "Reiniciar"
+    entity_category: diagnostic
+
+binary_sensor:
+  - platform: template
+    name: "Conversa em andamento"
+    lambda: return desk_robot::conversation_session.active();
+  - platform: status
+    name: "Conectado"
+  - platform: template
+    name: "Assist conectado"
+    entity_category: diagnostic
+    lambda: return id(assistant).get_api_connection() != nullptr;
+
+sensor:
+  - platform: wifi_signal
+    name: "Sinal Wi-Fi"
+    update_interval: 60s
+  - platform: uptime
+    name: "Tempo ligado"
+    update_interval: 60s
+  - platform: template
+    name: "Memória livre"
+    entity_category: diagnostic
+    unit_of_measurement: B
+    accuracy_decimals: 0
+    update_interval: 30s
+    lambda: return static_cast<float>(esp_get_free_heap_size());
+  - platform: template
+    name: "Menor memória livre"
+    entity_category: diagnostic
+    unit_of_measurement: B
+    accuracy_decimals: 0
+    update_interval: 30s
+    lambda: return static_cast<float>(esp_get_minimum_free_heap_size());
+
+text_sensor:
+  - platform: template
+    name: "Estado"
+    update_interval: 1s
+    lambda: |-
+      static const char *phases[] = {
+        "Sem conexão", "Aguardando chamada", "Ouvindo", "Pensando",
+        "Falando", "Microfone pausado", "Erro"
+      };
+      return std::string(phases[id(assistant_phase)]);
+  - platform: template
+    id: last_voice_error
+    name: "Último erro de voz"
+    entity_category: diagnostic
+    update_interval: never

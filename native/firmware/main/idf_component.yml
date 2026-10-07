@@ -1,0 +1,6 @@
+dependencies:
+  espressif/esp-tflite-micro: "*"
+  espressif/esp_websocket_client: "^1.4.0"
+  speech_features:
+    git: https://github.com/0xD34D/ESPMicroSpeechFeatures.git
+    version: c2a077454c24d71fc84be377bb6e28725f05c333

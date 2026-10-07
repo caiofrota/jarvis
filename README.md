@@ -1,3 +1,52 @@
+# Unified Jarvis platform
+
+Jarvis now includes the Rosie central server and browser administration, alongside
+the existing Windows/Linux desktop application and native voice endpoints.
+
+- `apps/web`: authenticated central brain, home tools, assistants, room/device administration and `/studio` web conversation.
+- `packages`: shared contracts and Prisma database.
+- `native`: existing Rosie speech service and ESP32 firmware, licensed GPL-3.0.
+- Root desktop application: existing local Windows/Linux executor and voice UI.
+
+The browser admin uses the Jarvis visual identity and adapts to phone screens.
+Text conversation uses the same central brain and home tools as robot endpoints.
+The desktop executor is still local: remote computer pairing and native mobile
+control are subsequent integration work. Mobile browser access does not grant
+unrestricted access to iOS or Android system functions.
+
+## Run the central brain
+
+Use the pinned Node/pnpm versions in the CI workflow. From the repository root:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm db:generate
+cp apps/web/.env.example apps/web/.env
+set -a
+. ./apps/web/.env
+set +a
+pnpm db:deploy
+pnpm db:init
+pnpm user:create-first
+pnpm dev:brain
+```
+
+Configure the database and required session/provider settings in the private
+`.env` before running the setup commands. See [installation](docs/engineering/installation.md)
+and [Home Assistant integration](docs/engineering/home-assistant.md).
+No physical board is required for browser administration or text conversation.
+Do not expose the server directly to the public internet; configure the documented
+authentication and deployment boundary for remote access.
+
+## License
+
+Original Jarvis application code uses [MIT](LICENSE). Imported components preserve
+their existing licenses; see [license boundaries](THIRD_PARTY.md).
+Credentials, databases, recordings, model weights and compiled firmware are private
+runtime artifacts and are excluded from version control.
+
+## Existing desktop documentation
+
 # Jarvis Studio
 
 Assistente com IA local ou na nuvem, conversa por voz e painéis de tarefas,

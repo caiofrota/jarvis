@@ -6,7 +6,7 @@
 - Maintained surfaces: a Next.js browser application, a Node.js local server, an Electron desktop application, and a Python voice runtime.
 - The browser and local server listen on loopback by default. `PORT` is read from the process environment and defaults to `4318`; no dotenv loader is used.
 - The Python voice runtime targets Python 3.11 and is installed into `.voice-env` from the locked project in `voice/`.
-- There is no user account, multi-tenant organization, database, or public deployment in this repository.
+- The shared brain in `apps/web` owns local accounts, scoped catalogs and SQLite. The root desktop runtime retains its local executor boundary. No public deployment is configured.
 
 ## Repository boundaries
 
@@ -41,3 +41,10 @@ Provider-specific security controls and their temporary limitation are recorded 
 - `JARVIS_TEST_LOCAL_MODEL` enables optional tests that require a locally installed model.
 - Host variables such as `PATH`, `SystemRoot`, and `APPDATA` are supplied by the operating system and are not application configuration.
 - Process variables take precedence because the application reads them directly; local dotenv files are not loaded automatically.
+
+## Shared brain and robots
+
+The imported Rosie server, contracts, database, speech worker and firmware are maintained
+in this workspace. Read [the shared brain context](rosie-context.md) before modifying
+those components. Root web/desktop scripts retain Jarvis compatibility; `*:brain`
+scripts validate and run the central administration application.

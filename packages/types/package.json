@@ -1,0 +1,17 @@
+{
+  "name": "@rosie/types",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./context": "./src/context.ts"
+  },
+  "scripts": {
+    "lint": "biome check src",
+    "typecheck": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "4.6.5"
+  }
+}

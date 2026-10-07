@@ -1,0 +1,21 @@
+{
+  "name": "@rosie/db",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": {
+    "lint": "biome check src",
+    "typecheck": "tsc",
+    "db:generate": "prisma generate",
+    "db:check": "prisma validate",
+    "db:deploy": "prisma migrate deploy"
+  },
+  "dependencies": {
+    "@prisma/client": "7.10.0",
+    "@prisma/adapter-better-sqlite3": "7.10.0",
+    "@rosie/types": "workspace:*"
+  },
+  "devDependencies": {
+    "prisma": "7.10.0"
+  }
+}

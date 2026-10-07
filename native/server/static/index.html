@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Rosie · Casa e conversa</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <aside>
+      <div class="brand">◕ ◕ <strong>ROSIE</strong></div>
+      <p>Um pouco de personalidade.<br />Um lugar na sua casa.</p>
+      <nav id="nav"></nav>
+      <div id="connection">Conectando…</div>
+    </aside>
+    <main>
+      <header>
+        <div>
+          <small>ROBÔ DE MESA</small>
+          <h1 id="title">Visão geral</h1>
+        </div>
+        <button id="save" hidden>Salvar alterações</button>
+      </header>
+      <section id="login">
+        <h2>Olá, vamos conversar?</h2>
+        <p>Use a senha de administração gerada na instalação.</p>
+        <form id="login-form">
+          <label
+            >Senha<input
+              id="password"
+              type="password"
+              autocomplete="current-password"
+              required /></label
+          ><button>Entrar</button>
+        </form>
+      </section>
+      <div id="message" role="status"></div>
+      <section id="content" hidden></section>
+    </main>
+    <dialog id="editor">
+      <form id="edit-form">
+        <h2 id="edit-title"></h2>
+        <div id="fields"></div>
+        <footer>
+          <button type="button" class="secondary" id="cancel">Cancelar</button
+          ><button>Concluir cadastro</button>
+        </footer>
+      </form>
+    </dialog>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

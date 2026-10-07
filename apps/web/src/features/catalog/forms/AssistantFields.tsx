@@ -1,0 +1,123 @@
+import { Field } from "../../../components/field/Field";
+import { VoicePreview } from "../../voice-preview/VoicePreview";
+import type { FormProps } from "./types";
+export function AssistantFields({ value: v, set, voices, cloudHomeId }: FormProps) {
+  const cloud = String(v.voice).startsWith("ha-cloud-");
+  const available = voices.filter((id) => !id.startsWith("ha-cloud-") || v.homeId === cloudHomeId);
+  const current = String(v.voice ?? "");
+  const choices = current && !available.includes(current) ? [...available, current] : available;
+  return (
+    <>
+      <fieldset>
+        <legend>Identidade</legend>
+        <Field
+          label="Personalidade"
+          type="textarea"
+          value={v.personality}
+          onChange={(x) => set("personality", x)}
+        />
+        <Field
+          label="Informações deste robô"
+          type="textarea"
+          value={v.facts}
+          onChange={(x) => set("facts", x)}
+        />
+        <Field
+          label="Visão de mundo e posicionamento"
+          type="textarea"
+          value={v.worldview ?? ""}
+          onChange={(x) => set("worldview", x)}
+          hint="Perspectiva da personagem em temas que pedem opinião. Compartilhada pelas caixinhas deste robô, preservando fatos e o tom adequado à conversa."
+        />
+        <Field
+          label="Outros nomes"
+          type="lines"
+          value={v.aliases}
+          onChange={(x) => set("aliases", x)}
+          hint="Um por linha."
+        />
+      </fieldset>
+      <fieldset>
+        <legend>Voz e conversa</legend>
+        <Field
+          label="Voz"
+          type="select"
+          value={v.voice}
+          onChange={(x) => set("voice", x)}
+          options={choices.map((id) => ({
+            id,
+            name:
+              (id.startsWith("ha-cloud-")
+                ? `${id.slice(9).replace(/Neural$/, "")} · Home Assistant Cloud`
+                : ((
+                    {
+                      "kokoro-pf_dora": "Dora · Kokoro",
+                      "pt_BR-faber-medium": "Faber · Piper",
+                      "pt_BR-cadu-medium": "Cadu · Piper",
+                      "supertonic-f1": "Supertonic F1",
+                      "supertonic-m1": "Supertonic M1",
+                    } as Record<string, string>
+                  )[id] ?? id)) + (available.includes(id) ? "" : " · indisponível"),
+          }))}
+          required
+          hint={
+            cloud
+              ? "Gera a fala na nuvem usando sua assinatura do Home Assistant Cloud. Envia o texto da resposta e precisa de internet. O reconhecimento da sua fala continua local."
+              : "Gera a fala neste servidor. Não usa um serviço de voz na nuvem."
+          }
+        />
+        <p className="field-hint">
+          Ouvir uma amostra não altera a voz do robô. Salve para aplicar às caixinhas vinculadas a
+          ele.
+        </p>
+        {typeof v.id === "string" && (
+          <VoicePreview
+            key={`${v.id}:${v.voice}`}
+            assistantId={v.id}
+            name={String(v.name)}
+            voice={String(v.voice)}
+          />
+        )}
+        {!cloud && (
+          <Field
+            label="Qualidade da voz"
+            type="select"
+            value={v.quality}
+            onChange={(x) => set("quality", x)}
+            options={[
+              { id: "fast", name: "Rápida" },
+              { id: "detailed", name: "Detalhada" },
+            ]}
+          />
+        )}
+        <Field
+          label="Provedor da conversa"
+          type="select"
+          value={v.provider}
+          onChange={(x) => set("provider", x)}
+          options={[
+            { id: "openai", name: "OpenAI" },
+            { id: "deepseek", name: "DeepSeek" },
+          ]}
+        />
+        <Field label="Modelo" value={v.model} onChange={(x) => set("model", x)} required />
+        <Field
+          label="Limite de tokens por resposta"
+          type="number"
+          min={64}
+          max={1000}
+          value={v.maxOutputTokens}
+          onChange={(x) => set("maxOutputTokens", x)}
+        />
+        <Field
+          label="Turnos de histórico"
+          type="number"
+          min={0}
+          max={12}
+          value={v.historyTurns}
+          onChange={(x) => set("historyTurns", x)}
+        />
+      </fieldset>
+    </>
+  );
+}

@@ -1,0 +1,29 @@
+[Unit]
+Description=Local Ollama for Desk Robot
+Wants=network-online.target
+Requires=nftables.service
+After=network-online.target nftables.service
+
+[Service]
+Type=simple
+User=ollama
+Group=ollama
+WorkingDirectory=/usr/share/ollama
+ExecStart=/usr/bin/ollama serve
+Environment=OLLAMA_HOST=0.0.0.0:11434
+Environment=OLLAMA_MODELS=/var/lib/ollama/models
+Environment=OLLAMA_NO_CLOUD=1
+Environment=OLLAMA_NUM_PARALLEL=1
+Environment=OLLAMA_MAX_LOADED_MODELS=1
+Environment=OLLAMA_MAX_QUEUE=2
+Environment=OLLAMA_CONTEXT_LENGTH=2048
+Environment=OLLAMA_KEEP_ALIVE=2m
+Nice=10
+MemoryHigh=1900M
+MemoryMax=2200M
+NoNewPrivileges=true
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
