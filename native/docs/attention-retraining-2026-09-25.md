@@ -4,10 +4,11 @@
 
 The user requested an improved retraining run and required registration in Herdr
 before it starts. The real Herdr pane **`wR:p2`**, in workspace **`wR`**, tab
-**`wR:t1`**, was created without changing focus and named **Rosie: treinamento wake
-+ parar**. It is a training terminal, not another Codex agent. Its terminal ID is
-`term_65c51aaf920aff`. Control followed the installed CLI's `herdr --skill`
-instructions after verifying `HERDR_ENV=1`.
+**`wR:t1`**, was created without changing focus and named \*\*Rosie: treinamento wake
+
+- parar\*\*. It is a training terminal, not another Codex agent. Its terminal ID is
+  `term_65c51aaf920aff`. Control followed the installed CLI's `herdr --skill`
+  instructions after verifying `HERDR_ENV=1`.
 
 The pane displays `monitor_attention_job.py`, which reads the actual phase and
 progress files. **Training and diagnostics are complete; neither target qualified.**
@@ -119,26 +120,26 @@ These are **development** results from four withheld synthetic voice styles, wit
 their augmentations. They are not final acceptance results or independent human
 trials. The table shows the highest recall at a valid threshold in each attempt.
 
-| Target | Filters | Best step | Recall | Threshold | Negative clips detected | Decision |
-| --- | --- | --- | --- | --- | --- | --- |
-| Wake | 64 | 8,000 | 88.01% (697/792) | 0.95 | 0/1,128 | Failed |
-| Wake | 96 | 8,000 | 69.70% | 0.99 | 0/1,128 | Failed |
-| Addressed stop | 64 | 4,000 | 82.29% (474/576) | 0.80 | 0/1,272 | Failed |
-| Addressed stop | 96 | — | — | No valid threshold | — | All four checkpoints failed |
+| Target         | Filters | Best step | Recall           | Threshold          | Negative clips detected | Decision                    |
+| -------------- | ------- | --------- | ---------------- | ------------------ | ----------------------- | --------------------------- |
+| Wake           | 64      | 8,000     | 88.01% (697/792) | 0.95               | 0/1,128                 | Failed                      |
+| Wake           | 96      | 8,000     | 69.70%           | 0.99               | 0/1,128                 | Failed                      |
+| Addressed stop | 64      | 4,000     | 82.29% (474/576) | 0.80               | 0/1,272                 | Failed                      |
+| Addressed stop | 96      | —         | —                | No valid threshold | —                       | All four checkpoints failed |
 
 Recall for the best valid-threshold checkpoints:
 
-| Call | Recall |
-| --- | --- |
+| Call         | Recall |
+| ------------ | ------ |
 | Acorda Rosie | 81.94% |
 | Acorde Rosie | 84.72% |
-| Ei Rosie | 86.11% |
-| Oi Rosie | 88.89% |
-| Olá Rosie | 97.22% |
-| Hello Rosie | 87.50% |
-| Hi Rosie | 93.75% |
-| Rosie, para | 84.72% |
-| Para, Rosie | 79.86% |
+| Ei Rosie     | 86.11% |
+| Oi Rosie     | 88.89% |
+| Olá Rosie    | 97.22% |
+| Hello Rosie  | 87.50% |
+| Hi Rosie     | 93.75% |
+| Rosie, para  | 84.72% |
+| Para, Rosie  | 79.86% |
 
 Wake recall by name pronunciation was 91.92% American and 84.09% Brazilian. For
 stop it was 81.60% American and 82.99% Brazilian. Stop with a comma pause achieved
@@ -153,10 +154,10 @@ room, videos or the robot's own playback are safe from false activation.
 
 The diagnostic ruled out a large quantization loss in these best checkpoints:
 
-| Target | Float recall | Int8 recall | Mean absolute score difference | Float gate |
-| --- | --- | --- | --- | --- |
-| Wake | 88.26% | 88.01% | 0.00266 | Failed |
-| Addressed stop | 82.64% | 82.29% | 0.00233 | Failed |
+| Target         | Float recall | Int8 recall | Mean absolute score difference | Float gate |
+| -------------- | ------------ | ----------- | ------------------------------ | ---------- |
+| Wake           | 88.26%       | 88.01%      | 0.00266                        | Failed     |
+| Addressed stop | 82.64%       | 82.29%      | 0.00233                        | Failed     |
 
 Float and int8 thresholds were independently obtained from the same development
 negatives using the same margin rule. Both representations missed the required

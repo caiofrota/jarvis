@@ -49,11 +49,11 @@ styles. These are ten Kokoro styles from one synthesizer, **not ten independent
 human speakers**. Held-out synthesized speech does not establish real microphone
 accuracy, distance tolerance or reliability during speaker playback.
 
-| Greeting | Prefix variants | Name variants |
-| --- | --- | --- |
-| Acorda Rosie / Acorde Rosie | Brazilian /h/ and tap-r | American Rosie and Brazilian Rôzi/Rose |
-| Ei Rosie / Oi Rosie / Olá Rosie | Brazilian greeting phonemes | Both name variants |
-| Hello Rosie / Hi Rosie | Native-US and Brazilian-accent greeting phonemes | Both name variants |
+| Greeting                        | Prefix variants                                  | Name variants                          |
+| ------------------------------- | ------------------------------------------------ | -------------------------------------- |
+| Acorda Rosie / Acorde Rosie     | Brazilian /h/ and tap-r                          | American Rosie and Brazilian Rôzi/Rose |
+| Ei Rosie / Oi Rosie / Olá Rosie | Brazilian greeting phonemes                      | Both name variants                     |
+| Hello Rosie / Hi Rosie          | Native-US and Brazilian-accent greeting phonemes | Both name variants                     |
 
 The name phonemes reuse the two drafts approved on September 22. New prefixes and
 comma prosody have not received human acoustic approval. American voice styles do
@@ -128,14 +128,14 @@ limited corpus is not a guarantee about household false wakes. The score is not 
 calibrated real-world probability.
 
 | Held-out wake phrase | Recall |
-| --- | ---: |
-| Acorda Rosie | 36.1% |
-| Acorde Rosie | 48.6% |
-| Ei Rosie | 75.0% |
-| Oi Rosie | 58.3% |
-| Olá Rosie | 77.8% |
-| Hello Rosie | 37.5% |
-| Hi Rosie | 54.2% |
+| -------------------- | -----: |
+| Acorda Rosie         |  36.1% |
+| Acorde Rosie         |  48.6% |
+| Ei Rosie             |  75.0% |
+| Oi Rosie             |  58.3% |
+| Olá Rosie            |  77.8% |
+| Hello Rosie          |  37.5% |
+| Hi Rosie             |  54.2% |
 
 American-name recall was 42.9%; Brazilian-name recall was 59.6%. Full separate
 greeting-accent/name combinations are retained in the private evaluation JSON.
