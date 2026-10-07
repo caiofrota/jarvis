@@ -1,5 +1,5 @@
-import { randomBytes } from "node:crypto";
-import { json, type Repository } from "@rosie/db";
+import { randomBytes, randomUUID } from "node:crypto";
+import { json, Repository } from "@rosie/db";
 import {
   type Catalog,
   type Collection,
@@ -11,6 +11,7 @@ import {
 import { DomainError, validateReferences } from "@rosie/types/context";
 import { registeredCalendar } from "../calendar/service";
 import { registeredVoice } from "../voice/profiles";
+import { removalItems, removalReview } from "./removal";
 
 export const sortFields = [
   "name",
@@ -206,8 +207,79 @@ export class CatalogService {
     this.mutation = result.catch(() => {});
     return result;
   }
-  async remove(collection: Collection, id: string, revision: number) {
+  async removalPreview(collection: Collection, id: string) {
+    if (!["homes", "rooms"].includes(collection)) throw new DomainError("Revisão indisponível.");
+    const entries = await this.repo.db.entry.findMany();
+    const settings = await this.repo.settings();
+    return {
+      items: removalItems(await this.repo.catalog({ project: false }), collection, id),
+      review: removalReview(entries, settings),
+      disconnectsHomeAssistant: collection === "homes" && settings.homeAssistantHomeId === id,
+    };
+  }
+  async remove(collection: Collection, id: string, revision: number, review?: string) {
     const work = async () => {
+      if (["homes", "rooms"].includes(collection) && review) {
+        await this.repo.db.$transaction(async (tx) => {
+          const repo = new Repository(tx as unknown as Repository["db"]);
+          const entries = await tx.entry.findMany(),
+            settings = await repo.settings();
+          const row = entries.find((value) => value.collection === collection && value.id === id);
+          if (!row || row.revision !== revision || removalReview(entries, settings) !== review)
+            throw new DomainError("Os vínculos mudaram. Revise a exclusão novamente.");
+          const catalog = await repo.catalog({ project: false });
+          const items = removalItems(catalog, collection, id);
+          for (const item of items) {
+            await tx.entry.delete({
+              where: { collection_id: { collection: item.collection, id: item.id } },
+            });
+            if (item.collection === "residents")
+              await tx.setting.deleteMany({
+                where: { id: { in: [`voiceprint:${item.id}`, `calendar:${item.id}`] } },
+              });
+            (catalog[item.collection] as Entity[]) = (catalog[item.collection] as Entity[]).filter(
+              (value) => value.id !== item.id,
+            );
+          }
+          validateReferences(catalog);
+          if (collection === "homes" && settings.homeAssistantHomeId === id) {
+            await tx.setting.update({
+              where: { id: "settings" },
+              data: {
+                data: json({ ...settings, homeAssistantEnabled: false, homeAssistantHomeId: "" }),
+              },
+            });
+          }
+          const shared = new Set(
+            items.filter((item) => item.collection === "assistants").map((item) => item.id),
+          );
+          if (shared.size)
+            for (const saved of await tx.setting.findMany({
+              where: { id: { startsWith: "user-profile:" } },
+            })) {
+              const data = saved.data as {
+                profile?: { defaultSharedAssistantId?: string | null };
+                revision?: string;
+              };
+              if (
+                data.profile?.defaultSharedAssistantId &&
+                shared.has(data.profile.defaultSharedAssistantId)
+              )
+                await tx.setting.update({
+                  where: { id: saved.id },
+                  data: {
+                    data: json({
+                      ...data,
+                      revision: randomUUID(),
+                      profile: { ...data.profile, defaultSharedAssistantId: null },
+                    }),
+                  },
+                });
+            }
+        });
+        await this.repo.event("catalog_deleted", { collection, id, associated: true });
+        return;
+      }
       const c = await this.repo.catalog();
       if (
         collection === "devices" &&

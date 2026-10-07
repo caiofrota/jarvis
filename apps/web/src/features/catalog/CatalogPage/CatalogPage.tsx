@@ -33,6 +33,11 @@ export function CatalogPage({
     [loading, setLoading] = useState(true),
     [editing, setEditing] = useState<RecordRow | "new" | null>(null),
     [deleting, setDeleting] = useState<RecordRow | null>(null),
+    [removal, setRemoval] = useState<{
+      review: string;
+      items: { collection: Collection; id: string; name: string }[];
+      disconnectsHomeAssistant: boolean;
+    } | null>(null),
     [busy, setBusy] = useState(false),
     [detail, setDetail] = useState<{ title: string; body: React.ReactNode } | null>(null);
   const load = useCallback(async () => {
@@ -207,7 +212,21 @@ export function CatalogPage({
             collection={collection}
             data={data}
             onEdit={setEditing}
-            onDelete={setDeleting}
+            onDelete={(row) => {
+              setRemoval(null);
+              if (!["homes", "rooms"].includes(collection)) {
+                setDeleting(row);
+                return;
+              }
+              setBusy(true);
+              void request<NonNullable<typeof removal>>(`/catalog/${collection}/${row.id}/removal`)
+                .then((preview) => {
+                  setRemoval(preview);
+                  setDeleting(row);
+                })
+                .catch((cause) => setError(cause.message))
+                .finally(() => setBusy(false));
+            }}
             onAction={(row, kind) => void action(row, kind)}
             onSort={(key) =>
               update({
@@ -284,14 +303,45 @@ export function CatalogPage({
       {deleting && (
         <ConfirmDialog
           title={`Excluir ${deleting.name}?`}
-          description="O cadastro será removido. Registros associados precisam ser desvinculados antes da exclusão."
+          description={
+            removal ? (
+              <>
+                <p>
+                  Serão removidos deste Jarvis os cadastros abaixo. A exclusão não apaga
+                  dispositivos no Home Assistant nem grava a placa.
+                </p>
+                <ul>
+                  {removal.items.map((item) => (
+                    <li key={`${item.collection}:${item.id}`}>
+                      {labels[item.collection]}: {item.name}
+                    </li>
+                  ))}
+                </ul>
+                {removal.disconnectsHomeAssistant && (
+                  <p>
+                    A conexão do Home Assistant desta casa será desativada. O endereço e a
+                    credencial serão preservados para configurar outra casa.
+                  </p>
+                )}
+                <p>
+                  Caixinhas e automações listadas deixarão de funcionar até serem cadastradas
+                  novamente.
+                </p>
+              </>
+            ) : (
+              "O cadastro será removido. Registros associados precisam ser desvinculados antes da exclusão."
+            )
+          }
           busy={busy}
           onCancel={() => setDeleting(null)}
           onConfirm={() => {
             setBusy(true);
             void request(`/catalog/${collection}/${deleting.id}`, {
               method: "DELETE",
-              body: JSON.stringify({ revision: deleting.revision }),
+              body: JSON.stringify({
+                revision: deleting.revision,
+                ...(removal ? { review: removal.review } : {}),
+              }),
             })
               .then(() => {
                 setDeleting(null);

@@ -25,7 +25,7 @@ export class Repository {
   catalogProjection?: (catalog: Catalog) => Promise<Catalog>;
   private usageQueue: Promise<unknown> = Promise.resolve();
   constructor(readonly db: PrismaClient) {}
-  async catalog(): Promise<Catalog> {
+  async catalog({ project = true }: { project?: boolean } = {}): Promise<Catalog> {
     const c = emptyCatalog();
     for (const entry of await this.db.entry.findMany()) {
       if (collections.includes(entry.collection as Collection))
@@ -33,7 +33,7 @@ export class Repository {
           schemas[entry.collection as Collection].parse(entry.data),
         );
     }
-    return this.catalogProjection ? this.catalogProjection(c) : c;
+    return project && this.catalogProjection ? this.catalogProjection(c) : c;
   }
   async settings(): Promise<Settings> {
     return settingsSchema.parse(

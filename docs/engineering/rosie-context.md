@@ -130,3 +130,33 @@ the bedroom bridge remains active. Alexa keeps the existing entity identity and
 aliases, with the office temperature route issuing one combined command (decision 018).
 Model-initiated internet searches require a single-use confirmation unless the user's
 current request explicitly asks for the search; see the web-search contract.
+
+## Moving an existing Rosie catalog into Jarvis
+
+`apps/web/tools/import-rosie.ts` merges a maintained SQLite catalog into an already
+initialized Jarvis database. Set distinct `ROSIE_SOURCE_DATABASE_URL` and
+`DATABASE_URL`, then run `pnpm --filter @rosie/web exec tsx tools/import-rosie.ts`.
+The default is a read-only plan; `--apply` commits the plan in one transaction.
+Take private online SQLite backups before applying and rehearse against a copy.
+
+The importer preserves assistant/endpoint IDs, endpoint tokens, voice/personality,
+physical controls, inherited audio values and household behavior references. It
+reuses matching homes and rooms, fills empty household facts, maps room references, and fills missing room
+bindings/default devices without replacing existing choices. Conflicting IDs fail
+without overwriting records. Accounts, sessions, OAuth connections, voiceprints,
+installation credentials and provider settings are not imported. Imported resident
+entries remain household preferences rather than account identities. No firmware
+or stored device server address changes: an existing physical endpoint must later
+be pointed at the Jarvis gateway using its preserved identity.
+
+## Removing houses and rooms
+
+House/room deletion first presents the exact dependent registrations. Confirmation
+removes those local records atomically; it never deletes entities in Home Assistant
+or flashes a physical endpoint. Dependency closure includes fixed endpoints,
+registered devices, scoped rules and inherited variants, preventing an unlinked
+scope from becoming installation-wide. An intervening catalog/settings edit
+invalidates the review. Projected HA entities are not persisted dependencies.
+Removing the connected house disables its HA connection while retaining its URL
+and secret, and clears affected shared assistant defaults. Users, private assistant
+profiles and personal integrations remain intact.

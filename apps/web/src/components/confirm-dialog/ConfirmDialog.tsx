@@ -7,14 +7,14 @@ export function ConfirmDialog({
   busy = false,
 }: {
   title: string;
-  description: string;
+  description: React.ReactNode;
   onCancel: () => void;
   onConfirm: () => void;
   busy?: boolean;
 }) {
   return (
     <Modal title={title} onClose={onCancel}>
-      <p>{description}</p>
+      <div>{description}</div>
       <footer className="form-actions">
         <button type="button" onClick={onCancel}>
           Cancelar

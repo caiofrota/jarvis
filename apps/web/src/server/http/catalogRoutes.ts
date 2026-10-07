@@ -15,6 +15,15 @@ export async function catalogRoutes(
     respond(res, 200, { items: await searchWeatherLocations(url.searchParams.get("q") ?? "") });
     return true;
   }
+  const previewPath = path.match(/^\/api\/v1\/catalog\/(homes|rooms)\/([a-z0-9_-]+)\/removal$/);
+  if (previewPath && req.method === "GET") {
+    respond(
+      res,
+      200,
+      await rt.catalog.removalPreview(previewPath[1] as Collection, previewPath[2]),
+    );
+    return true;
+  }
   const entityPath = path.match(/^\/api\/v1\/catalog\/([a-z]+)(?:\/([a-z0-9_-]+))?$/);
   if (entityPath && collections.includes(entityPath[1] as Collection)) {
     const collection = entityPath[1] as Collection,
@@ -33,7 +42,17 @@ export async function catalogRoutes(
       return true;
     }
     if (req.method === "DELETE" && id) {
-      await rt.catalog.remove(collection, id, Number((await body(req)).revision));
+      const input = await body(req);
+      await rt.catalog.remove(
+        collection,
+        id,
+        Number(input.revision),
+        typeof input.review === "string" ? input.review : undefined,
+      );
+      if (["homes", "rooms"].includes(collection)) {
+        await rt.automations.configure();
+        await rt.interactions.configure();
+      }
       if (collection === "devices") await rt.automations.subscribe();
       await rt.gateway.refresh();
       if (collection === "endpoints") await rt.interactions.configure();
