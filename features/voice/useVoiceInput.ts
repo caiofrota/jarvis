@@ -322,10 +322,7 @@ export function useVoiceInput({ chat, speech, ai, profile, conversation = false 
                 onText,
                 onError,
                 onReview: (message) => {
-                  if (valid()) {
-                    setError(message);
-                    latest.current.speech.read(message);
-                  }
+                  if (valid()) setError(message);
                 },
                 onUtterance: conversation ? onUtterance : undefined,
                 onSpeechStart: conversation ? () => turns.current?.speechStart() : undefined,
