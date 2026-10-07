@@ -8,15 +8,15 @@ import type {
   PersonalProposal,
   PersonalProvider,
 } from "@rosie/types";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Modal } from "../../components/modal/Modal";
-import { PasswordField } from "../../components/password-field/PasswordField";
 import { request } from "../../lib/api-client";
 
 const base = "/personal-integrations";
 const providerName = (provider: PersonalProvider) =>
   provider === "google" ? "Google" : "Microsoft";
-export function PersonalIntegrations({ admin }: { admin: boolean }) {
+export function PersonalIntegrations({ userName, admin }: { userName: string; admin: boolean }) {
   const [status, setStatus] = useState<IntegrationStatus>(),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
@@ -31,9 +31,6 @@ export function PersonalIntegrations({ admin }: { admin: boolean }) {
     [schedule, setSchedule] = useState(false),
     [proposal, setProposal] = useState<PersonalProposal>(),
     [disconnecting, setDisconnecting] = useState<PersonalConnection>();
-  const [application, setApplication] = useState<PersonalProvider>(),
-    [clientId, setClientId] = useState(""),
-    [secret, setSecret] = useState("");
   const [to, setTo] = useState(""),
     [subject, setSubject] = useState(""),
     [text, setText] = useState(""),
@@ -96,10 +93,30 @@ export function PersonalIntegrations({ admin }: { admin: boolean }) {
       <header className="page-header">
         <div>
           <p className="eyebrow">CONTAS PESSOAIS</p>
-          <h1>Minhas integrações</h1>
-          <p>Seus e-mails e agendas, conectados à sua conta do Jarvis.</p>
+          <h1>Minhas contas</h1>
+          <p>
+            Conecte os seus e-mails e agendas. Cada pessoa usa seu próprio usuário do Jarvis e
+            autoriza suas próprias contas.
+          </p>
         </div>
       </header>
+      <section className="panel account-guidance">
+        <h2>Estas conexões pertencem a {userName}</h2>
+        <p>
+          Ao clicar em Conectar, escolha a sua conta no Google ou na Microsoft e autorize o acesso.
+          Para conectar as contas de outra pessoa, ela precisa entrar no Jarvis com o próprio
+          usuário.
+        </p>
+        {admin && (
+          <Link className="button" href="/users">
+            Gerenciar usuários
+          </Link>
+        )}
+        <p>
+          Nome e voz do assistente não alteram o dono destas conexões. Seus e-mails, agendas e
+          histórico não são compartilhados ao escolher um assistente compartilhado.
+        </p>
+      </section>
       {error && (
         <p role="alert" className="error">
           {error}
@@ -117,7 +134,7 @@ export function PersonalIntegrations({ admin }: { admin: boolean }) {
                 <p>
                   {provider.configured
                     ? "Conecte uma ou mais contas para acessar e-mail e calendário."
-                    : "O aplicativo precisa ser configurado por um administrador."}
+                    : "A conexão ainda não está disponível. Um administrador precisa configurar o aplicativo Jarvis para este provedor."}
                 </p>
                 <button
                   type="button"
@@ -135,18 +152,10 @@ export function PersonalIntegrations({ admin }: { admin: boolean }) {
                 >
                   Conectar {providerName(provider.provider)}
                 </button>
-                {admin && (
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => {
-                      setApplication(provider.provider);
-                      setClientId(provider.clientId ?? "");
-                      setSecret("");
-                    }}
-                  >
-                    Configurar aplicativo {providerName(provider.provider)}
-                  </button>
+                {!provider.configured && admin && (
+                  <Link className="button" href="/provider-apps">
+                    Configurar o aplicativo Jarvis
+                  </Link>
                 )}
               </section>
             ))}
@@ -302,89 +311,6 @@ export function PersonalIntegrations({ admin }: { admin: boolean }) {
             </section>
           )}
         </>
-      )}
-      {application && status && (
-        <Modal
-          title={`Aplicativo ${providerName(application)}`}
-          onClose={() => {
-            if (!busy) {
-              setApplication(undefined);
-              setSecret("");
-            }
-          }}
-        >
-          <p>
-            Cadastre um aplicativo OAuth de servidor no provedor. Esta configuração é compartilhada;
-            as autorizações continuam individuais.
-          </p>
-          <p>
-            URI de retorno: <code style={{ overflowWrap: "anywhere" }}>{status.callback}</code>
-          </p>
-          <p>
-            Use um domínio HTTPS registrado no provedor ou localhost para desenvolvimento. O Google
-            não aceita o IP da rede como URI de retorno.
-          </p>
-          <p>
-            <a
-              href={
-                application === "google"
-                  ? "https://developers.google.com/identity/protocols/oauth2/web-server"
-                  : "https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow"
-              }
-              target="_blank"
-              rel="noreferrer"
-            >
-              Instruções oficiais de {providerName(application)}
-            </a>
-          </p>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              void action(async () => {
-                await request(`${base}/applications`, {
-                  method: "PUT",
-                  body: JSON.stringify({
-                    provider: application,
-                    clientId,
-                    ...(secret ? { clientSecret: secret } : {}),
-                  }),
-                });
-                setSecret("");
-                setApplication(undefined);
-                await reload();
-                setNotice("Aplicativo configurado. Agora cada pessoa pode conectar suas contas.");
-              });
-            }}
-          >
-            <fieldset disabled={busy}>
-              <label>
-                ID do cliente
-                <input
-                  required
-                  value={clientId}
-                  onChange={(event) => setClientId(event.target.value)}
-                  maxLength={512}
-                  autoComplete="off"
-                />
-              </label>
-              <PasswordField
-                label="Segredo do cliente"
-                value={secret}
-                onChange={setSecret}
-                autoComplete="off"
-              />
-              <p>Deixe o segredo vazio para manter o atual quando o ID do cliente for o mesmo.</p>
-            </fieldset>
-            {error && (
-              <p role="alert" className="error">
-                {error}
-              </p>
-            )}
-            <button type="submit" className="primary" disabled={busy}>
-              Salvar aplicativo
-            </button>
-          </form>
-        </Modal>
       )}
       {compose && selected && !proposal && (
         <Modal

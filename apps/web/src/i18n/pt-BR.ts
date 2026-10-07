@@ -2,7 +2,7 @@ import type { Collection } from "@rosie/types";
 export const labels: Record<Collection, string> = {
   homes: "Casas",
   rooms: "Ambientes",
-  assistants: "Robôs digitais",
+  assistants: "Assistentes compartilhados",
   endpoints: "Caixinhas",
   devices: "Dispositivos",
   residents: "Moradores",
@@ -13,7 +13,8 @@ export const labels: Record<Collection, string> = {
 export const descriptions: Record<Collection, string> = {
   homes: "Localização e informações compartilhadas.",
   rooms: "Organize os ambientes e seus dispositivos padrão.",
-  assistants: "Identidade, voz e personalidade de cada assistente.",
+  assistants:
+    "Perfis de nome, voz e personalidade disponíveis para a conversa e para as caixinhas. Suas contas conectadas continuam privadas.",
   endpoints: "Escolha quem responde em cada lugar da casa.",
   devices: "Luzes, sensores e aparelhos conectados.",
   residents: "Preferências pessoais, separadas das conversas.",

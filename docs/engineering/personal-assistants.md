@@ -2,11 +2,15 @@
 
 ## Using the web companion
 
-**Jarvis padrão** configures the installation fallback (administrators only).
-**Meus assistentes** belongs to the signed-in account: create assistants, choose
+**Assistentes → Padrão da instalação** configures the fallback (administrators only).
+**Assistentes → Seus assistentes** belongs to the signed-in account: create assistants, choose
 their names, voices, personality and conversation provider/model, and select a
 personal default. The companion uses that selection without an endpoint, home or
-room. Physical endpoints retain their existing household catalog profiles.
+room. Physical endpoints retain their existing household catalog profiles. Those profiles
+are labeled shared assistants and can also be selected for the authenticated web
+companion. Selecting a shared profile does not share the account integrations or
+conversation history. Personal default selection accepts either an owned private
+profile or an enabled shared catalog profile; the server validates the reference.
 
 Create a separate account for each person in **Usuários**, using **Usuário
 pessoal** for companion access without installation administration. Personal users
@@ -17,19 +21,22 @@ creating this role. Viewers retain read-only household access and can configure
 their personal profiles/integrations, but cannot converse or execute home commands.
 
 Profiles are stored under authenticated user IDs, with optimistic revisions.
-Default selection must reference an assistant in the same profile. The server
+Private default selection must reference an assistant in the same profile.
+Shared defaults must reference an enabled installation assistant. The server
 assigns new assistant IDs and rejects foreign companion selections. The fallback
 editor changes only its profile and preserves all other installation settings.
 
 ## Connecting Google and Microsoft
 
-Each person opens **Minhas integrações** while signed in and authorizes their own
+Each person opens **Configurações → Minhas contas** while signed in and authorizes their own
 Google and/or Microsoft accounts. Up to ten accounts per user are supported,
 including multiple accounts from the same provider. Provider authorization is an
 integration link, never an application login or an administrator grant. A provider
 identity cannot be silently merged into another Jarvis user by email address.
 
-An administrator first configures each provider's **aplicativo** on that page.
+An administrator first opens **Configurações → Aplicativos Google e Microsoft**
+and configures each provider application. This is separate from personal account
+authorization, and never connects a mailbox by itself.
 Client secrets never return to the browser; an empty secret preserves the existing
 secret only when the client ID remains the same. Changing the client ID requires
 reconnecting existing accounts. The exact callback is derived from `ROSIE_ORIGIN`:
@@ -67,7 +74,7 @@ minutes; continuations expire after five. A restart discards incomplete flows.
 
 ## Reading and confirming actions
 
-The page lists the first ten inbox messages, opens text-only message bodies, lists
+The personal accounts page lists the first ten inbox messages, opens text-only message bodies, lists
 up to fifty calendars and shows up to thirty events over the next seven days.
 HTML, attachments and remote resources are not displayed. Lists are bounded and
 may be incomplete. All provider calls use official HTTPS endpoints and timeouts.

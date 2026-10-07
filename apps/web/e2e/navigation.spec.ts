@@ -20,8 +20,8 @@ test("client navigation retains the authenticated shell and session", async ({
   const mobile = testInfo.project.name === "mobile";
   if (!mobile) await page.getByRole("button", { name: "Recolher menu", exact: true }).click();
   for (const [label, path] of [
-    ["Casas", "/homes"],
-    ["Minha conta", "/account"],
+    ["Assistentes", "/personal"],
+    ["Configurações", "/integrations"],
     ["Conversa", "/studio"],
   ]) {
     if (mobile) await page.getByRole("button", { name: "Abrir menu da administração" }).click();

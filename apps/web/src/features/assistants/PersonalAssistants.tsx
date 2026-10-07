@@ -1,13 +1,20 @@
 "use client";
-import type { CompanionProfile, PersonalAssistant, PersonalProfileStatus } from "@rosie/types";
+import type {
+  CompanionProfile,
+  PersonalAssistant,
+  PersonalProfileStatus,
+  SharedAssistant,
+} from "@rosie/types";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Modal } from "../../components/modal/Modal";
 import { request } from "../../lib/api-client";
+import { useSession } from "../session/SessionProvider";
 import { AssistantProfileFields } from "./AssistantProfileFields";
 
-type Choices = { voices: string[]; defaultProfile: CompanionProfile };
+type Choices = { voices: string[]; defaultProfile: CompanionProfile; shared?: SharedAssistant[] };
 export function PersonalAssistants() {
+  const { actor } = useSession();
   const [status, setStatus] = useState<PersonalProfileStatus>();
   const [choices, setChoices] = useState<Choices>();
   const [editing, setEditing] = useState<PersonalAssistant>();
@@ -34,6 +41,9 @@ export function PersonalAssistants() {
     assistants: PersonalAssistant[],
     defaultAssistantId: string | null,
     message: string,
+    defaultSharedAssistantId: string | null = defaultAssistantId
+      ? null
+      : (status?.profile.defaultSharedAssistantId ?? null),
   ) {
     if (!status) return;
     setBusy(true);
@@ -44,7 +54,7 @@ export function PersonalAssistants() {
         method: "PUT",
         body: JSON.stringify({
           revision: status.revision,
-          profile: { ...status.profile, assistants, defaultAssistantId },
+          profile: { ...status.profile, assistants, defaultAssistantId, defaultSharedAssistantId },
         }),
       });
       setStatus(next);
@@ -62,8 +72,11 @@ export function PersonalAssistants() {
       <header className="page-header">
         <div>
           <p className="eyebrow">SEU ESPAÇO</p>
-          <h1>Meus assistentes</h1>
-          <p>Nome, voz e personalidade para as suas conversas.</p>
+          <h1>Assistentes</h1>
+          <p>
+            Escolha quem conversa com você. Um assistente define nome, voz e personalidade; a
+            caixinha é apenas o aparelho onde ele responde.
+          </p>
         </div>
         <button
           type="button"
@@ -93,25 +106,32 @@ export function PersonalAssistants() {
             <p>
               {status.profile.assistants.find((a) => a.id === status.profile.defaultAssistantId)
                 ?.name ??
+                choices?.shared?.find((a) => a.id === status.profile.defaultSharedAssistantId)
+                  ?.name ??
                 choices?.defaultProfile.name ??
                 "Jarvis"}
             </p>
-            {status.profile.defaultAssistantId && (
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() =>
-                  void save(
-                    status.profile.assistants,
-                    null,
-                    "O Jarvis da instalação será usado por padrão.",
-                  )
-                }
-              >
-                Usar Jarvis da instalação
-              </button>
-            )}
-            <Link href="/studio">Conversar</Link>
+            <div className="button-row">
+              {(status.profile.defaultAssistantId || status.profile.defaultSharedAssistantId) && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    void save(
+                      status.profile.assistants,
+                      null,
+                      "O Jarvis da instalação será usado por padrão.",
+                      null,
+                    )
+                  }
+                >
+                  Usar Jarvis da instalação
+                </button>
+              )}
+              <Link className="button primary" href="/studio">
+                Conversar
+              </Link>
+            </div>
           </section>
           {!status.profile.assistants.length && (
             <section className="panel">
@@ -122,6 +142,7 @@ export function PersonalAssistants() {
           {status.profile.assistants.map((assistant) => (
             <section className="panel" key={assistant.id}>
               <h2>{assistant.name}</h2>
+              <span className="badge">Pessoal · Só na sua conta</span>
               <p>
                 {assistant.voice}{" "}
                 {assistant.id === status.profile.defaultAssistantId ? "· Seu padrão" : ""}
@@ -149,6 +170,51 @@ export function PersonalAssistants() {
               </div>
             </section>
           ))}
+          {(choices?.shared?.length ?? 0) > 0 && (
+            <section className="panel">
+              <div className="section-heading">
+                <div>
+                  <h2>Compartilhados</h2>
+                  <p>
+                    Os mesmos perfis podem responder na conversa e nas caixinhas. Escolher um perfil
+                    compartilhado não compartilha seus e-mails, agendas ou histórico.
+                  </p>
+                </div>
+                {actor.capabilities.includes("catalog.read") && (
+                  <Link className="button" href="/assistants">
+                    {actor.capabilities.includes("catalog.manage")
+                      ? "Gerenciar perfis compartilhados"
+                      : "Ver perfis compartilhados"}
+                  </Link>
+                )}
+              </div>
+              <div className="card-grid">
+                {choices?.shared?.map((assistant) => (
+                  <article className="assistant-card" key={assistant.id}>
+                    <span className="badge">Compartilhado</span>
+                    <h3>{assistant.name}</h3>
+                    <p>{assistant.voice}</p>
+                    <button
+                      type="button"
+                      disabled={busy || assistant.id === status.profile.defaultSharedAssistantId}
+                      onClick={() =>
+                        void save(
+                          status.profile.assistants,
+                          null,
+                          "Assistente padrão atualizado.",
+                          assistant.id,
+                        )
+                      }
+                    >
+                      {assistant.id === status.profile.defaultSharedAssistantId
+                        ? `${assistant.name} · Seu padrão`
+                        : `Usar ${assistant.name} por padrão`}
+                    </button>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
         </>
       )}
       {editing && choices && (

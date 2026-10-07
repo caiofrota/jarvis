@@ -22,21 +22,30 @@ export async function companionRoutes(
 ) {
   if (!path.startsWith("/api/v1/companion/")) return false;
   if (path === "/api/v1/companion/options" && req.method === "GET") {
-    const [personal, areas, settings, speech] = await Promise.all([
+    const [personal, areas, settings, speech, catalog] = await Promise.all([
       rt.profiles.get(actor.user.id),
       rt.companion.areas().catch(() => []),
       rt.repo.settings(),
       rt.voice.health(),
+      rt.repo.catalog(),
     ]);
     respond(res, 200, {
-      assistants: personal.profile.assistants.map((a) => ({ id: a.id, name: a.name })),
-      defaultAssistantId: personal.profile.defaultAssistantId,
+      assistants: [
+        ...personal.profile.assistants,
+        ...catalog.assistants.filter((value) => value.enabled),
+      ].map((a) => ({ id: a.id, name: a.name })),
+      defaultAssistantId:
+        personal.profile.defaultAssistantId ?? personal.profile.defaultSharedAssistantId,
       voices: speech.voices,
       defaultProfile: settings.companionProfile,
       areas,
       name:
         personal.profile.assistants.find((a) => a.id === personal.profile.defaultAssistantId)
-          ?.name ?? settings.companionProfile.name,
+          ?.name ??
+        catalog.assistants.find(
+          (a) => a.id === personal.profile.defaultSharedAssistantId && a.enabled,
+        )?.name ??
+        settings.companionProfile.name,
     });
     return true;
   }

@@ -34,8 +34,8 @@ export function AdminShell({
           <Link
             key={item.id}
             href={item.id === "overview" ? "/" : `/${item.id}`}
-            className={item.id === section ? "active" : ""}
-            aria-current={item.id === section ? "page" : undefined}
+            className={item.sections.includes(section) ? "active" : ""}
+            aria-current={item.sections.includes(section) ? "page" : undefined}
             title={item.label}
             onClick={() => setMobile(false)}
           >
@@ -116,7 +116,7 @@ export function AdminShell({
           </span>
           <span>Casa · Assistentes · Dispositivos</span>
         </div>
-        {children}
+        <div className="page-content">{children}</div>
       </main>
       {confirm && (
         <ConfirmDialog

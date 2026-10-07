@@ -20,7 +20,12 @@ playback. Interruption stops speech; ending voice or leaving the page releases m
 tracks. Synthetic browser tests exercise capture and playback, not acoustic quality.
 Real microphones, echo handling and audible speech still require user acceptance.
 
-Immediate on/off requests use the shared generic command parser. HA owns the authoritative
+Immediate on/off requests use the shared generic command parser. Natural-language
+action offers must use `propose_home_action`: the server registers one exact
+entity/action, asks for confirmation and consumes the proposal on the next reply.
+A positive confirmation dispatches once after rechecking exposure, availability,
+entity identity and connection. Offers expire after two minutes; refusal, topic or
+assistant/location changes discard them. Uncertain dispatch is never retried. HA owns the authoritative
 entity names, aliases, availability and areas. Switches whose authoritative names identify
 a light or fan can match that role; arbitrary switches are not presumed to be lights.
 Only Assist-exposed entities are eligible, and exposure is rechecked before dispatch.

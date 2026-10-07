@@ -130,8 +130,8 @@ export function Settings({ status, refresh }: { status?: Status; refresh: () => 
                         : "O serviço de fala local está indisponível."}
                     </p>
                     <p>
-                      Escolha a voz em Robôs digitais → Editar → Voz e conversa. Cada robô pode usar
-                      uma voz local ou Home Assistant Cloud.
+                      Escolha a voz em Assistentes → Editar. Cada assistente pode usar uma voz local
+                      ou Home Assistant Cloud.
                     </p>
                     <p role="status">
                       {status?.speech.voices.some((id) => id.startsWith("ha-cloud-"))

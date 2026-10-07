@@ -5,6 +5,7 @@ import {
   type PersonalProfileStatus,
   personalProfileSchema,
   savePersonalProfileSchema,
+  schemas,
 } from "@rosie/types";
 import { DomainError } from "@rosie/types/context";
 import { z } from "zod";
@@ -30,6 +31,15 @@ export class PersonalProfiles {
       if ((previous?.revision ?? null) !== parsed.revision)
         throw new DomainError("Seu perfil mudou. Recarregue antes de salvar.");
       const next = { profile: parsed.profile, revision: randomUUID() };
+      if (next.profile.defaultSharedAssistantId) {
+        const assistant = await tx.entry.findUnique({
+          where: {
+            collection_id: { collection: "assistants", id: next.profile.defaultSharedAssistantId },
+          },
+        });
+        if (!assistant || !schemas.assistants.parse(assistant.data).enabled)
+          throw new DomainError("Assistente compartilhado indisponível.");
+      }
       await tx.setting.upsert({
         where: { id: key(actor.id) },
         create: { id: key(actor.id), data: json(next) },

@@ -34,13 +34,30 @@ test("personal assistants persist without requiring a house or endpoint", async 
     page.getByRole("button", { name: `Usar ${name} por padrão`, exact: true }),
   ).toBeDisabled();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const gaps = await page
+    .locator(".page-content > .panel")
+    .evaluateAll((panels) =>
+      panels
+        .slice(1)
+        .map(
+          (panel, index) =>
+            panel.getBoundingClientRect().top - panels[index].getBoundingClientRect().bottom,
+        ),
+    );
+  expect(gaps.every((gap) => gap >= 20)).toBe(true);
+  await page.screenshot({ path: info.outputPath("assistants-spaced.png"), fullPage: true });
   await page.getByRole("button", { name: `Excluir ${name}`, exact: true }).click();
   await page.getByRole("button", { name: "Confirmar exclusão", exact: true }).click();
   await expect(dialog).not.toBeVisible();
   await expect(page.getByRole("heading", { name, exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Usar Rosie por padrão", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Rosie · Seu padrão", exact: true }),
+  ).toBeDisabled();
   await page.goto("/assistant-default");
   await expect(page.getByLabel("Nome do assistente", { exact: true })).toBeVisible();
   await page.goto("/studio");
+  await expect(page.getByLabel("Assistente", { exact: true })).toContainText("Rosie");
   await expect(
     page.getByText("Você pode conversar sem cadastrar uma caixinha.", { exact: false }),
   ).toHaveCount(0);
@@ -87,10 +104,25 @@ test("integration setup and mail review require explicit confirmation", async ({
     await route.fulfill({ json: { message: "Envio aceito pelo provedor." } });
   });
   await signIn(page, "/integrations");
+  await expect(page.getByRole("heading", { name: "Minhas contas", exact: true })).toBeVisible();
+  const menuButton = page.getByRole("button", { name: "Abrir menu da administração", exact: true });
+  const mobileMenu = await menuButton.isVisible();
+  if (mobileMenu) await menuButton.click();
+  await expect(
+    page.getByRole("navigation", { name: "Administração" }).getByRole("link"),
+  ).toHaveCount(5);
+  if (mobileMenu) await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Conectar Google", exact: true })).toBeDisabled();
   await expect(
     page.getByRole("button", { name: "Conectar Microsoft", exact: true }),
   ).toBeDisabled();
+  await expect(
+    page.getByText("Estas conexões pertencem a Test administrator", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Configurar aplicativo Google", exact: true }),
+  ).toHaveCount(0);
+  await page.goto("/provider-apps");
   await page.getByRole("button", { name: "Configurar aplicativo Google", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toContainText(
@@ -100,6 +132,7 @@ test("integration setup and mail review require explicit confirmation", async ({
   await password.fill("fixture-only-secret");
   await expect(password).toHaveAttribute("type", "password");
   await page.keyboard.press("Escape");
+  await page.goto("/integrations");
   await page.getByRole("button", { name: `Escrever e-mail com ${account}`, exact: true }).click();
   await dialog.getByLabel("Destinatários", { exact: true }).fill("recipient@example.test");
   await dialog.getByLabel("Assunto", { exact: true }).fill("Revisão");

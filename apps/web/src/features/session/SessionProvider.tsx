@@ -77,7 +77,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, [actor, refresh]);
   if (actor === undefined) return <LoadingScreen error={error} onRetry={() => void check()} />;
   if (actor === null) return <Login onLogin={() => void check()} />;
-  const section = pathname?.split("/")[1] || "overview";
+  const section =
+    pathname?.split("/")[1] || (actor.capabilities.includes("status.read") ? "overview" : "studio");
   return (
     <SessionContext.Provider value={{ actor, status, refresh, check, expire }}>
       <AdminShell

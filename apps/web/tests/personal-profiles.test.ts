@@ -76,6 +76,50 @@ it("isolates personal assistants, enforces member permissions and preserves inst
         administrator.id,
       ),
     ).rejects.toThrow("não pertence");
+    const shared = await member("/me/profile", "PUT", {
+      ...saved,
+      profile: { ...saved.profile, defaultAssistantId: null, defaultSharedAssistantId: "rosie" },
+    });
+    expect(shared.status).toBe(200);
+    const selectedShared = await shared.json();
+    expect(
+      (
+        await conversation.profile(
+          { sessionId: randomUUID(), assistantId: null, areaId: null },
+          user.id,
+        )
+      ).name,
+    ).toBe("Rosie");
+    expect(
+      (
+        await conversation.profile(
+          { sessionId: randomUUID(), assistantId: "rosie", areaId: null },
+          user.id,
+        )
+      ).name,
+    ).toBe("Rosie");
+    expect(
+      (
+        await member("/me/profile", "PUT", {
+          ...selectedShared,
+          profile: {
+            ...selectedShared.profile,
+            defaultSharedAssistantId: saved.profile.assistants[0].id,
+          },
+        })
+      ).status,
+    ).toBe(409);
+    expect(
+      (
+        await member("/me/profile", "PUT", {
+          ...selectedShared,
+          profile: {
+            ...selectedShared.profile,
+            defaultAssistantId: saved.profile.assistants[0].id,
+          },
+        })
+      ).status,
+    ).toBe(422);
     const settings = await f.repo.settings();
     const original = await f.repo.db.setting.findUniqueOrThrow({ where: { id: "settings" } });
     await f.repo.db.setting.update({

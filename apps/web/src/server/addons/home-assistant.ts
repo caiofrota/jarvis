@@ -549,6 +549,7 @@ export class HomeAssistantAddon implements Addon {
     signal?: AbortSignal,
   ) {
     signal?.throwIfAborted();
+    const connection = this.configuration;
     this.ensure(device.homeId);
     if (
       (requireExposure || this.settings?.homeAssistantAutomaticCatalog) &&
@@ -556,6 +557,9 @@ export class HomeAssistantAddon implements Addon {
     )
       throw new DomainError("Esse dispositivo não está exposto ao Assist no Home Assistant.");
     signal?.throwIfAborted();
+    this.ensure(device.homeId);
+    if (connection !== this.configuration)
+      throw new DomainError("A conexão da casa mudou antes do envio. Faça o pedido novamente.");
     const entity = device.haEntityId,
       service = device.actions[action];
     if (!entity || !this.states.has(entity))

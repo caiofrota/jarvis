@@ -44,7 +44,9 @@ button,
   cursor: pointer;
   font-weight: 600;
   text-decoration: none;
-  min-height: 42px;
+  min-height: 44px;
+  line-height: 1.25;
+  vertical-align: middle;
 }
 button:hover,
 .button:hover {
@@ -200,7 +202,7 @@ p {
 }
 .page-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 24px;
   margin-bottom: 28px;
@@ -211,7 +213,7 @@ p {
 }
 .page-header > .primary {
   flex-shrink: 0;
-  margin-top: 8px;
+  margin-top: 0;
 }
 .panel {
   background: var(--surface);
@@ -276,7 +278,7 @@ textarea {
   padding: 10px 12px;
   color: var(--ink);
   max-width: 100%;
-  min-height: 42px;
+  min-height: 44px;
 }
 .field textarea {
   min-height: 100px;
@@ -329,7 +331,8 @@ textarea {
 .button-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: stretch;
+  gap: 12px;
 }
 .icon-button {
   width: 38px;
@@ -506,12 +509,151 @@ legend {
 }
 .form-actions {
   display: flex;
-  align-items: center;
+  align-items: stretch;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 12px;
   margin-top: 22px;
   padding-top: 18px;
   border-top: 1px solid var(--line);
+}
+
+.page-content {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+}
+.page-content > .page-header {
+  margin-bottom: 0;
+}
+.page-content > :is(.notice, .error, [role="status"]) {
+  margin: 0;
+}
+.workspace-navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.workspace-links,
+.workspace-advanced nav {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+:where(.workspace-links a),
+:where(.workspace-advanced nav a) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.25;
+}
+.workspace-navigation [aria-current="page"] {
+  background: var(--green-light);
+  border-color: #438477;
+  color: var(--green);
+}
+.workspace-advanced summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.85rem;
+  padding: 8px 0;
+}
+.workspace-advanced nav {
+  margin-top: 8px;
+}
+.cards,
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 24px;
+}
+:where(.cards > .panel),
+.assistant-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+:where(.cards > .panel > :is(h2, p)),
+:where(.assistant-card > :is(h3, p)) {
+  margin: 0;
+}
+:where(.cards > .panel > p) {
+  flex: 1;
+}
+.assistant-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px;
+}
+.assistant-card > .badge {
+  align-self: flex-start;
+}
+:where(.assistant-card > button) {
+  margin-top: auto;
+}
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+:where(.section-heading p) {
+  max-width: 650px;
+  margin-bottom: 0;
+}
+.setup-steps {
+  color: var(--muted);
+  padding-left: 24px;
+  line-height: 1.6;
+}
+.setup-steps li + li {
+  margin-top: 12px;
+}
+.account-guidance > .button {
+  margin-bottom: 20px;
+}
+fieldset > label:not(.field):not(.password-field) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.button-row > *,
+.form-actions > * {
+  max-width: 100%;
+  min-width: 0;
+}
+.panel > article + article {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+@media (max-width: 760px) {
+  .page-content {
+    gap: 24px;
+  }
+  .cards,
+  .card-grid {
+    gap: 20px;
+  }
+  :where(.workspace-links a),
+  :where(.workspace-advanced nav a) {
+    padding: 10px 12px;
+  }
 }
 .settings-form {
   max-width: 960px;
@@ -685,6 +827,7 @@ audio {
   }
   .page-header {
     flex-direction: column;
+    align-items: stretch;
     gap: 12px;
   }
   .page-header > .primary {
@@ -1163,4 +1306,15 @@ body {
 .password-control > .icon-button:hover {
   background: var(--green-light);
   color: var(--green);
+}
+
+.panel > .badge + p {
+  margin-top: 12px;
+}
+@media (max-width: 760px) {
+  .form-actions,
+  .button-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

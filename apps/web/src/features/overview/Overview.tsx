@@ -297,7 +297,7 @@ export function Overview({
         <section className="panel">
           <h2>Um jeito para cada momento</h2>
           <p>
-            <Link href="/assistants">Robôs digitais</Link> guardam identidade e voz.{" "}
+            <Link href="/personal">Assistentes</Link> guardam identidade e voz.{" "}
             <Link href="/endpoints">Caixinhas</Link> têm ambiente e ajustes próprios.
           </p>
           <p>

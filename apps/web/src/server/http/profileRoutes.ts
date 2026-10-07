@@ -1,7 +1,12 @@
 import { createHash, randomUUID } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { json } from "@rosie/db";
-import { type Actor, companionProfileSchema, settingsSchema } from "@rosie/types";
+import {
+  type Actor,
+  companionProfileSchema,
+  settingsSchema,
+  sharedAssistantSchema,
+} from "@rosie/types";
 import { DomainError } from "@rosie/types/context";
 import { z } from "zod";
 import type { Runtime } from "../runtime";
@@ -21,11 +26,18 @@ export async function profileRoutes(
     if (!actor.capabilities.includes("profile.manage"))
       throw new HttpError(403, "Acesso ao perfil pessoal necessário.");
     if (req.method !== "GET") throw new HttpError(405, "Método não permitido.");
-    const [settings, speech] = await Promise.all([
+    const [settings, speech, catalog] = await Promise.all([
       rt.repo.settings(),
       rt.voice.health().catch(() => ({ voices: [] as string[] })),
+      rt.repo.catalog(),
     ]);
-    respond(res, 200, { defaultProfile: settings.companionProfile, voices: speech.voices });
+    respond(res, 200, {
+      defaultProfile: settings.companionProfile,
+      voices: speech.voices,
+      shared: catalog.assistants
+        .filter((value) => value.enabled)
+        .map((value) => sharedAssistantSchema.parse(value)),
+    });
     return true;
   }
   if (path === "/api/v1/me/assistants") {
@@ -64,7 +76,9 @@ export async function profileRoutes(
           assistants,
           defaultAssistantId:
             status.profile.defaultAssistantId ??
-            (!status.profile.assistants.length ? assistant.id : null),
+            (!status.profile.assistants.length && !status.profile.defaultSharedAssistantId
+              ? assistant.id
+              : null),
         },
       }),
     );

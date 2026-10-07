@@ -14,6 +14,7 @@ export default async function Page({ params }: { params: Promise<{ section: stri
       "personal",
       "integrations",
       "assistant-default",
+      "provider-apps",
       "settings",
       "users",
       "account",

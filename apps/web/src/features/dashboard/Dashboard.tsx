@@ -1,9 +1,11 @@
 "use client";
 import { type Collection, collections } from "@rosie/types";
 import Link from "next/link";
+import { WorkspaceNavigation } from "../../components/admin-shell/WorkspaceNavigation";
 import { DefaultAssistant } from "../assistants/DefaultAssistant";
 import { PersonalAssistants } from "../assistants/PersonalAssistants";
 import { CatalogPage } from "../catalog/CatalogPage/CatalogPage";
+import { IntegrationApplications } from "../integrations/IntegrationApplications";
 import { PersonalIntegrations } from "../integrations/PersonalIntegrations";
 import { Overview } from "../overview/Overview";
 import { useSession } from "../session/SessionProvider";
@@ -16,6 +18,12 @@ export function Dashboard({ section = "overview" }: { section?: string }) {
   const admin = actor?.user.role === "admin";
   return (
     <>
+      <WorkspaceNavigation
+        section={
+          section === "overview" && !actor.capabilities.includes("status.read") ? "studio" : section
+        }
+        capabilities={actor.capabilities}
+      />
       {(section === "studio" ||
         (section === "overview" && !actor.capabilities.includes("status.read"))) &&
       actor?.capabilities.includes("companion.use") ? (
@@ -25,7 +33,9 @@ export function Dashboard({ section = "overview" }: { section?: string }) {
       ) : section === "assistant-default" && admin ? (
         <DefaultAssistant />
       ) : section === "integrations" && actor.capabilities.includes("profile.manage") ? (
-        <PersonalIntegrations admin={admin} />
+        <PersonalIntegrations admin={admin} userName={actor.user.name} />
+      ) : section === "provider-apps" && admin ? (
+        <IntegrationApplications />
       ) : section === "overview" ? (
         <Overview status={status} refresh={refresh} readOnly={!admin} />
       ) : section === "account" && actor ? (
