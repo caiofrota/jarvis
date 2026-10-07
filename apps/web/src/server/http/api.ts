@@ -6,6 +6,7 @@ import type { Runtime } from "../runtime";
 import { accountRoutes } from "./accountRoutes";
 import { body, respond } from "./body";
 import { catalogRoutes } from "./catalogRoutes";
+import { companionRoutes } from "./companionRoutes";
 import { endpointRoutes } from "./endpointRoutes";
 import { HttpError } from "./errors";
 import { integrationRoutes } from "./integrationRoutes";
@@ -69,6 +70,7 @@ export async function api(
           : "robot.control";
     if (!readOnlyRequest && !actor.capabilities.includes(capability))
       throw new HttpError(403, "Você não tem acesso a esta ação.");
+    if (await companionRoutes(req, res, rt, path, actor)) return true;
     if (path === "/api/v1/options" && req.method === "GET") {
       respond(res, 200, await rt.catalog.options());
       return true;

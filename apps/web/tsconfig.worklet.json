@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.worklet.json",
+  "compilerOptions": { "outDir": "public" },
+  "files": ["../../features/voice/pcm-worklet.ts"]
+}

@@ -7,9 +7,13 @@ import { HomeAssistantAddon } from "../src/server/addons/home-assistant";
 import { CatalogService } from "../src/server/catalog/service";
 import { repositoryFixture } from "./fixture";
 
-it.each(["light", "switch"])(
-  "controls a logical light through HA %s, isolates homes and never replays",
-  async (domain) => {
+it.each([
+  { domain: "light", automatic: true },
+  { domain: "switch", automatic: true },
+  { domain: "switch", automatic: false },
+])(
+  "controls HA $domain with automatic catalog $automatic, isolates homes and never replays",
+  async ({ domain, automatic }) => {
     const server = new WebSocketServer({ host: "127.0.0.1", port: 0 });
     await once(server, "listening");
     const address = server.address();
@@ -70,7 +74,7 @@ it.each(["light", "switch"])(
     const addon = new HomeAssistantAddon(),
       cfg = settingsSchema.parse({
         homeAssistantEnabled: true,
-        homeAssistantAutomaticCatalog: true,
+        homeAssistantAutomaticCatalog: automatic,
         homeAssistantUrl: `http://127.0.0.1:${address.port}`,
         homeAssistantToken: "fixture-token",
         homeAssistantHomeId: "home",
@@ -99,7 +103,7 @@ it.each(["light", "switch"])(
         areaName: "Escritório",
       });
       await expect(addon.discover("other-home")).rejects.toThrow(/outra casa/);
-      await addon.execute(device, "on");
+      await addon.execute(device, "on", undefined, !automatic);
       expect(calls.filter((v) => v.type === "call_service")).toEqual([
         expect.objectContaining({
           domain,
@@ -126,11 +130,15 @@ it.each(["light", "switch"])(
       await delay(20);
       expect(addon.value(device, 60)).toBe("on");
       exposed = false;
-      await expect(addon.execute(device, "off")).rejects.toThrow(/exposto ao Assist/);
+      await expect(addon.execute(device, "off", undefined, !automatic)).rejects.toThrow(
+        /exposto ao Assist/,
+      );
       expect(calls.filter((v) => v.type === "call_service")).toHaveLength(1);
       exposed = true;
       disconnect = true;
-      await expect(addon.execute(device, "off")).rejects.toThrow(/Não vou repeti/);
+      await expect(addon.execute(device, "off", undefined, !automatic)).rejects.toThrow(
+        /Não vou repeti/,
+      );
       await addon.configure({ ...cfg, homeAssistantEnabled: false });
       await delay(20);
       expect(calls.filter((v) => v.type === "call_service")).toHaveLength(2);

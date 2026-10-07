@@ -541,13 +541,21 @@ export class HomeAssistantAddon implements Addon {
         : {}),
     };
   }
-  async execute(device: EntityMap["devices"], action: string, temperature?: number) {
+  async execute(
+    device: EntityMap["devices"],
+    action: string,
+    temperature?: number,
+    requireExposure = false,
+    signal?: AbortSignal,
+  ) {
+    signal?.throwIfAborted();
     this.ensure(device.homeId);
     if (
-      this.settings?.homeAssistantAutomaticCatalog &&
+      (requireExposure || this.settings?.homeAssistantAutomaticCatalog) &&
       !(await this.exposed(device.homeId)).has(device.haEntityId ?? "")
     )
       throw new DomainError("Esse dispositivo não está exposto ao Assist no Home Assistant.");
+    signal?.throwIfAborted();
     const entity = device.haEntityId,
       service = device.actions[action];
     if (!entity || !this.states.has(entity))

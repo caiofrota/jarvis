@@ -25,6 +25,7 @@
     "dev:brain": "pnpm --filter @rosie/web dev",
     "start:brain": "pnpm --filter @rosie/web start",
     "build:brain": "pnpm --filter @rosie/web build",
+    "setup:brain:https": "node scripts/setup-brain-https.mjs",
     "test:brain": "pnpm --filter @rosie/web test && pnpm --filter @rosie/types test",
     "typecheck:brain": "pnpm --filter @rosie/types typecheck && pnpm --filter @rosie/db typecheck && pnpm --filter @rosie/web typecheck",
     "lint:brain": "pnpm --filter @rosie/types lint && pnpm --filter @rosie/db lint && pnpm --filter @rosie/web lint",

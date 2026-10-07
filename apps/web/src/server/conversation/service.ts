@@ -26,6 +26,7 @@ import {
   semanticIntents,
   templateReply,
 } from "./intents";
+import { completion } from "./provider";
 import { prepareIntent } from "./response-rules";
 import { explicitlyRequestsSearch, SearchConsent, type SearchRequest } from "./search-consent";
 import { speakerIdentityContext, speakerIdentityReply } from "./speaker-identity";
@@ -398,25 +399,7 @@ export class Conversation {
             : { type: "json_object" },
       };
       const start = Date.now();
-      const response = await fetch(
-        assistant.provider === "openai"
-          ? "https://api.openai.com/v1/chat/completions"
-          : "https://api.deepseek.com/chat/completions",
-        {
-          method: "POST",
-          headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
-          body: JSON.stringify(payload),
-          signal: AbortSignal.any([signal, AbortSignal.timeout(30000)]),
-        },
-      );
-      if (!response.ok) throw new Error(`Conversation provider failed (${response.status})`);
-      const data = (await response.json()) as {
-        choices: {
-          message: { content: string | null; tool_calls?: ToolCall[] };
-          finish_reason: string;
-        }[];
-        usage: Record<string, unknown>;
-      };
+      const data = await completion(cfg, assistant.provider, payload, signal);
       await this.repo.event("llm_usage", {
         endpoint: endpointId,
         assistant: assistant.id,

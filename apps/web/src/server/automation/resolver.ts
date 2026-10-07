@@ -57,7 +57,7 @@ export function localCommand(text: string) {
   )
     return null;
   const m = normalize(text).match(
-    /^(?:por favor )?(liga|ligue|acende|acenda|desliga|desligue|apaga|apague) (?:a |o |as |os )?(.+?)(?: por favor)?$/,
+    /^(?:por favor )?(liga|ligar|ligue|acende|acender|acenda|desliga|desligar|desligue|apaga|apagar|apague) (?:a |o |as |os )?(.+?)(?: por favor)?$/,
   );
   if (!m) return null;
   const loc = m[2].match(/^(.+?) (?:da|do|na|no|em) (.+)$/);

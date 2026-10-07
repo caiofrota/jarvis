@@ -9,7 +9,10 @@ the existing Windows/Linux desktop application and native voice endpoints.
 - Root desktop application: existing local Windows/Linux executor and voice UI.
 
 The browser admin uses the Jarvis visual identity and adapts to phone screens.
-Text conversation uses the same central brain and home tools as robot endpoints.
+Web conversation uses an authenticated companion session and the existing desktop
+orb, microphone capture, playback and speech chunking. No physical endpoint, home
+or room record is required to converse. HA areas and exposed entities are discovered
+directly when controlling the house; an itinerant client asks for missing location.
 The desktop executor is still local: remote computer pairing and native mobile
 control are subsequent integration work. Mobile browser access does not grant
 unrestricted access to iOS or Android system functions.
@@ -36,7 +39,14 @@ port 18765. It refuses to overwrite an existing setup. Use the example `.env`
 for a custom deployment instead. Configure provider settings in the admin after
 creating your first user. See [installation](docs/engineering/installation.md)
 and [Home Assistant integration](docs/engineering/home-assistant.md).
-No physical board is required for browser administration or text conversation.
+No physical board is required for browser administration or conversation.
+For web microphone access, open the server over HTTPS or localhost on the computer
+running the browser. `pnpm setup:brain:https` creates a private development certificate,
+moves HTTPS to the next port and redirects the previous HTTP port. Restart the server
+and trust the generated certificate on your computer before microphone testing.
+Production deployments should use their own trusted certificate or HTTPS proxy.
+The planned iPhone/Android clients are native apps; mobile browser access is not a
+requirement. See [companion boundaries](docs/engineering/companion.md).
 Do not expose the server directly to the public internet; configure the documented
 authentication and deployment boundary for remote access.
 

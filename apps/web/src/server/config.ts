@@ -12,10 +12,20 @@ export function loadConfig() {
       ROSIE_VOICE_TOKEN_FILE: z.string().min(1),
       ROSIE_VOICE_URL: z.url().default("http://127.0.0.1:8766"),
       ROSIE_ORIGIN: z.url(),
+      ROSIE_TLS_CERT_FILE: z.string().default(""),
+      ROSIE_TLS_KEY_FILE: z.string().default(""),
+      ROSIE_HTTP_REDIRECT_PORT: z.coerce.number().int().min(0).max(65535).default(0),
       PORT: z.coerce.number().int().min(1).max(65535).default(8765),
       HOST: z.string().default("0.0.0.0"),
     })
     .parse(process.env);
+  if (
+    Boolean(e.ROSIE_TLS_CERT_FILE) !== Boolean(e.ROSIE_TLS_KEY_FILE) ||
+    (Boolean(e.ROSIE_TLS_CERT_FILE) && new URL(e.ROSIE_ORIGIN).protocol !== "https:") ||
+    (Boolean(e.ROSIE_HTTP_REDIRECT_PORT) &&
+      (!e.ROSIE_TLS_CERT_FILE || e.ROSIE_HTTP_REDIRECT_PORT === e.PORT))
+  )
+    throw new Error("HTTPS requires both certificate and key files.");
   for (const path of [e.ROSIE_ADMIN_TOKEN_FILE, e.ROSIE_VOICE_TOKEN_FILE])
     if (readFileSync(resolve(path), "utf8").trim().length < 16)
       throw new Error("Credential file is empty or too short");
@@ -27,6 +37,9 @@ export function loadConfig() {
     origin: new URL(e.ROSIE_ORIGIN).origin,
     port: e.PORT,
     host: e.HOST,
+    tlsCertFile: e.ROSIE_TLS_CERT_FILE,
+    tlsKeyFile: e.ROSIE_TLS_KEY_FILE,
+    redirectPort: e.ROSIE_HTTP_REDIRECT_PORT,
   };
 }
 export type AppConfig = ReturnType<typeof loadConfig>;

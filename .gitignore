@@ -61,6 +61,7 @@ native/.venv/
 
 # Private central development setup
 apps/web/.local/
+apps/web/public/pcm-worklet.js
 
 # Synthetic speech fixture required by native VAD regression tests
 !native/tests/fixtures/local-greeting.wav

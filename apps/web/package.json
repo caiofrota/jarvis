@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "user:create-first": "tsx tools/create-first-user.ts",
-    "dev": "tsx watch server.ts",
-    "build": "next build --webpack",
+    "dev": "tsc -p tsconfig.worklet.json && tsx watch server.ts",
+    "build": "tsc -p tsconfig.worklet.json && next build --webpack",
     "start": "NODE_ENV=production tsx server.ts",
     "lint": "biome check app src server.ts tools tests e2e playwright.config.ts",
     "typecheck": "tsc",

@@ -6,6 +6,7 @@ import { Automations } from "./automation/service";
 import { ResidentCalendars } from "./calendar/service";
 import { CatalogService } from "./catalog/service";
 import type { AppConfig } from "./config";
+import { CompanionConversation } from "./conversation/companion";
 import { Conversation } from "./conversation/service";
 import { RobotGateway } from "./robot/gateway";
 import { Interactions } from "./robot/interactions";
@@ -22,6 +23,7 @@ export function createRuntime(config: AppConfig) {
     calendars = new ResidentCalendars(repo, () => automations.addons.calendar),
     conversation = new Conversation(repo, automations),
     previewConversation = new Conversation(repo, automations),
+    companion = new CompanionConversation(repo, automations.addons.homeAssistant),
     voice = new VoiceClient(
       config.voiceUrl,
       config.voiceToken,
@@ -41,6 +43,7 @@ export function createRuntime(config: AppConfig) {
     calendars,
     conversation,
     previewConversation,
+    companion,
     voice,
     voiceProfiles,
     gateway,

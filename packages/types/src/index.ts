@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { companionProfileSchema } from "./companion";
 
 export type {
   CalendarBinding,
@@ -302,6 +303,7 @@ export type Row = Omit<Entity, "token"> & {
   scopeLabel?: string;
 };
 export const settingsSchema = z.object({
+  companionProfile: companionProfileSchema.default(companionProfileSchema.parse({})),
   ...integrationSettings,
   mqttEnabled: z.boolean().default(true),
   weatherEnabled: z.boolean().default(true),
@@ -349,3 +351,5 @@ export function slug(value: string): string {
   );
 }
 export * from "./accounts";
+
+export * from "./companion";

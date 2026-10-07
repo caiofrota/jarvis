@@ -7,6 +7,7 @@ export interface CaptureSession {
   setPaused?(paused: boolean): void;
 }
 interface Options {
+  workletUrl?: string;
   stream: MediaStream;
   api: Pick<JarvisAPI, 'transcribe' | 'cancelVoice'>;
   provider?: VoiceProvider;
@@ -63,6 +64,7 @@ function wav(samples: Float32Array, rate: number): string {
   return btoa(binary);
 }
 export async function capture({
+  workletUrl = 'pcm-worklet.js',
   stream,
   api,
   provider = 'local',
@@ -74,8 +76,13 @@ export async function capture({
   onSpeechStart,
 }: Options): Promise<CaptureSession> {
   const context = new AudioContext({ sampleRate: 16000 });
-  await context.audioWorklet.addModule('pcm-worklet.js');
-  await context.resume();
+  try {
+    await context.audioWorklet.addModule(workletUrl);
+    await context.resume();
+  } catch (cause) {
+    await context.close();
+    throw cause;
+  }
   const source = context.createMediaStreamSource(stream),
     node = new AudioWorkletNode(context, 'jarvis-pcm');
   source.connect(node);
