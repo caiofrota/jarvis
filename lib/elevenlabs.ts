@@ -31,7 +31,7 @@ export class ElevenLabsService {
     pending.controller.abort();
     return true;
   }
-  private async request(path: string, init: RequestInit, signal: AbortSignal) {
+  private async request(path: string, init: RequestInit, signal: AbortSignal, operation: string) {
     if (!this.key) throw new Error('Conecte sua chave ElevenLabs em Configurações → Voz.');
     const response = await this.fetchImpl(API + path, {
       ...init,
@@ -40,13 +40,32 @@ export class ElevenLabsService {
       redirect: 'error',
     });
     if (!response.ok) {
-      await response.body?.cancel();
+      let code: unknown;
+      try {
+        const data = JSON.parse((await this.bytes(response, 16 * 1024)).toString());
+        code = data?.detail?.status ?? data?.detail?.code;
+      } catch {
+        // Malformed or oversized provider bodies must not replace the HTTP diagnosis.
+      }
+      const prefix = 'ElevenLabs — ' + operation + ': ';
+      if (code === 'invalid_api_key')
+        throw new Error(prefix + 'chave inválida. Reconecte em Configurações → Voz.');
+      if (code === 'missing_permissions' || response.status === 403)
+        throw new Error(
+          prefix + 'a chave não tem permissão para esta operação. Revise suas permissões na ElevenLabs.',
+        );
+      if (code === 'quota_exceeded')
+        throw new Error(
+          prefix + 'saldo ou cota insuficiente. Confira os créditos e o limite da chave na ElevenLabs.',
+        );
       if (response.status === 401)
-        throw new Error('Chave ElevenLabs inválida. Reconecte em Configurações → Voz.');
-      if (response.status === 403)
-        throw new Error('A chave ElevenLabs não tem permissão para esta operação.');
-      if (response.status === 429) throw new Error('Limite ou saldo da ElevenLabs atingido.');
-      throw new Error('A ElevenLabs recusou o pedido (' + response.status + ').');
+        throw new Error(
+          prefix +
+            'acesso recusado (HTTP 401). Confira a chave, suas permissões e as restrições da conta na ElevenLabs.',
+        );
+      if (response.status === 429)
+        throw new Error(prefix + 'limite de requisições atingido. Aguarde e tente novamente.');
+      throw new Error(prefix + 'a ElevenLabs recusou o pedido (HTTP ' + response.status + ').');
     }
     return response;
   }
@@ -98,7 +117,7 @@ export class ElevenLabsService {
     for (let page = 0; page < 10; page++) {
       const params = new URLSearchParams({ page_size: '100' });
       if (token) params.set('next_page_token', token);
-      const response = await this.request('/v2/voices?' + params, {}, signal);
+      const response = await this.request('/v2/voices?' + params, {}, signal, 'catálogo de vozes');
       const data = JSON.parse((await this.bytes(response, 2 * 1024 * 1024)).toString());
       if (!Array.isArray(data.voices)) throw new Error('Catálogo ElevenLabs inválido.');
       for (const voice of data.voices) {
@@ -151,6 +170,7 @@ export class ElevenLabsService {
           }),
         },
         signal,
+        'voz de resposta (Text to Speech)',
       );
       return { audio: (await this.bytes(response, 8 * 1024 * 1024)).toString('base64'), mime: 'audio/mpeg' };
     });
@@ -180,7 +200,12 @@ export class ElevenLabsService {
         form.append('tag_audio_events', 'false');
         form.append('diarize', 'false');
         form.append('timestamps_granularity', 'none');
-        const response = await this.request('/v1/speech-to-text', { method: 'POST', body: form }, signal);
+        const response = await this.request(
+          '/v1/speech-to-text',
+          { method: 'POST', body: form },
+          signal,
+          'reconhecimento de fala (Speech to Text)',
+        );
         const data = JSON.parse((await this.bytes(response, 256 * 1024)).toString());
         if (typeof data.text !== 'string' || !data.text.trim())
           throw new Error('Nenhuma fala foi reconhecida.');
