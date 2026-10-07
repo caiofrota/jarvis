@@ -142,7 +142,11 @@ test('cloud mode sends the key only in the header and uses an SSE stream', async
   await ai.chat({ ...request, provider: 'cloud', model: 'gpt-test' }, (e) => events.push(e));
   assert.equal(calls[0].options.headers.Authorization, 'Bearer test-key-not-real');
   assert.equal(calls[0].options.body.includes('test-key-not-real'), false);
-  assert.equal(JSON.parse(calls[0].options.body).store, false);
+  const payload = JSON.parse(calls[0].options.body);
+  assert.equal(payload.store, false);
+  assert.match(payload.messages[0].content, /currentDateTime/);
+  for (const variant of payload.response_format.json_schema.schema.properties.decision.anyOf)
+    assert.deepEqual(variant.required, Object.keys(variant.properties));
   assert.equal(events.at(-1).type, 'done');
   assert.equal(JSON.stringify(ai.status()).includes('test-key-not-real'), false);
   ai.setKey('');

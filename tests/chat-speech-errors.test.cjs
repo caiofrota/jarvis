@@ -32,6 +32,7 @@ function controller(chat, overrides = {}) {
       if (name === '../../client/storage') return { readStored: () => [] };
       if (name === '../../client/text') return { withoutEmoji: (value) => value };
       if (name === './conversation') return { chatMessages };
+      if (name === '../../shared/chat-speech-policy') return require('../dist/shared/chat-speech-policy.js');
       throw new Error('Unexpected import: ' + name);
     },
   });

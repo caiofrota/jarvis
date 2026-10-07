@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { getAPI } from '../../client/api';
 import { readStored } from '../../client/storage';
 import { withoutEmoji } from '../../client/text';
+import { shouldSpeakChatResponse } from '../../shared/chat-speech-policy';
 import { chatMessages } from './conversation';
 import type {
   Message,
@@ -251,9 +252,9 @@ export function useChat({
       paint();
       active.current = false;
       setBusy(false);
-      if (spoken && turn === epoch.current) {
-        if (response.status === 'done') speech.finish(response.text);
-        else speech.stop();
+      if (turn === epoch.current) {
+        if (shouldSpeakChatResponse(spoken, response.status)) speech.finish(response.text);
+        else if (spoken) speech.stop();
       }
       release();
     }
