@@ -2,6 +2,8 @@ import { z } from "zod";
 
 export const companionProfileSchema = z.object({
   name: z.string().trim().min(1).max(100).default("Jarvis"),
+  worldview: z.string().trim().max(1500).default(""),
+  facts: z.string().max(3000).default(""),
   personality: z
     .string()
     .max(3000)

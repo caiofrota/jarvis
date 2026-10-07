@@ -177,7 +177,8 @@ export function PersonalAssistants() {
                   <h2>Compartilhados</h2>
                   <p>
                     Os mesmos perfis podem responder na conversa e nas caixinhas. Escolher um perfil
-                    compartilhado não compartilha seus e-mails, agendas ou histórico.
+                    compartilhado não compartilha seus e-mails, agendas ou histórico. Todos podem
+                    escolher; somente administradores podem editar esses perfis.
                   </p>
                 </div>
                 {actor.capabilities.includes("catalog.read") && (

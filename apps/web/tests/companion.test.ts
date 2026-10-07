@@ -1,7 +1,15 @@
-import { emptyCatalog, settingsSchema } from "@rosie/types";
+import {
+  companionProfileSchema,
+  emptyCatalog,
+  personalProfileSchema,
+  schemas,
+  settingsSchema,
+} from "@rosie/types";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { HomeAssistantAddon } from "../src/server/addons/home-assistant";
 import { CompanionConversation } from "../src/server/conversation/companion";
+import { assistantIdentity } from "../src/server/conversation/identity";
+import { catalogFixture } from "./fixture";
 
 function fixture() {
   const settings = settingsSchema.parse({
@@ -397,4 +405,100 @@ describe("itinerant companion", () => {
     );
     expect(f.ha.execute).not.toHaveBeenCalled();
   });
+});
+
+it("preserves a shared persona and its household context without assigning a room or resident", async () => {
+  const f = fixture(),
+    catalog = catalogFixture();
+  catalog.assistants[0].worldview = "Perspectiva solidária de esquerda.";
+  catalog.assistants[0].facts = "A personagem cuida de um observatório.";
+  catalog.homes[0].facts = "A casa tem uma biblioteca.";
+  catalog.residents.push(
+    schemas.residents.parse({
+      id: "unknown-resident",
+      name: "Unselected person",
+      homeId: "home",
+      facts: "Unselected resident context",
+    }),
+  );
+  const provider = vi.fn<typeof fetch>(
+    async () =>
+      new Response(
+        JSON.stringify({
+          choices: [{ message: { role: "assistant", content: "Resposta da personagem" } }],
+        }),
+      ),
+  );
+  vi.stubGlobal("fetch", provider);
+  const conversation = new CompanionConversation(
+    { settings: async () => f.settings, catalog: async () => catalog },
+    f.ha as never,
+  );
+  const sessionId = conversation.create("owner");
+  await conversation.respond(
+    "owner",
+    { sessionId, assistantId: "rosie", areaId: null, text: "Você é de esquerda ou de direita?" },
+    AbortSignal.timeout(5000),
+  );
+  const payload = JSON.parse(String(provider.mock.calls[0][1]?.body));
+  expect(payload.messages[0].content).toContain(assistantIdentity(catalog.assistants[0]));
+  expect(payload.messages[0].content).toContain("A casa tem uma biblioteca.");
+  expect(payload.messages[0].content).toContain("não informa a localização atual");
+  expect(payload.messages[0].content).not.toContain("Unselected resident context");
+  expect(f.ha.execute).not.toHaveBeenCalled();
+});
+it("keeps private persona context and resets history when configured values change", async () => {
+  const f = fixture();
+  const personal = personalProfileSchema.parse({
+    assistants: [
+      {
+        ...companionProfileSchema.parse({
+          name: "Atlas",
+          worldview: "Valoriza a curiosidade.",
+          facts: "Cuida de um jardim.",
+        }),
+        id: "00000000-0000-4000-8000-000000000001",
+      },
+    ],
+    defaultAssistantId: "00000000-0000-4000-8000-000000000001",
+  });
+  const provider = vi.fn<typeof fetch>(
+    async () =>
+      new Response(
+        JSON.stringify({ choices: [{ message: { role: "assistant", content: "Resposta" } }] }),
+      ),
+  );
+  vi.stubGlobal("fetch", provider);
+  const conversation = new CompanionConversation(
+    { settings: async () => f.settings, catalog: async () => emptyCatalog() },
+    f.ha as never,
+    { get: async () => ({ profile: personal, revision: null }) },
+  );
+  const sessionId = conversation.create("owner"),
+    input = { sessionId, assistantId: null, areaId: null };
+  await conversation.respond(
+    "owner",
+    { ...input, text: "Quais são seus valores?" },
+    AbortSignal.timeout(5000),
+  );
+  await conversation.respond(
+    "owner",
+    { ...input, text: "E seu jardim?" },
+    AbortSignal.timeout(5000),
+  );
+  const second = JSON.parse(String(provider.mock.calls[1][1]?.body));
+  expect(second.messages[0].content).toContain("Valoriza a curiosidade.");
+  expect(second.messages[0].content).toContain("Cuida de um jardim.");
+  expect(second.messages.filter((value: { role: string }) => value.role === "user")).toHaveLength(
+    2,
+  );
+  personal.assistants[0].worldview = "Valoriza a sustentabilidade.";
+  await conversation.respond(
+    "owner",
+    { ...input, text: "O que mudou?" },
+    AbortSignal.timeout(5000),
+  );
+  const third = JSON.parse(String(provider.mock.calls[2][1]?.body));
+  expect(third.messages[0].content).toContain("Valoriza a sustentabilidade.");
+  expect(third.messages.filter((value: { role: string }) => value.role === "user")).toHaveLength(1);
 });

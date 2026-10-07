@@ -1,5 +1,6 @@
 import type { CompanionProfile } from "@rosie/types";
 import { Field } from "../../components/field/Field";
+import { AssistantIdentityFields } from "./AssistantIdentityFields";
 export function AssistantProfileFields({
   value,
   onChange,
@@ -30,39 +31,37 @@ export function AssistantProfileFields({
         options={choices}
         onChange={(voice) => set("voice", voice)}
       />
-      <Field
-        label="Personalidade"
-        type="textarea"
-        value={value.personality}
-        onChange={(personality) => set("personality", personality)}
-      />
-      <Field
-        label="Provedor de conversa"
-        type="select"
-        value={value.provider}
-        required
-        options={[
-          { id: "openai", name: "OpenAI" },
-          { id: "deepseek", name: "DeepSeek" },
-        ]}
-        onChange={(provider) => set("provider", provider)}
-      />
-      <Field
-        label="Modelo de conversa"
-        value={value.model}
-        required
-        onChange={(model) => set("model", model)}
-      />
-      <Field
-        label="Qualidade da voz"
-        type="select"
-        value={value.quality}
-        options={[
-          { id: "fast", name: "Rápida" },
-          { id: "detailed", name: "Detalhada" },
-        ]}
-        onChange={(quality) => set("quality", quality)}
-      />
+      <AssistantIdentityFields value={value} onChange={set} />
+      <details className="assistant-context">
+        <summary>Opções de voz e modelo (avançado)</summary>
+        <Field
+          label="Provedor de conversa"
+          type="select"
+          value={value.provider}
+          required
+          options={[
+            { id: "openai", name: "OpenAI" },
+            { id: "deepseek", name: "DeepSeek" },
+          ]}
+          onChange={(provider) => set("provider", provider)}
+        />
+        <Field
+          label="Modelo de conversa"
+          value={value.model}
+          required
+          onChange={(model) => set("model", model)}
+        />
+        <Field
+          label="Qualidade da voz"
+          type="select"
+          value={value.quality}
+          options={[
+            { id: "fast", name: "Rápida" },
+            { id: "detailed", name: "Detalhada" },
+          ]}
+          onChange={(quality) => set("quality", quality)}
+        />
+      </details>
     </>
   );
 }

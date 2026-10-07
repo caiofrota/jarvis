@@ -31,8 +31,11 @@ export function DefaultAssistant() {
       <header className="page-header">
         <div>
           <p className="eyebrow">PADRÃO DA INSTALAÇÃO</p>
-          <h1>Jarvis padrão</h1>
-          <p>Usado pelas contas que ainda não escolheram um assistente pessoal.</p>
+          <h1>Padrão da instalação</h1>
+          <p>
+            Usado somente por quem ainda não escolheu um assistente pessoal ou compartilhado.
+            Alterar este padrão não muda os assistentes particulares dos usuários.
+          </p>
         </div>
       </header>
       {error && (

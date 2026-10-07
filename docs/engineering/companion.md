@@ -3,9 +3,17 @@
 The central `/studio` conversation does not require a digital robot, physical
 endpoint, local home or room record. Its default profile lives in installation
 settings; each authenticated account can create personal assistant profiles and
-choose its own default voice and personality in **Meus assistentes**. See
+choose its own default voice and personality in **Assistentes → Seus assistentes**. See
 [personal assistants and integrations](personal-assistants.md).
 Fixed endpoints retain their scoped catalog and firmware contract.
+
+All profile editors share personality, optional facts and optional worldview fields.
+The web companion and fixed endpoint model prompts use the same identity builder.
+Selecting a shared profile includes its enabled household facts/timezone as reference
+data, without inferring the mobile user’s room or resident identity. Private profiles
+have no household binding. Profile/context edits reset the in-memory conversation
+history. Personal defaults override the installation fallback; only administrators
+can edit shared profiles or that fallback.
 
 Companion API routes are authenticated under `/api/v1/companion`. The server creates
 random session IDs, binds them to the authenticated account and expires idle sessions
@@ -34,7 +42,7 @@ an installation home; a companion itself has no home binding. Explicit room name
 optional current area; absent or ambiguous location requires clarification. A successful
 HA service request is acknowledged as a sent command, not verified physical state.
 Personal email/calendar reads use owner-scoped tools; writes require confirmation
-on **Minhas integrações**. Scheduled/composite home actions, temperatures, search and desktop executors remain
+on **Configurações → Minhas contas**. Scheduled/composite home actions, temperatures, search and desktop executors remain
 outside the companion action boundary in this iteration; never confirm their execution.
 
 iPhone and Android are planned native clients of the central services. No mobile app

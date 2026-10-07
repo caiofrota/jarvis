@@ -17,6 +17,16 @@ test("personal assistants persist without requiring a house or endpoint", async 
   await dialog
     .getByLabel("Personalidade", { exact: true })
     .fill("Converse com clareza e curiosidade.");
+  await expect(
+    dialog.getByLabel("Visão de mundo e posicionamento", { exact: true }),
+  ).not.toBeVisible();
+  await dialog.getByText("Contexto adicional (opcional)", { exact: true }).click();
+  await dialog
+    .getByLabel("Visão de mundo e posicionamento", { exact: true })
+    .fill("Valoriza a curiosidade.");
+  await dialog
+    .getByLabel("Informações do assistente", { exact: true })
+    .fill("Cuida de um observatório.");
   await expect(dialog.getByLabel("Casa", { exact: true })).toHaveCount(0);
   await expect(dialog.getByLabel("Ambiente", { exact: true })).toHaveCount(0);
   await dialog.getByRole("button", { name: "Salvar assistente", exact: true }).click();

@@ -1318,3 +1318,13 @@ body {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+.assistant-context {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  margin-block: 16px;
+}
+.assistant-context summary {
+  cursor: pointer;
+  color: var(--ink);
+}

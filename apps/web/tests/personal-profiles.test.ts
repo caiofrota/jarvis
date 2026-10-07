@@ -36,9 +36,16 @@ it("isolates personal assistants, enforces member permissions and preserves inst
     const member = await client("partner");
     for (const path of ["/settings", "/users", "/catalog/devices", "/status", "/assistant-default"])
       expect((await member(path)).status, path).toBe(403);
+    expect((await member("/catalog/assistants/rosie", "PUT", {})).status).toBe(403);
+    expect((await member("/catalog/assistants/rosie", "DELETE", { revision: 1 })).status).toBe(403);
     const before = await (await member("/me/profile")).json();
     const assistant = {
-      ...companionProfileSchema.parse({ name: "Atlas", voice: "fixture-voice" }),
+      ...companionProfileSchema.parse({
+        name: "Atlas",
+        voice: "fixture-voice",
+        worldview: "Curiosidade",
+        facts: "Contexto particular",
+      }),
       id: "",
     };
     const created = await member("/me/assistants", "POST", {
@@ -47,6 +54,10 @@ it("isolates personal assistants, enforces member permissions and preserves inst
     });
     expect(created.status).toBe(201);
     const saved = await created.json();
+    expect(saved.profile.assistants[0]).toMatchObject({
+      worldview: "Curiosidade",
+      facts: "Contexto particular",
+    });
     expect(saved.profile.defaultAssistantId).toBe(saved.profile.assistants[0].id);
     expect((await (await admin("/me/profile")).json()).profile.assistants).toEqual([]);
     expect((await member("/me/profile", "PUT", { ...saved, owner: "other" })).status).toBe(422);

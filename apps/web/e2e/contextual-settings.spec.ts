@@ -33,12 +33,14 @@ test("weather city, assistant worldview and independent addon settings persist",
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await page.goto("/assistants");
   await page.getByRole("button", { name: "Editar Rosie", exact: true }).click();
+  await page.getByText(/Contexto adicional \(opcional\)/).click();
   await page
     .getByLabel("Visão de mundo e posicionamento", { exact: true })
     .fill("Perspectiva marxista em temas políticos.");
   await page.getByRole("button", { name: "Salvar", exact: true }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await page.getByRole("button", { name: "Editar Rosie", exact: true }).click();
+  await page.getByText(/Contexto adicional \(opcional\)/).click();
   await expect(page.getByLabel("Visão de mundo e posicionamento", { exact: true })).toHaveValue(
     "Perspectiva marxista em temas políticos.",
   );
