@@ -4,7 +4,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { json } from "@rosie/db";
 import { schemas } from "@rosie/types";
 import { expect, it, vi } from "vitest";
-import WebSocket from "ws";
+import WebSocket, { WebSocketServer } from "ws";
 import { Automations } from "../src/server/automation/service";
 import { Conversation } from "../src/server/conversation/service";
 import { decodeBatch, encode } from "../src/server/robot/codec";
@@ -205,3 +205,36 @@ it("keeps two endpoints independent, negotiates codec and finishes playback on t
     await f.close();
   }
 }, 10000);
+
+it("routes only the development HMR path to the supplied handler and rejects unknown upgrades", async () => {
+  const f = await repositoryFixture();
+  const server = createServer();
+  const hmr = new WebSocketServer({ noServer: true });
+  const voice = new VoiceClient("http://127.0.0.1:1", "fixture-private");
+  const automations = new Automations(f.repo);
+  const gateway = new RobotGateway(f.repo, voice, new Conversation(f.repo, automations));
+  const upgrade = vi.fn(async (req, socket, head) => {
+    hmr.handleUpgrade(req, socket, head, (ws) => ws.send("development-ready"));
+  });
+  gateway.attach(server, upgrade);
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  const address = server.address();
+  if (!address || typeof address === "string") throw new Error("port");
+  const ws = new WebSocket(`ws://127.0.0.1:${address.port}/_next/hmr?id=fixture`);
+  const unknown = new WebSocket(`ws://127.0.0.1:${address.port}/unknown`);
+  const denied = expect(once(unknown, "open")).rejects.toThrow();
+  try {
+    const [, [data]] = await Promise.all([once(ws, "open"), once(ws, "message")]);
+    expect(data.toString()).toBe("development-ready");
+    await denied;
+    expect(upgrade).toHaveBeenCalledTimes(1);
+  } finally {
+    ws.terminate();
+    unknown.terminate();
+    gateway.close();
+    hmr.close();
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await f.close();
+  }
+});

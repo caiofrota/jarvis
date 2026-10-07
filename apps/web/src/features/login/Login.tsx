@@ -55,9 +55,7 @@ export function Login({ onLogin }: { onLogin: () => void }) {
           onChange={setPassword}
           autoComplete="current-password"
         />
-        <p className="hint">
-          Primeiro acesso? Crie o administrador no servidor com <code>pnpm user:create-first</code>.
-        </p>
+        <p className="hint">Use a conta configurada para esta central.</p>
         {error && (
           <p role="alert" className="error">
             {error}

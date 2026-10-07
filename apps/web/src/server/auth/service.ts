@@ -37,7 +37,7 @@ export class Authentication {
   }
   private cookie(req: IncomingMessage, res: ServerResponse) {
     return getIronSession<{ id?: string }>(req, res, {
-      cookieName: "rosie-session",
+      cookieName: "jarvis-session",
       password: createHash("sha512")
         .update(`rosie:user-session:${this.cfg.adminToken}`)
         .digest("hex"),
