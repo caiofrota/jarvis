@@ -1,9 +1,10 @@
 import { Suspense } from "react";
+import { LoadingScreen } from "../src/components/loading-screen/LoadingScreen";
 import { Dashboard } from "../src/features/dashboard/Dashboard";
 
 export default function Page() {
   return (
-    <Suspense fallback={<p>Carregando painel…</p>}>
+    <Suspense fallback={<LoadingScreen />}>
       <Dashboard section="overview" />
     </Suspense>
   );

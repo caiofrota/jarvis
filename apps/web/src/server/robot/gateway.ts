@@ -1,5 +1,6 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, Server } from "node:http";
+import type { Duplex } from "node:stream";
 import type { Repository } from "@rosie/db";
 import type { TurnContext } from "@rosie/types/context";
 import { WebSocketServer } from "ws";
@@ -18,8 +19,15 @@ export class RobotGateway {
     private conversation: Conversation,
     private voiceProfiles?: VoiceProfiles,
   ) {}
-  attach(server: Server) {
+  attach(
+    server: Server,
+    developmentUpgrade?: (req: IncomingMessage, socket: Duplex, head: Buffer) => Promise<void>,
+  ) {
     server.on("upgrade", (req, socket, head) => {
+      if (developmentUpgrade && req.url?.split("?")[0] === "/_next/hmr") {
+        void developmentUpgrade(req, socket, head).catch(() => socket.destroy());
+        return;
+      }
       const match = req.url?.match(/^\/ws\/robot\/([a-z0-9_-]{1,64})$/);
       if (!match) {
         socket.destroy();

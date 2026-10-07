@@ -3,6 +3,7 @@ import { type Actor, type Collection, collections } from "@rosie/types";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { AdminShell } from "../../components/admin-shell/AdminShell";
+import { LoadingScreen } from "../../components/loading-screen/LoadingScreen";
 import { ApiError, request, type Status } from "../../lib/api-client";
 import { CatalogPage } from "../catalog/CatalogPage/CatalogPage";
 import { Login } from "../login/Login";
@@ -45,17 +46,7 @@ export function Dashboard({ section = "overview" }: { section?: string }) {
     return () => clearInterval(timer);
   }, [authenticated, refresh]);
   if (authenticated === false) return <Login onLogin={() => void check()} />;
-  if (authenticated === null)
-    return (
-      <main className="loading-page">
-        <p role={error ? "alert" : "status"}>{error || "Abrindo sua casa…"}</p>
-        {error && (
-          <button type="button" onClick={() => void check()}>
-            Tentar novamente
-          </button>
-        )}
-      </main>
-    );
+  if (authenticated === null) return <LoadingScreen error={error} onRetry={() => void check()} />;
   const admin = actor?.user.role === "admin";
   return (
     <AdminShell

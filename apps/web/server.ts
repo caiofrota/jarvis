@@ -22,7 +22,10 @@ const server = createServer(async (req, res) => {
   res.setHeader("Referrer-Policy", "same-origin");
   if (!(await api(req, res, runtime))) await handle(req, res);
 });
-runtime.gateway.attach(server);
+runtime.gateway.attach(
+  server,
+  process.env.NODE_ENV !== "production" ? app.getUpgradeHandler() : undefined,
+);
 await runtime.automations.configure();
 await runtime.interactions.configure();
 server.listen(config.port, config.host, () =>

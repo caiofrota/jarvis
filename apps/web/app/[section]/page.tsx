@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { LoadingScreen } from "../../src/components/loading-screen/LoadingScreen";
 import { Dashboard } from "../../src/features/dashboard/Dashboard";
 import { labels } from "../../src/i18n/pt-BR";
 
@@ -13,7 +14,7 @@ export default async function Page({ params }: { params: Promise<{ section: stri
   )
     notFound();
   return (
-    <Suspense fallback={<p>Carregando painel…</p>}>
+    <Suspense fallback={<LoadingScreen />}>
       <Dashboard section={section} />
     </Suspense>
   );
