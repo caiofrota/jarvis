@@ -1,7 +1,10 @@
 "use client";
 import { type Collection, collections } from "@rosie/types";
 import Link from "next/link";
+import { DefaultAssistant } from "../assistants/DefaultAssistant";
+import { PersonalAssistants } from "../assistants/PersonalAssistants";
 import { CatalogPage } from "../catalog/CatalogPage/CatalogPage";
+import { PersonalIntegrations } from "../integrations/PersonalIntegrations";
 import { Overview } from "../overview/Overview";
 import { useSession } from "../session/SessionProvider";
 import { Settings } from "../settings/Settings";
@@ -13,8 +16,16 @@ export function Dashboard({ section = "overview" }: { section?: string }) {
   const admin = actor?.user.role === "admin";
   return (
     <>
-      {section === "studio" && actor?.capabilities.includes("robot.control") ? (
+      {(section === "studio" ||
+        (section === "overview" && !actor.capabilities.includes("status.read"))) &&
+      actor?.capabilities.includes("companion.use") ? (
         <Studio />
+      ) : section === "personal" && actor.capabilities.includes("profile.manage") ? (
+        <PersonalAssistants />
+      ) : section === "assistant-default" && admin ? (
+        <DefaultAssistant />
+      ) : section === "integrations" && actor.capabilities.includes("profile.manage") ? (
+        <PersonalIntegrations admin={admin} />
       ) : section === "overview" ? (
         <Overview status={status} refresh={refresh} readOnly={!admin} />
       ) : section === "account" && actor ? (

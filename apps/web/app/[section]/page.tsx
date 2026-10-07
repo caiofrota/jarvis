@@ -8,9 +8,17 @@ import { labels } from "../../src/i18n/pt-BR";
 export default async function Page({ params }: { params: Promise<{ section: string }> }) {
   const { section } = await params;
   if (
-    !["overview", "studio", "settings", "users", "account", ...Object.keys(labels)].includes(
-      section,
-    )
+    ![
+      "overview",
+      "studio",
+      "personal",
+      "integrations",
+      "assistant-default",
+      "settings",
+      "users",
+      "account",
+      ...Object.keys(labels),
+    ].includes(section)
   )
     notFound();
   return (

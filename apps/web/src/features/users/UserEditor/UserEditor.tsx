@@ -20,7 +20,7 @@ export function UserEditor({
 }) {
   const [name, setName] = useState(user?.name ?? ""),
     [username, setUsername] = useState(user?.username ?? "");
-  const [role, setRole] = useState<Account["role"]>(user?.role ?? "viewer"),
+  const [role, setRole] = useState<Account["role"]>(user?.role ?? "member"),
     [enabled, setEnabled] = useState(user?.enabled ?? true);
   const [password, setPassword] = useState(""),
     [confirmation, setConfirmation] = useState("");
@@ -92,8 +92,9 @@ export function UserEditor({
             options={Object.entries(accountRoleLabels).map(([id, name]) => ({ id, name }))}
           />
           <p className="hint">
-            Administradores gerenciam a plataforma e os usuários. Somente leitura permite consultar
-            cadastros e status, sem executar ações.
+            Usuários pessoais conversam e gerenciam seus assistentes e integrações. Administradores
+            também gerenciam a instalação. Somente leitura permite consultar cadastros e status, sem
+            operar a casa.
           </p>
           <Field
             label="Acesso ativo"

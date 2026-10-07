@@ -333,3 +333,20 @@ MCP tool execution client. Cache discovery for five seconds, coalesce concurrent
 reads, fail closed on discovery errors, and recheck Assist exposure before dispatch.
 Only currently supported domains are projected. No entity is exposed or modified
 in HA by this feature, and no firmware change is required.
+
+## 022: Authenticated personal companions and direct account integrations
+
+The owner requested separate companions and both Google/Microsoft mail and calendar
+accounts for each person. Companion profiles therefore belong to installation
+users rather than physical endpoints/residents. An explicit personal member role
+grants companion and personal integration access without installation management.
+Administrators configure the global fallback and provider applications; each user
+authorizes their own accounts. Existing physical resident calendars through HA
+remain separate, with their household authentication limitations.
+
+Use maintained OAuth protocol primitives, PKCE/state, encrypted server-only tokens
+and authenticated owner-bound completion. Provider identities are integration links,
+not additional login mechanisms. Read-only tools may query personal accounts for
+the companion; sending and event creation require explicit page confirmation.
+This implements separate authenticated personal access, not private voice identity
+or native mobile integration. See [the feature and setup contract](personal-assistants.md).

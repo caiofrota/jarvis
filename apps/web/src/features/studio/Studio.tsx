@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { AudioOutput } from "../../../../../features/voice/audio-output";
 import { type CaptureSession, capture } from "../../../../../features/voice/local-capture";
@@ -322,10 +323,7 @@ export function Studio() {
               setAreaId(String(value));
             }}
           />
-          <p className="hint">
-            Você pode conversar sem cadastrar uma caixinha. Para controlar a casa, diga o ambiente
-            ou o nome do dispositivo.
-          </p>
+          <Link href="/personal">Configurar meus assistentes</Link>
           <button type="button" disabled={busy} onClick={() => void reset()}>
             Nova conversa
           </button>

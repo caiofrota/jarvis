@@ -14,7 +14,7 @@ export const passwordSchema = z
 export const accountSchema = z.object({
   username: usernameSchema,
   name: z.string().trim().min(1, "Informe o nome.").max(100),
-  role: z.enum(["admin", "viewer"]),
+  role: z.enum(["admin", "member", "viewer"]),
   enabled: z.boolean(),
 });
 export const createAccountSchema = accountSchema.extend({ password: passwordSchema });
@@ -24,4 +24,8 @@ export const updateAccountSchema = accountSchema.extend({
 });
 export type Account = z.infer<typeof accountSchema> & { id: string; revision: number };
 export type Actor = { user: Account; capabilities: string[] };
-export const accountRoleLabels = { admin: "Administrador", viewer: "Somente leitura" };
+export const accountRoleLabels = {
+  admin: "Administrador",
+  member: "Usuário pessoal",
+  viewer: "Somente leitura",
+};

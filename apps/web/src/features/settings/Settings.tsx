@@ -1,5 +1,5 @@
 "use client";
-import type { CompanionProfile } from "@rosie/types";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Field } from "../../components/field/Field";
 import { PasswordField } from "../../components/password-field/PasswordField";
@@ -9,7 +9,6 @@ import { HomeAssistantImport } from "./HomeAssistant";
 import { InteractionTest } from "./InteractionTest";
 
 type Values = {
-  companionProfile: CompanionProfile;
   homeAssistantEnabled: boolean;
   homeAssistantAutomaticCatalog: boolean;
   homeAssistantUrl: string;
@@ -164,51 +163,7 @@ export function Settings({ status, refresh }: { status?: Status; refresh: () => 
                 content: (
                   <>
                     <h2>Conversa</h2>
-                    <h3>Companion padrão</h3>
-                    <p>Este assistente funciona sem caixinha, casa ou cômodo fixo.</p>
-                    <Field
-                      label="Nome do companion"
-                      value={value.companionProfile.name}
-                      onChange={(name) =>
-                        set("companionProfile", { ...value.companionProfile, name })
-                      }
-                    />
-                    <Field
-                      label="Personalidade do companion"
-                      type="textarea"
-                      value={value.companionProfile.personality}
-                      onChange={(personality) =>
-                        set("companionProfile", { ...value.companionProfile, personality })
-                      }
-                    />
-                    <Field
-                      label="Provedor do companion"
-                      type="select"
-                      value={value.companionProfile.provider}
-                      options={[
-                        { id: "openai", name: "OpenAI" },
-                        { id: "deepseek", name: "DeepSeek" },
-                      ]}
-                      onChange={(provider) =>
-                        set("companionProfile", { ...value.companionProfile, provider })
-                      }
-                    />
-                    <Field
-                      label="Modelo do companion"
-                      value={value.companionProfile.model}
-                      onChange={(model) =>
-                        set("companionProfile", { ...value.companionProfile, model })
-                      }
-                    />
-                    <Field
-                      label="Voz do companion"
-                      type="select"
-                      value={value.companionProfile.voice}
-                      options={(status?.speech.voices ?? []).map((id) => ({ id, name: id }))}
-                      onChange={(voice) =>
-                        set("companionProfile", { ...value.companionProfile, voice })
-                      }
-                    />
+                    <Link href="/assistant-default">Configurar Jarvis padrão</Link>
                     <p>
                       A chave é compartilhada pelos robôs que usam o mesmo provedor. Deixe em branco
                       para manter a chave atual.

@@ -22,17 +22,21 @@ export async function companionRoutes(
 ) {
   if (!path.startsWith("/api/v1/companion/")) return false;
   if (path === "/api/v1/companion/options" && req.method === "GET") {
-    const [catalog, areas, settings] = await Promise.all([
-      rt.repo.catalog(),
+    const [personal, areas, settings, speech] = await Promise.all([
+      rt.profiles.get(actor.user.id),
       rt.companion.areas().catch(() => []),
       rt.repo.settings(),
+      rt.voice.health(),
     ]);
     respond(res, 200, {
-      assistants: catalog.assistants
-        .filter((a) => a.enabled)
-        .map((a) => ({ id: a.id, name: a.name })),
+      assistants: personal.profile.assistants.map((a) => ({ id: a.id, name: a.name })),
+      defaultAssistantId: personal.profile.defaultAssistantId,
+      voices: speech.voices,
+      defaultProfile: settings.companionProfile,
       areas,
-      name: settings.companionProfile.name,
+      name:
+        personal.profile.assistants.find((a) => a.id === personal.profile.defaultAssistantId)
+          ?.name ?? settings.companionProfile.name,
     });
     return true;
   }
@@ -75,7 +79,7 @@ export async function companionRoutes(
     } else {
       const input = companionSpeechSchema.parse(await body(req));
       rt.companion.session(actor.user.id, input.sessionId);
-      const profile = await rt.companion.profile(input);
+      const profile = await rt.companion.profile(input, actor.user.id);
       const health = await rt.voice.health();
       const voice = input.voice ?? profile.voice;
       if (!health.voices.includes(voice))

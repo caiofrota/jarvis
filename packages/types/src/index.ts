@@ -353,3 +353,5 @@ export function slug(value: string): string {
 export * from "./accounts";
 
 export * from "./companion";
+export * from "./personal";
+export * from "./personal-integrations";

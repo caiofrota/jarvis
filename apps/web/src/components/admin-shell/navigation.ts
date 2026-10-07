@@ -15,7 +15,15 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { labels } from "../../i18n/pt-BR";
 export const navigation = [
-  { id: "studio", label: "Conversa", icon: faRobot, permission: "robot.control" },
+  { id: "studio", label: "Conversa", icon: faRobot, permission: "companion.use" },
+  { id: "personal", label: "Meus assistentes", icon: faRobot, permission: "profile.manage" },
+  {
+    id: "integrations",
+    label: "Minhas integrações",
+    icon: faSliders,
+    permission: "profile.manage",
+  },
+  { id: "assistant-default", label: "Jarvis padrão", icon: faRobot, permission: "settings.manage" },
   { id: "overview", label: "Visão geral", icon: faGauge, permission: "status.read" },
   ...Object.entries(labels).map(([id, label]) => ({
     id,
@@ -35,5 +43,5 @@ export const navigation = [
   })),
   { id: "settings", label: "Voz e conexões", icon: faSliders, permission: "settings.manage" },
   { id: "users", label: "Usuários", icon: faUserShield, permission: "users.manage" },
-  { id: "account", label: "Minha conta", icon: faUser, permission: "status.read" },
+  { id: "account", label: "Minha conta", icon: faUser, permission: "profile.manage" },
 ];

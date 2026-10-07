@@ -98,8 +98,12 @@ export class Authentication {
               "robot.control",
               "settings.manage",
               "users.manage",
+              "profile.manage",
+              "companion.use",
             ]
-          : ["catalog.read", "status.read"],
+          : stored.user.role === "member"
+            ? ["profile.manage", "companion.use"]
+            : ["catalog.read", "status.read", "profile.manage"],
     };
   }
   async logout(req: IncomingMessage, res: ServerResponse) {

@@ -2,7 +2,7 @@
 
 Panel users are distinct from residents, voiceprints and device credentials.
 Each account has a unique case-insensitive ASCII username (3–40 characters), a
-display name, an administrator/viewer role and an enabled flag. Usernames permit
+display name, an administrator/member/viewer role and an enabled flag. Usernames permit
 letters, digits, dots, hyphens and underscores. Passwords are 8–128 characters,
 are never trimmed and are stored only as salted hashes.
 
@@ -33,7 +33,11 @@ to create the remaining accounts. There is no public account-creation endpoint.
   integrations, enroll voices, edit calendars or manage users. The API enforces
   this independently of hidden UI actions. Integration settings and credentials
   are not part of viewer access.
-- Both roles can change their own password through **Minha conta**, verifying
+- Personal members can converse and manage their own assistants and integrations,
+  without access to household catalog/status or installation administration. See
+  [personal assistants](personal-assistants.md) for the household access grant.
+- All roles can manage their own personal profiles/integrations and change their
+  own password through **Minha conta**, verifying
   the current password first. All their sessions end afterward. Administrators
   can reset another account's password through **Usuários**.
 - Disabling an account or editing its identity/role/password revokes its sessions.

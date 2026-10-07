@@ -23,7 +23,7 @@ export const companionSelectionSchema = z.object({
   sessionId: z.string().uuid(),
   assistantId: z
     .string()
-    .regex(/^[a-z0-9_-]{1,64}$/)
+    .regex(/^[a-zA-Z0-9_-]{1,64}$/)
     .nullable()
     .default(null),
   areaId: z.string().max(200).nullable().default(null),

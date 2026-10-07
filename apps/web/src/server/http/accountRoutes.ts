@@ -13,6 +13,15 @@ export async function accountRoutes(
   url: URL,
   actor: Actor,
 ) {
+  if (path === "/api/v1/me/profile") {
+    if (!actor.capabilities.includes("profile.manage"))
+      throw new HttpError(403, "Acesso ao perfil pessoal necessário.");
+    if (req.method === "GET") respond(res, 200, await rt.profiles.get(actor.user.id));
+    else if (req.method === "PUT")
+      respond(res, 200, await rt.profiles.save(actor.user, await body(req, 100000)));
+    else throw new HttpError(405, "Método não permitido.");
+    return true;
+  }
   if (path === "/api/v1/me/password" && req.method === "POST") {
     rt.auth.limits.check(`password:${actor.user.id}`, 5);
     const input = z

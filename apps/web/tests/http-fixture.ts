@@ -2,12 +2,14 @@ import { once } from "node:events";
 import { createServer, type Server } from "node:http";
 import { Accounts } from "../src/server/auth/accounts";
 import { Pairing } from "../src/server/auth/pairing";
+import { PersonalProfiles } from "../src/server/auth/profiles";
 import { Authentication } from "../src/server/auth/service";
 import type { Automations } from "../src/server/automation/service";
 import { ResidentCalendars } from "../src/server/calendar/service";
 import { CatalogService } from "../src/server/catalog/service";
 import { Conversation } from "../src/server/conversation/service";
 import { api } from "../src/server/http/api";
+import { PersonalIntegrations } from "../src/server/personal/service";
 import type { Runtime } from "../src/server/runtime";
 import { VoiceProfiles } from "../src/server/voice/profiles";
 import { repositoryFixture } from "./fixture";
@@ -26,6 +28,7 @@ export async function httpFixture() {
     repo: f.repo,
     config: cfg,
     auth: new Authentication(f.repo, cfg as Runtime["config"]),
+    profiles: new PersonalProfiles(f.repo),
     pairing: new Pairing(),
     catalog: new CatalogService(f.repo),
     conversation: new Conversation(f.repo, {} as Automations),
@@ -45,6 +48,7 @@ export async function httpFixture() {
   const address = server.address();
   if (!address || typeof address === "string") throw new Error("fixture port");
   cfg.origin = `http://127.0.0.1:${address.port}`;
+  rt.personalIntegrations = new PersonalIntegrations(f.repo, cfg.origin, cfg.adminToken);
   return {
     ...f,
     rt,

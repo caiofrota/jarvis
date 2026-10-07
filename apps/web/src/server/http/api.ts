@@ -10,7 +10,12 @@ import { companionRoutes } from "./companionRoutes";
 import { endpointRoutes } from "./endpointRoutes";
 import { HttpError } from "./errors";
 import { integrationRoutes } from "./integrationRoutes";
+import {
+  personalIntegrationCallback,
+  personalIntegrationRoutes,
+} from "./personalIntegrationRoutes";
 import { previewRoutes } from "./previewRoutes";
+import { profileRoutes } from "./profileRoutes";
 import { residentCalendarRoutes } from "./residentCalendarRoutes";
 import { residentVoiceRoutes } from "./residentVoiceRoutes";
 import { settingsRoutes } from "./settingsRoutes";
@@ -41,6 +46,10 @@ export async function api(
       respond(res, 200, { ok: true });
       return true;
     }
+    if (path === "/api/v1/personal-integrations/callback" && req.method === "GET") {
+      await personalIntegrationCallback(res, rt, url);
+      return true;
+    }
     const actor = await rt.auth.require(req, res);
     if (path === "/api/v1/session" && req.method === "GET") {
       respond(res, 200, actor);
@@ -52,22 +61,31 @@ export async function api(
       return true;
     }
     if (await accountRoutes(req, res, rt, path, url, actor)) return true;
+    if (await profileRoutes(req, res, rt, path, actor)) return true;
+    if (await personalIntegrationRoutes(req, res, rt, path, url, actor)) return true;
     const readOnlyRequest =
       req.method === "GET" &&
       (path === "/api/v1/status" ||
         path === "/api/v1/options" ||
         /^\/api\/v1\/catalog\/[a-z]+$/.test(path) ||
         /^\/api\/v1\/endpoints\/[a-z0-9_-]+\/effective$/.test(path));
-    const capability = /^\/api\/v1\/home-assistant\/authoriz(?:e|ation)$/.test(path)
-      ? "settings.manage"
-      : path.includes("/catalog/") ||
-          path.includes("/home-assistant/") ||
-          path.endsWith("/options") ||
-          path.endsWith("/weather/locations")
-        ? "catalog.manage"
-        : path.endsWith("/settings") || path.endsWith("/voice-preview")
-          ? "settings.manage"
-          : "robot.control";
+    if (
+      readOnlyRequest &&
+      !actor.capabilities.includes(path === "/api/v1/status" ? "status.read" : "catalog.read")
+    )
+      throw new HttpError(403, "Você não tem acesso a esta consulta.");
+    const capability = path.startsWith("/api/v1/companion/")
+      ? "companion.use"
+      : /^\/api\/v1\/home-assistant\/authoriz(?:e|ation)$/.test(path)
+        ? "settings.manage"
+        : path.includes("/catalog/") ||
+            path.includes("/home-assistant/") ||
+            path.endsWith("/options") ||
+            path.endsWith("/weather/locations")
+          ? "catalog.manage"
+          : path.endsWith("/settings") || path.endsWith("/voice-preview")
+            ? "settings.manage"
+            : "robot.control";
     if (!readOnlyRequest && !actor.capabilities.includes(capability))
       throw new HttpError(403, "Você não tem acesso a esta ação.");
     if (await companionRoutes(req, res, rt, path, actor)) return true;

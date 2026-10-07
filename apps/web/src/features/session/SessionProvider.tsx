@@ -70,7 +70,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     void check();
   }, [check]);
   useEffect(() => {
-    if (!actor) return;
+    if (!actor?.capabilities.includes("status.read")) return;
     void refresh();
     const timer = setInterval(() => void refresh(), 10000);
     return () => clearInterval(timer);

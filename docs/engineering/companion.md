@@ -2,7 +2,9 @@
 
 The central `/studio` conversation does not require a digital robot, physical
 endpoint, local home or room record. Its default profile lives in installation
-settings; optional existing assistant profiles change the voice and personality.
+settings; each authenticated account can create personal assistant profiles and
+choose its own default voice and personality in **Meus assistentes**. See
+[personal assistants and integrations](personal-assistants.md).
 Fixed endpoints retain their scoped catalog and firmware contract.
 
 Companion API routes are authenticated under `/api/v1/companion`. The server creates
@@ -26,7 +28,8 @@ No duplicate room/device rows are created. The existing HA connection still belo
 an installation home; a companion itself has no home binding. Explicit room names override
 optional current area; absent or ambiguous location requires clarification. A successful
 HA service request is acknowledged as a sent command, not verified physical state.
-Scheduled/composite actions, temperatures, calendars, search and desktop executors remain
+Personal email/calendar reads use owner-scoped tools; writes require confirmation
+on **Minhas integrações**. Scheduled/composite home actions, temperatures, search and desktop executors remain
 outside the companion action boundary in this iteration; never confirm their execution.
 
 iPhone and Android are planned native clients of the central services. No mobile app

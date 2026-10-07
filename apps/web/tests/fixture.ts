@@ -42,12 +42,12 @@ export function catalogFixture() {
   ];
   return c;
 }
-export async function repositoryFixture() {
+export async function repositoryFixture(excludeMigration?: string) {
   const dir = mkdtempSync(join(tmpdir(), "rosie-test-")),
     db = createDatabase(`file:${dir}/test.sqlite`);
   const migrations = resolve(import.meta.dirname, "../../../packages/db/prisma/migrations");
   for (const entry of readdirSync(migrations, { withFileTypes: true })
-    .filter((v) => v.isDirectory())
+    .filter((v) => v.isDirectory() && v.name !== excludeMigration)
     .sort((a, b) => a.name.localeCompare(b.name))) {
     const sql = readFileSync(join(migrations, entry.name, "migration.sql"), "utf8");
     for (const statement of sql
