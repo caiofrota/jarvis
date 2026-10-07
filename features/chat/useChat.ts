@@ -120,7 +120,7 @@ export function useChat({
       publish([...previous, user, { role: 'assistant', text: message, kind: 'local', status: 'error' }]);
       setStatus(message);
       setError(message);
-      if (spoken) speech.read(message);
+      if (spoken) speech.stop();
       return;
     }
     if (local !== null && local !== undefined) {
@@ -200,6 +200,7 @@ export function useChat({
           if (event.type === 'error') {
             response.status = 'error';
             response.text = event.message;
+            if (spoken) speech.stop();
           }
           if (event.type === 'cancelled') response.status = 'cancelled';
         },
@@ -252,7 +253,6 @@ export function useChat({
       setBusy(false);
       if (spoken && turn === epoch.current) {
         if (response.status === 'done') speech.finish(response.text);
-        else if (response.status === 'error') speech.read(response.text);
         else speech.stop();
       }
       release();
