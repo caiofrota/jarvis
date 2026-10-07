@@ -1,6 +1,4 @@
 "use client";
-import { faRobot } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
 import { PasswordField } from "../../components/password-field/PasswordField";
 import { request } from "../../lib/api-client";
@@ -31,12 +29,8 @@ export function Login({ onLogin }: { onLogin: () => void }) {
           }
         }}
       >
-        <span className="brand-mark">
-          <FontAwesomeIcon icon={faRobot} />
-        </span>
         <p className="eyebrow">JARVIS · CENTRAL DE OPERAÇÕES</p>
         <h1>Bem-vindo à sua casa.</h1>
-        <p>Entre para cuidar dos seus assistentes.</p>
         <label className="field">
           Usuário
           <input
@@ -55,7 +49,6 @@ export function Login({ onLogin }: { onLogin: () => void }) {
           onChange={setPassword}
           autoComplete="current-password"
         />
-        <p className="hint">Use a conta configurada para esta central.</p>
         {error && (
           <p role="alert" className="error">
             {error}

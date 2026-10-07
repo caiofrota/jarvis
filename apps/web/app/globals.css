@@ -310,13 +310,34 @@ textarea {
 }
 .password-input,
 .password-control {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  position: relative;
 }
 .password-input input,
 .password-control input {
   width: 100%;
+  min-width: 0;
+  padding-inline-end: 3rem;
+}
+.password-input > .icon-button,
+.password-control > .icon-button {
+  position: absolute;
+  inset-inline-end: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+}
+.password-input > .icon-button:hover,
+.password-control > .icon-button:hover {
+  background: var(--green-light);
+  color: var(--green);
 }
 .password-field {
   display: flex;

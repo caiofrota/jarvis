@@ -4,6 +4,30 @@ import { Automations } from "../src/server/automation/service";
 import { httpFixture as fixture } from "./http-fixture";
 
 describe("administrative boundary", () => {
+  it("keeps the Jarvis session independent of an existing Rosie browser cookie", async () => {
+    const f = await fixture();
+    try {
+      const login = await fetch(`${f.url}/api/v1/login`, {
+        method: "POST",
+        headers: {
+          origin: f.url,
+          "content-type": "application/json",
+          cookie: "rosie-session=other-service",
+        },
+        body: JSON.stringify({ username: "admin", password: "fixture-user-password" }),
+      });
+      expect(login.status).toBe(200);
+      const cookie = (login.headers.get("set-cookie") ?? "").split(";")[0];
+      expect(cookie).toMatch(/^jarvis-session=/);
+      const session = await fetch(`${f.url}/api/v1/session`, {
+        headers: { cookie: `rosie-session=other-service; ${cookie}` },
+      });
+      expect(session.status).toBe(200);
+      expect(await session.json()).toMatchObject({ user: { username: "admin" } });
+    } finally {
+      await f.close();
+    }
+  });
   it("protects resident calendar bindings with owner sessions, origin checks and bounded schemas", async () => {
     const f = await fixture();
     try {
