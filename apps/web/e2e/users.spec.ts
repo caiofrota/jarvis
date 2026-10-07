@@ -14,6 +14,8 @@ test("administrators create a reader and the reader cannot operate robots", asyn
   await page.keyboard.press("Escape");
   const username = `reader-${testInfo.project.name}`;
   await page.getByRole("button", { name: "Novo usuário", exact: true }).click();
+  await expect(page.getByLabel("Permissão", { exact: true })).toHaveValue("member");
+  await page.getByLabel("Permissão", { exact: true }).selectOption("viewer");
   await page.getByLabel("Nome", { exact: true }).fill(username);
   await page.getByLabel("Usuário", { exact: true }).fill(username);
   await page.getByLabel("Senha", { exact: true }).fill("fixture-reader-password");
