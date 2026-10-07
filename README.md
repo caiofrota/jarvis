@@ -21,7 +21,7 @@ Use the pinned Node/pnpm versions in the CI workflow. From the repository root:
 ```sh
 pnpm install --frozen-lockfile
 pnpm db:generate
-cp apps/web/.env.example apps/web/.env
+pnpm setup:brain
 set -a
 . ./apps/web/.env
 set +a
@@ -31,8 +31,10 @@ pnpm user:create-first
 pnpm dev:brain
 ```
 
-Configure the database and required session/provider settings in the private
-`.env` before running the setup commands. See [installation](docs/engineering/installation.md)
+`setup:brain` creates private local credentials and an isolated database path on
+port 18765. It refuses to overwrite an existing setup. Use the example `.env`
+for a custom deployment instead. Configure provider settings in the admin after
+creating your first user. See [installation](docs/engineering/installation.md)
 and [Home Assistant integration](docs/engineering/home-assistant.md).
 No physical board is required for browser administration or text conversation.
 Do not expose the server directly to the public internet; configure the documented

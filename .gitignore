@@ -58,3 +58,6 @@ test-results/
 
 native/.venv/
 .cache/
+
+# Private central development setup
+apps/web/.local/

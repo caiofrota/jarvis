@@ -38,7 +38,8 @@
     "db:check": "pnpm --filter @rosie/db db:check",
     "firmware:build": "make -C native build",
     "db:init": "pnpm --filter @rosie/web db:init",
-    "format:check:brain": "biome check apps packages"
+    "format:check:brain": "biome check apps packages",
+    "setup:brain": "node scripts/setup-brain.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
