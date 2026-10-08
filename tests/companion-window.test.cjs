@@ -77,6 +77,7 @@ async function boot(directory, args = ['--server', 'https://fixture.test']) {
       exports: {},
       process: { argv: ['electron', filename, ...args], env: {} },
       console,
+      URL,
     },
     { filename },
   );
