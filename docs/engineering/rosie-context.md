@@ -144,7 +144,9 @@ physical controls, inherited audio values and household behavior references. It
 reuses matching homes and rooms, fills empty household facts, maps room references, and fills missing room
 bindings/default devices without replacing existing choices. Conflicting IDs fail
 without overwriting records. Accounts, sessions, OAuth connections, voiceprints,
-installation credentials and provider settings are not imported. Imported resident
+installation credentials and provider settings are not imported. Existing resident voiceprints
+can be transferred separately with `apps/web/tools/import-residents.ts`, as documented
+in [speaker identification](speaker-identification.md#importing-existing-residents-and-enrolled-voices). Imported resident
 entries remain household preferences rather than account identities. No firmware
 or stored device server address changes: an existing physical endpoint must later
 be pointed at the Jarvis gateway using its preserved identity.

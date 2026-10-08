@@ -18,6 +18,8 @@ const profileSchema = z.object({
   enrolledAt: z.string(),
   enrollmentId: z.string(),
 });
+
+export { profileSchema as voiceProfileSchema };
 export const enrollmentPrompts = [
   "Olá, Rosie. Esta é a minha voz. Gosto de conversar com você quando chego em casa.",
   "Hoje vou organizar minhas coisas e depois descansar um pouco. Você pode me fazer companhia.",

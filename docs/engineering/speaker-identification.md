@@ -194,3 +194,21 @@ event measured 1.292 seconds of detected speech, 0.740 similarity and 214 ms for
 identification. This confirms one household success after the correction, not a
 general accuracy rate; other residents and unregistered human voices remain to be
 checked.
+
+## Importing existing residents and enrolled voices
+
+`apps/web/tools/import-residents.ts` plans the transfer of household resident
+records and `voiceprint:` settings from a separate Rosie SQLite snapshot. Set
+`ROSIE_SOURCE_DATABASE_URL` and `DATABASE_URL`; run with no arguments for a metadata-only
+plan, then use `--apply` after a private online backup and rehearsal on a copy.
+The resident/home bindings and canonical voice profile schema are validated before
+any writes. Existing identical references remain untouched; conflicting resident
+records or voice enrollments abort the transaction instead of replacing newer data.
+No embeddings, personal facts, provider secrets or account sessions are printed.
+
+These references continue to personalize physical endpoint sessions; they do not
+identify an authenticated web account. Verify worker readiness and encoder model
+compatibility separately. Importing a complete reference does not prove current
+microphone recognition accuracy; validate that with the enrolled people when the
+endpoint is connected. No enrollment capture or firmware update is required for
+compatible existing references.
