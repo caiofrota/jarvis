@@ -33,7 +33,13 @@ const phaseLabels = {
   speaking: "Falando com você",
   settling: "Preparando a escuta…",
 };
-export function CompanionWorkspace({ identity }: { identity: WorkspaceIdentity }) {
+export function CompanionWorkspace({
+  identity,
+  onReady,
+}: {
+  identity: WorkspaceIdentity;
+  onReady?: () => void;
+}) {
   const { actor, logout } = useSession();
   const namespace = `companion:${actor.user.id}:`;
   const [prefs, savePrefs, ready, preferenceError] = useWorkspacePreferences(identity, namespace);
@@ -110,6 +116,25 @@ export function CompanionWorkspace({ identity }: { identity: WorkspaceIdentity }
     : conversation.active
       ? "Encerrar conversa"
       : "Iniciar conversa";
+  useEffect(() => {
+    if (!ready || !viewReady) return;
+    let cancelled = false;
+    let first = 0;
+    let second = 0;
+    void document.fonts.ready.then(() => {
+      if (cancelled) return;
+      first = requestAnimationFrame(() => {
+        second = requestAnimationFrame(() => {
+          if (!cancelled) onReady?.();
+        });
+      });
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(first);
+      cancelAnimationFrame(second);
+    };
+  }, [ready, viewReady, onReady]);
   if (!ready || !viewReady) return <LoadingScreen />;
   const contents = {
     assistant: (
@@ -314,7 +339,6 @@ export function CompanionWorkspace({ identity }: { identity: WorkspaceIdentity }
   };
   return (
     <>
-      <link rel="stylesheet" href="/companion.css" />
       <Shell
         primary={identity.primary}
         open={open}

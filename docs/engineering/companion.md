@@ -59,7 +59,10 @@ The computer card can explicitly open locally registered programs through the de
 executor; the central model cannot dispatch computer actions.
 
 The main interface reuses the original Jarvis shell, particle ring, focus mode, fitted
-card grid, drag/order/size controls and per-window preferences. Desktop window geometry
+card grid, drag/order/size controls and per-window preferences. The signed-in home
+route defaults to this workspace. Its loading animation remains visible until the
+stylesheet, fonts and saved preferences are ready and the browser has laid out the
+panel; a failed stylesheet load offers retry instead of exposing unstyled controls. Desktop window geometry
 and detached cards use the existing WindowSession lifecycle. Administration stays on
 web routes such as `/overview`, `/personal` and `/integrations`, opened in the system
 browser from native clients. Next development indicators are disabled. Tasks and notes

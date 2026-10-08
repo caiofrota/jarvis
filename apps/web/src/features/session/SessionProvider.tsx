@@ -90,7 +90,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   if (actor === undefined) return <LoadingScreen error={error} onRetry={() => void check()} />;
   if (actor === null) return <Login onLogin={() => void check()} />;
   const section =
-    pathname?.split("/")[1] || (actor.capabilities.includes("status.read") ? "overview" : "studio");
+    pathname?.split("/")[1] ||
+    (actor.capabilities.includes("companion.use") ? "studio" : "overview");
   return (
     <SessionContext.Provider value={{ actor, status, refresh, check, expire, logout }}>
       {companion ? (

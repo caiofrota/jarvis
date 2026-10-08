@@ -38,3 +38,53 @@ test("the main Jarvis restores its original stage, focus mode and detachable car
   await page.getByRole("button", { name: `Excluir ${title}`, exact: true }).click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test("authenticated home keeps loading visible until the workspace stylesheet arrives", async ({
+  page,
+}) => {
+  let release: () => void = () => {};
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/companion.css", async (route) => {
+    await pending;
+    await route.continue();
+  });
+  try {
+    await page.goto("/");
+    await page.getByLabel("Usuário", { exact: true }).fill("admin");
+    await page.getByLabel("Senha", { exact: true }).fill("fixture-user-password");
+    await page.getByRole("button", { name: "Entrar", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Carregando", exact: true })).toBeVisible();
+    await expect(page.locator(".workspace-stage")).not.toBeVisible();
+    await expect(page.locator(".jarvis-loader")).toBeVisible();
+  } finally {
+    release();
+  }
+  await expect(page.locator(".workspace-stage")).toBeVisible();
+  await expect(page.locator(".jarvis-loading")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/(?:\?window=[^&]+)?$/);
+  await page.reload();
+  await expect(page.locator(".workspace-stage")).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Administração", exact: true })).toHaveCount(0);
+});
+
+test("a failed workspace stylesheet offers retry instead of an unstyled panel", async ({
+  page,
+}) => {
+  let failures = 1;
+  await page.route("**/companion.css", async (route) => {
+    if (failures-- > 0) await route.abort();
+    else await route.continue();
+  });
+  await page.goto("/");
+  await page.getByLabel("Usuário", { exact: true }).fill("admin");
+  await page.getByLabel("Senha", { exact: true }).fill("fixture-user-password");
+  await page.getByRole("button", { name: "Entrar", exact: true }).click();
+  await expect(page.locator(".jarvis-loading").getByRole("alert")).toHaveText(
+    "Não foi possível carregar o visual do Jarvis.",
+  );
+  await expect(page.locator(".workspace-stage")).not.toBeVisible();
+  await page.getByRole("button", { name: "Tentar novamente", exact: true }).click();
+  await expect(page.locator(".workspace-stage")).toBeVisible();
+});
