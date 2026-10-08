@@ -7,7 +7,7 @@ const { resolve, join } = require('node:path');
 const { createRequire } = require('node:module');
 const vm = require('node:vm');
 
-async function boot(directory, args = ['--server', 'https://fixture.test']) {
+async function boot(directory, args = ['--server', 'https://fixture.test'], env = {}) {
   const app = new EventEmitter(),
     partition = new EventEmitter();
   Object.assign(app, {
@@ -75,7 +75,7 @@ async function boot(directory, args = ['--server', 'https://fixture.test']) {
     {
       require: (name) => (name === 'electron' ? electron : localRequire(name)),
       exports: {},
-      process: { argv: ['electron', filename, ...args], env: {} },
+      process: { argv: ['electron', filename, ...args], env },
       console,
       URL,
     },
@@ -208,6 +208,18 @@ test('saved local trust retains only the public certificate and survives deletin
     const f = await boot(directory, []);
     assert.equal(f.window.url, 'https://fixture.test/studio');
     assert.equal(typeof f.partition.certificate, 'function');
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('launcher arguments travel outside the native Electron command line and are consumed once', async () => {
+  const directory = mkdtempSync(join(tmpdir(), 'jarvis-companion-launch-'));
+  try {
+    const env = { JARVIS_COMPANION_ARGUMENTS: JSON.stringify(['--server', 'https://fixture.test']) };
+    const f = await boot(directory, [], env);
+    assert.equal(f.window.url, 'https://fixture.test/studio');
+    assert.equal(env.JARVIS_COMPANION_ARGUMENTS, undefined);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

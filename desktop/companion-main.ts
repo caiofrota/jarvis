@@ -41,7 +41,14 @@ app
     }
     let options;
     try {
-      options = companionOptions(process.argv.slice(app.isPackaged ? 1 : 2), saved);
+      const serializedArgs = process.env.JARVIS_COMPANION_ARGUMENTS;
+      delete process.env.JARVIS_COMPANION_ARGUMENTS;
+      const args: unknown = serializedArgs
+        ? JSON.parse(serializedArgs)
+        : process.argv.slice(app.isPackaged ? 1 : 2);
+      if (!Array.isArray(args) || args.some((value) => typeof value !== 'string'))
+        throw new Error('Os argumentos de inicialização do companion são inválidos.');
+      options = companionOptions(args, saved);
     } catch (error) {
       dialog.showErrorBox('Conectar o Jarvis', (error as Error).message);
       app.quit();

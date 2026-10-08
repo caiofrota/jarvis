@@ -51,6 +51,9 @@ Sign in and enable voice. The application asks for microphone permission; Window
 must also permit microphone access for desktop apps in its privacy settings. The
 remote renderer has no Node access, privileged preload or local executor bridge.
 The current entry runs from source, not a separately published Windows installer.
+The launcher compiles through Node, starts an Electron application directory, and
+passes connection options through a one-use environment payload rather than Chromium
+command-line flags. This avoids the observed Windows exit before application loading.
 
 ## Android development on a computer with Android Studio
 

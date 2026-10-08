@@ -41,7 +41,7 @@
     "db:init": "pnpm --filter @rosie/web db:init",
     "format:check:brain": "biome check apps packages",
     "setup:brain": "node scripts/setup-brain.mjs",
-    "companion": "pnpm build:runtime && node scripts/start-companion.mjs",
+    "companion": "node scripts/start-companion.mjs",
     "mobile:start": "pnpm --filter @jarvis/mobile start",
     "mobile:android": "pnpm --filter @jarvis/mobile android",
     "mobile:ios": "pnpm --filter @jarvis/mobile ios",
