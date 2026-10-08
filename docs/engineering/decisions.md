@@ -356,7 +356,8 @@ or native mobile integration. See [the feature and setup contract](personal-assi
 The owner requested Windows/Linux and iPhone/Android clients of the central server.
 Use a separate sandboxed Electron remote entry and a thin Expo React Native WebView
 app. Both reuse `/studio` with shared public connection policy in `packages/api-client`.
-Neither shell imports server/database code or gives remote content a local executor.
+Neither shell imports server/database code. The initial desktop boundary is refined
+by decision 024 for window management and explicitly confirmed local catalog actions.
 
 The one native connection flow uses `registerRootComponent`, not unused Expo Router
 routes. Localized native strings live in a focused messages module, without an
@@ -369,3 +370,27 @@ local CA trust is an optional build-time setting limited to one host; iOS uses
 explicit system trust. System-trusted HTTPS remains the default. Generated native
 projects/binaries are private; signing/device acceptance is separate from bundling.
 No app-store publication is configured.
+
+## 024: Restore the original assistant workspace and keep administration separate
+
+The owner rejected using the operations panel as the native companion. The main
+`/` and `/studio` surface therefore reuses the original Jarvis shell, sphere, focus
+mode, fitted card grid and movable/detachable panel components. The administrator
+interface remains on web configuration routes, accessed through the system browser
+from native clients. Next development indicators are disabled on both applications.
+
+Scope the original stylesheet to the companion body using a generated asset; the
+source remains the original root CSS. Account-prefixed browser storage separates
+personal tasks/notes and window preferences. This preserves client-side behavior;
+central task tools and cross-device task/note synchronization are still pending.
+The calendar card queries only the signed-in person's actual connected calendars.
+
+A dedicated sandbox-compatible preload exposes window creation and the existing
+local catalog executor only. Every invocation checks ownership, the exact central
+origin, `/studio`, and the main frame. No generic IPC, shell, credential or filesystem
+API is exposed. WindowSession persists each window's identity, panel, reachable
+bounds, maximized/fullscreen state and closing lifecycle. Native mobile does not
+advertise detached windows. Local execution requires an owner-bound expiring token
+and a native confirmation defaulting to cancellation; central voice cannot dispatch
+computer actions. Deterministic acceptance uses a simulated executor, never real
+program launches or home commands.

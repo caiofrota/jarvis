@@ -33,7 +33,7 @@ export function AdminShell({
         .map((item) => (
           <Link
             key={item.id}
-            href={item.id === "overview" ? "/" : `/${item.id}`}
+            href={item.id === "overview" ? "/overview" : `/${item.id}`}
             className={item.sections.includes(section) ? "active" : ""}
             aria-current={item.sections.includes(section) ? "page" : undefined}
             title={item.label}
@@ -64,12 +64,12 @@ export function AdminShell({
         >
           <FontAwesomeIcon icon={faBars} />
         </button>
-        <Link href="/" className="brand">
+        <Link href="/overview" className="brand">
           Jarvis
         </Link>
       </header>
       <aside className="sidebar">
-        <Link href="/" className="brand">
+        <Link href="/overview" className="brand">
           <FontAwesomeIcon icon={faRobot} />
           <span>
             Jarvis<span className="brand-subtitle">Central de operações</span>

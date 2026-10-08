@@ -69,7 +69,7 @@ export function WorkspaceNavigation({
           .map((item) => (
             <Link
               key={item.id}
-              href={item.id === "overview" ? "/" : `/${item.id}`}
+              href={item.id === "overview" ? "/overview" : `/${item.id}`}
               aria-current={section === item.id ? "page" : undefined}
             >
               {item.label}

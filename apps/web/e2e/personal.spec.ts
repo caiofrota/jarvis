@@ -67,13 +67,14 @@ test("personal assistants persist without requiring a house or endpoint", async 
   await page.goto("/assistant-default");
   await expect(page.getByLabel("Nome do assistente", { exact: true })).toBeVisible();
   await page.goto("/studio");
-  await expect(page.getByLabel("Assistente", { exact: true })).toContainText("Rosie");
+  await page.getByRole("button", { name: "Configurações", exact: true }).click();
+  await expect(page.getByRole("combobox", { name: "Assistente", exact: true })).toContainText(
+    "Rosie",
+  );
   await expect(
     page.getByText("Você pode conversar sem cadastrar uma caixinha.", { exact: false }),
   ).toHaveCount(0);
-  await expect(
-    page.getByRole("link", { name: "Configurar meus assistentes", exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Meus assistentes", exact: true })).toBeVisible();
 });
 test("integration setup and mail review require explicit confirmation", async ({ page }) => {
   const id = "78fce76a-72c3-4e0a-9817-08df074785d1",

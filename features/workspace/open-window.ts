@@ -1,5 +1,10 @@
 import type { PanelId } from '../../shared/types';
 export function openWorkspaceWindow(panel?: PanelId): void {
+  if (window.jarvisCompanionWindows) {
+    if (panel) void window.jarvisCompanionWindows.openPanel(panel);
+    else void window.jarvisCompanionWindows.openWorkspace();
+    return;
+  }
   if (window.jarvisDesktop) {
     if (panel) void window.jarvisDesktop.openPanel(panel);
     else void window.jarvisDesktop.openWorkspace();

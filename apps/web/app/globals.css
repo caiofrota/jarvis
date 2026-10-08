@@ -1328,3 +1328,41 @@ body {
   cursor: pointer;
   color: var(--ink);
 }
+
+/* The main assistant uses the original workspace stylesheet, scoped to its body. */
+body.jarvis-companion {
+  --bg: #090e14;
+  --panel: #111922;
+  --line: #25303c;
+  --text: #e7edf3;
+  --muted: #94a4b5;
+  --accent: #7ae3d3;
+  --accent-rgb: 122, 227, 211;
+  --font: Segoe UI, Inter, system-ui, sans-serif;
+  color: var(--text);
+  font: 14px var(--font);
+}
+body.jarvis-companion .companion-status {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+body.jarvis-companion .companion-calendar label {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+body.jarvis-companion .companion-calendar select,
+body.jarvis-companion .setting-row select {
+  background: var(--panel);
+  color: var(--text);
+  padding: 8px;
+  border: 1px solid var(--line);
+  max-width: 100%;
+}
+body.jarvis-companion .command-list a {
+  display: block;
+  padding: 12px;
+  text-decoration: none;
+  color: var(--accent);
+}

@@ -6,8 +6,8 @@ import { SessionProvider } from "../src/features/session/SessionProvider";
 
 config.autoAddCss = false;
 export const metadata: Metadata = {
-  title: "Jarvis · Central de operações",
-  description: "Sua casa e seus assistentes em uma plataforma.",
+  title: "Jarvis",
+  description: "Seu assistente, sua casa e seu espaço pessoal.",
 };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

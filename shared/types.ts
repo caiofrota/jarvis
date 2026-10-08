@@ -274,3 +274,11 @@ export interface DesktopAPI extends JarvisAPI {
   openPanel(panel: PanelId): Promise<boolean>;
   openWorkspace(): Promise<boolean>;
 }
+
+export interface CompanionWindowsAPI extends Pick<
+  JarvisAPI,
+  'actions' | 'prepareAction' | 'executeAction' | 'cancelAction'
+> {
+  openPanel(panel: PanelId): Promise<boolean>;
+  openWorkspace(): Promise<boolean>;
+}

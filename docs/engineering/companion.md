@@ -1,6 +1,6 @@
 # Companion and fixed endpoints
 
-The central `/studio` conversation does not require a digital robot, physical
+The main `/` and `/studio` workspace does not require a digital robot, physical
 endpoint, local home or room record. Its default profile lives in installation
 settings; each authenticated account can create personal assistant profiles and
 choose its own default voice and personality in **Assistentes → Seus assistentes**. See
@@ -49,10 +49,25 @@ on **Configurações → Minhas contas**. Scheduled/composite home actions, temp
 outside the companion action boundary in this iteration; never confirm their execution.
 
 Windows/Linux connect through `pnpm companion --server https://your-server`. The
-remote Electron renderer has no privileged preload or Node access. Android/iPhone
+remote Electron renderer has no Node access. A narrow preload exposes origin-checked
+window management and catalog actions, with native consent before launching a local
+program. It exposes no credentials, arbitrary file paths or shell commands. Android/iPhone
 source uses a native WebView of the same interface, secure server selection and OS
 permissions. See [native client setup](remote-clients.md) for certificates and builds.
-Remote executor pairing is not implemented by the native shell.
+Voice-driven remote executor pairing is not implemented by the native shell.
+The computer card can explicitly open locally registered programs through the desktop
+executor; the central model cannot dispatch computer actions.
+
+The main interface reuses the original Jarvis shell, particle ring, focus mode, fitted
+card grid, drag/order/size controls and per-window preferences. Desktop window geometry
+and detached cards use the existing WindowSession lifecycle. Administration stays on
+web routes such as `/overview`, `/personal` and `/integrations`, opened in the system
+browser from native clients. Next development indicators are disabled. Tasks and notes
+retain the original client-side persistence, now namespaced by account; they are shared
+between this account's windows on this device, not synchronized across devices or used
+as authoritative central conversation tasks. That integration remains separate work.
+The calendar card reads the signed-in user's connected provider calendars; it contains
+no example events.
 
 The workspace keeps SQLite, Next and Electron. The mobile companion's one connection
 flow uses `registerRootComponent` instead of unused Expo Router routes. It consumes

@@ -8,6 +8,8 @@ export default function Shell({
   focused,
   setFocused,
   error,
+  home = './index.html',
+  detachable = true,
 }: {
   children: React.ReactNode;
   primary: boolean;
@@ -15,11 +17,13 @@ export default function Shell({
   focused: boolean;
   setFocused: (value: boolean) => void;
   error: string;
+  home?: string;
+  detachable?: boolean;
 }) {
   return (
     <div className="shell">
       <aside className="rail" aria-label="Navegação">
-        <Link className="brand" href="./index.html" aria-label="Jarvis início" prefetch={false}>
+        <Link className="brand" href={home} aria-label="Jarvis início" prefetch={false}>
           J<span>·</span>
         </Link>
         <button
@@ -58,7 +62,11 @@ export default function Shell({
             >
               ▦
             </button>
-            <button className="button small new-workspace" onClick={() => openWorkspaceWindow()}>
+            <button
+              hidden={!detachable}
+              className="button small new-workspace"
+              onClick={() => openWorkspaceWindow()}
+            >
               Nova janela
             </button>
             <button className="search-button" onClick={() => open('commands')}>

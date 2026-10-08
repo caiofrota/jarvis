@@ -12,10 +12,16 @@ test("companion works without a physical endpoint and starts a fresh session", a
   await page.getByLabel("Usuário", { exact: true }).fill("admin");
   await page.getByLabel("Senha", { exact: true }).fill("fixture-user-password");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Converse com seu universo." })).toBeVisible();
-  await expect(page.getByLabel("Assistente", { exact: true })).toHaveValue("");
-  await expect(page.getByLabel("Localização atual", { exact: true })).toHaveValue("");
+  await expect(page.getByRole("button", { name: "Iniciar conversa", exact: true })).toBeVisible();
+  await expect(page.locator(".app-shell")).toHaveCount(0);
+  await page.getByRole("button", { name: "Configurações", exact: true }).click();
+  await expect(page.getByRole("combobox", { name: "Assistente", exact: true })).toHaveValue("");
+  await expect(page.getByRole("combobox", { name: "Localização atual", exact: true })).toHaveValue(
+    "",
+  );
   await expect(page.getByLabel("Contexto da conversa", { exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Fechar", exact: true }).click();
+  await page.getByRole("tab", { name: "Transcrição", exact: true }).click();
   let submitted: unknown;
   await page.route("**/api/v1/companion/message", async (route) => {
     submitted = route.request().postDataJSON();

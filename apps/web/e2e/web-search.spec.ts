@@ -3,7 +3,7 @@ import { expect, test } from "./fixtures";
 test("search answers have adjacent clickable sources and clear when switching endpoints", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/overview");
   await page.getByLabel("Usuário", { exact: true }).fill("admin");
   await page.getByLabel("Senha", { exact: true }).fill("fixture-user-password");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();

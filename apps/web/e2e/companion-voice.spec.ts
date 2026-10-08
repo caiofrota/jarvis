@@ -53,9 +53,11 @@ test("voice captures PCM, speaks through the shared pipeline and releases the mi
   await page.getByLabel("Usuário", { exact: true }).fill("admin");
   await page.getByLabel("Senha", { exact: true }).fill("fixture-user-password");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
-  await page.getByRole("button", { name: "Conversar por voz", exact: true }).click();
-  await expect(page.getByText("Ouvindo", { exact: true })).toBeVisible();
-  await expect(page.getByRole("log")).toContainText("Olá, vamos conversar.");
+  await page.getByRole("button", { name: "Iniciar conversa", exact: true }).click();
+  await expect(page.getByText("Estou ouvindo", { exact: true })).toBeVisible();
+  await expect(page.getByRole("log", { includeHidden: true })).toContainText(
+    "Olá, vamos conversar.",
+  );
   await expect
     .poll(() =>
       page.evaluate(
@@ -63,9 +65,9 @@ test("voice captures PCM, speaks through the shared pipeline and releases the mi
       ),
     )
     .toBeGreaterThan(0);
-  await expect(page.getByText("Ouvindo", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Encerrar voz", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Conversar por voz", exact: true })).toBeVisible();
+  await expect(page.getByText("Estou ouvindo", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Encerrar conversa", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Iniciar conversa", exact: true })).toBeVisible();
   expect(
     await page.evaluate(
       () => (window as unknown as { voiceFixture: { stopped: number } }).voiceFixture.stopped,

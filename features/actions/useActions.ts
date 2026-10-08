@@ -1,7 +1,8 @@
-import type { ActionCatalog } from '../../shared/types';
+import type { ActionCatalog, JarvisAPI } from '../../shared/types';
 import { useEffect, useState } from 'react';
 import { getAPI } from '../../client/api';
-export function useActions() {
+export function useActions(provided?: Pick<JarvisAPI, 'actions' | 'prepareAction' | 'executeAction'>) {
+  const api = () => provided ?? getAPI();
   const [catalog, setCatalog] = useState<ActionCatalog>({
       items: [],
       apps: [],
@@ -12,7 +13,7 @@ export function useActions() {
     [busy, setBusy] = useState(false);
   async function refresh() {
     try {
-      setCatalog(await getAPI().actions());
+      setCatalog(await api().actions());
     } catch (eCause) {
       const e = eCause instanceof Error ? eCause : new Error(String(eCause));
       setError(e.message);
@@ -25,8 +26,8 @@ export function useActions() {
     setBusy(true);
     setError('');
     try {
-      const prepared = await getAPI().prepareAction(id, newInstance);
-      const result = await getAPI().executeAction(prepared.token);
+      const prepared = await api().prepareAction(id, newInstance);
+      const result = await api().executeAction(prepared.token);
       await refresh();
       return result.label + ': ' + result.message;
     } catch (eCause) {

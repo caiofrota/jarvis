@@ -13,17 +13,23 @@ import { Settings } from "../settings/Settings";
 import { Studio } from "../studio/Studio";
 import { MyAccount } from "../users/MyAccount/MyAccount";
 import { UsersPage } from "../users/UsersPage/UsersPage";
-export function Dashboard({ section = "overview" }: { section?: string }) {
+export function Dashboard({ section: requestedSection }: { section?: string }) {
   const { actor, status, refresh, check, expire } = useSession();
   const admin = actor?.user.role === "admin";
+  const section =
+    requestedSection ?? (actor.capabilities.includes("companion.use") ? "studio" : "overview");
   return (
     <>
-      <WorkspaceNavigation
-        section={
-          section === "overview" && !actor.capabilities.includes("status.read") ? "studio" : section
-        }
-        capabilities={actor.capabilities}
-      />
+      {section !== "studio" && (
+        <WorkspaceNavigation
+          section={
+            section === "overview" && !actor.capabilities.includes("status.read")
+              ? "studio"
+              : section
+          }
+          capabilities={actor.capabilities}
+        />
+      )}
       {(section === "studio" ||
         (section === "overview" && !actor.capabilities.includes("status.read"))) &&
       actor?.capabilities.includes("companion.use") ? (

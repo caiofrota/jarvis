@@ -6,8 +6,8 @@ Each person signs in with their own Jarvis account. Recognition, voices, assista
 HA and personal accounts belong to the central server. No endpoint, house, provider
 key, database or Python voice runtime is needed on the client.
 
-These are thin native clients of the shared interface. Remote execution of computer
-programs is not implemented: the legacy desktop executor still operates locally.
+These are thin native clients of the shared interface. The computer card uses the local desktop executor to open registered programs after
+native confirmation. Voice-driven remote computer execution is not implemented.
 Phone system control and a background wake word are not implied by this client.
 
 ## Windows and Linux
@@ -49,7 +49,9 @@ clears the previous pin unless another certificate is explicitly supplied.
 
 Sign in and enable voice. The application asks for microphone permission; Windows
 must also permit microphone access for desktop apps in its privacy settings. The
-remote renderer has no Node access, privileged preload or local executor bridge.
+remote renderer has no Node access. Its narrow preload manages windows and registered
+local actions, checks the selected server/main frame, and requires native consent
+before execution.
 The current entry runs from source, not a separately published Windows installer.
 The launcher compiles through Node, starts an Electron application directory, and
 passes connection options through a one-use environment payload rather than Chromium

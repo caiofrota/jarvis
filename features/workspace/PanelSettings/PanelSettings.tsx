@@ -8,10 +8,12 @@ export default function PanelSettings({
   id,
   prefs,
   patch,
+  detachable = true,
 }: {
   id: PanelId;
   prefs: Preferences;
   patch(values: Partial<Preferences>): void;
+  detachable?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -55,15 +57,17 @@ export default function PanelSettings({
                 Mover para o final
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => {
-                openWorkspaceWindow(id);
-                setOpen(false);
-              }}
-            >
-              Abrir em nova janela
-            </button>
+            {detachable && (
+              <button
+                type="button"
+                onClick={() => {
+                  openWorkspaceWindow(id);
+                  setOpen(false);
+                }}
+              >
+                Abrir em nova janela
+              </button>
+            )}
             {id !== 'assistant' && (
               <button
                 type="button"

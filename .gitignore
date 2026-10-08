@@ -74,3 +74,5 @@ apps/mobile/dist/
 *.apk
 *.aab
 *.ipa
+
+apps/web/public/companion.css

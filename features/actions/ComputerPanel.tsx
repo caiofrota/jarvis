@@ -6,7 +6,7 @@ export default function ComputerPanel({ actions }: { actions: ActionsController 
     <div className="panel-body computer-body">
       {actions.runtime?.restricted && <p className="runtime-warning">{actions.runtime.message}</p>}
       <div className="action-grid">
-        {actions.items.map((item) => (
+        {[...actions.items, ...actions.apps].map((item) => (
           <button
             key={item.id}
             className="action-tile"

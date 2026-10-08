@@ -13,6 +13,7 @@ type Session = {
   refresh: () => Promise<void>;
   check: () => Promise<void>;
   expire: () => void;
+  logout: () => void;
 };
 const SessionContext = createContext<Session | null>(null);
 export function useSession() {
@@ -75,28 +76,38 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     const timer = setInterval(() => void refresh(), 10000);
     return () => clearInterval(timer);
   }, [actor, refresh]);
+  const companion =
+    (pathname === "/" || pathname === "/studio") && !!actor?.capabilities.includes("companion.use");
+  useEffect(() => {
+    document.body.classList.toggle("jarvis-companion", companion && !!actor);
+    return () => document.body.classList.remove("jarvis-companion");
+  }, [companion, actor]);
+  const logout = () => {
+    void request("/logout", { method: "POST" })
+      .then(expire)
+      .catch((cause) => setError(cause.message));
+  };
   if (actor === undefined) return <LoadingScreen error={error} onRetry={() => void check()} />;
   if (actor === null) return <Login onLogin={() => void check()} />;
   const section =
     pathname?.split("/")[1] || (actor.capabilities.includes("status.read") ? "overview" : "studio");
   return (
-    <SessionContext.Provider value={{ actor, status, refresh, check, expire }}>
-      <AdminShell
-        section={section}
-        capabilities={actor.capabilities}
-        onLogout={() => {
-          void request("/logout", { method: "POST" })
-            .then(expire)
-            .catch((cause) => setError(cause.message));
-        }}
-      >
-        {error && (
-          <p className="error" role="alert">
-            {error}
-          </p>
-        )}
-        {children}
-      </AdminShell>
+    <SessionContext.Provider value={{ actor, status, refresh, check, expire, logout }}>
+      {companion ? (
+        <>
+          {error && <p role="alert">{error}</p>}
+          {children}
+        </>
+      ) : (
+        <AdminShell section={section} capabilities={actor.capabilities} onLogout={logout}>
+          {error && (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          )}
+          {children}
+        </AdminShell>
+      )}
     </SessionContext.Provider>
   );
 }

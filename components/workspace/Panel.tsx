@@ -8,6 +8,8 @@ export default function Panel({
   detached,
   children,
   drag,
+  calendarDemo = true,
+  detachable = true,
 }: {
   id: PanelId;
   prefs: Preferences;
@@ -15,6 +17,8 @@ export default function Panel({
   detached: PanelId | null;
   children: React.ReactNode;
   drag: React.RefObject<PanelId | null>;
+  calendarDemo?: boolean;
+  detachable?: boolean;
 }) {
   function move() {
     patch({ order: prefs.order.filter((x) => x !== id).concat(id) });
@@ -45,7 +49,7 @@ export default function Panel({
           {id === 'assistant' ? '◉' : '▦'}
         </span>
         <h2>{panelNames[id]}</h2>
-        {id === 'calendar' && <span className="badge">DEMO</span>}
+        {id === 'calendar' && calendarDemo && <span className="badge">DEMO</span>}
         <div className="panel-tools">
           <button
             className="icon-button drag-handle"
@@ -61,7 +65,7 @@ export default function Panel({
           >
             ⠿
           </button>
-          <PanelSettings id={id} prefs={prefs} patch={patch} />
+          <PanelSettings id={id} prefs={prefs} patch={patch} detachable={detachable} />
         </div>
       </header>
       {children}
