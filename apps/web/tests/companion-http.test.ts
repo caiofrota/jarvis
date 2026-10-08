@@ -52,7 +52,12 @@ describe("companion API", () => {
       expect(await (await send("transcribe", { sessionId, audio })).json()).toEqual({
         text: "Boa tarde",
       });
-      expect(transcribe).toHaveBeenCalledWith(expect.any(Buffer), "base", expect.any(AbortSignal));
+      expect(transcribe).toHaveBeenCalledWith(
+        expect.any(Buffer),
+        "base",
+        expect.any(AbortSignal),
+        expect.any(String),
+      );
       transcribe.mockResolvedValueOnce({ speech: false, text: "discard" });
       expect(await (await send("transcribe", { sessionId, audio })).json()).toEqual({ text: "" });
       expect(

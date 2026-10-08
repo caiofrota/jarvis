@@ -163,9 +163,20 @@ describe("itinerant companion", () => {
         provider = proposingProvider();
       await f.send("Luz Aurora");
       provider.mockImplementation(
-        async () =>
+        async (_url, init) =>
           new Response(
-            JSON.stringify({ choices: [{ message: { role: "assistant", content: "Tudo bem." } }] }),
+            JSON.stringify({
+              choices: [
+                {
+                  message: {
+                    role: "assistant",
+                    content: JSON.parse(String(init?.body)).response_format
+                      ? JSON.stringify({ decision: "new_request" })
+                      : "Tudo bem.",
+                  },
+                },
+              ],
+            }),
           ),
       );
       await f.send(answer);
@@ -173,6 +184,55 @@ describe("itinerant companion", () => {
       expect(f.ha.execute).not.toHaveBeenCalled();
     },
   );
+  it.each([
+    ["Sim, Jáus, por favor.", "confirm"],
+    ["Desejo.", "confirm"],
+    ["Isso, Aster, faça o que sugeriu.", "confirm"],
+    ["Não precisa mais, obrigado.", "cancel"],
+    ["Se eu confirmar você desliga?", "unclear"],
+    ["desvelhe", "unclear"],
+    ["Na verdade quero a bomba do jardim", "new_request"],
+  ])("interprets a pending response semantically: %s", async (reply, decision) => {
+    const f = fixture();
+    await f.send("Luz Aurora");
+    const provider = vi.fn<typeof fetch>(async (_url, init) => {
+      const payload = JSON.parse(String(init?.body));
+      return new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                role: "assistant",
+                content: payload.response_format ? JSON.stringify({ decision }) : "Outro pedido.",
+              },
+            },
+          ],
+        }),
+      );
+    });
+    vi.stubGlobal("fetch", provider);
+    const response = await f.send(reply);
+    expect(f.ha.execute).toHaveBeenCalledTimes(decision === "confirm" ? 1 : 0);
+    const data = JSON.parse(
+      JSON.parse(String(provider.mock.calls[0][1]?.body)).messages[1].content,
+    );
+    expect(data.proposal).toEqual({ entityId: "switch.relay", action: "off" });
+    expect(data.reply).toBe(reply);
+    if (decision === "unclear") {
+      expect(response.text).toContain("Não entendi");
+      await f.send("Sim");
+      expect(f.ha.execute).toHaveBeenCalledTimes(1);
+    }
+  });
+  it("bounds speech context to authoritative exposed names without transcript replacements", async () => {
+    const f = fixture();
+    f.settings.companionProfile.name = "Aster";
+    expect(await f.companion.transcriptionContext("owner", f.input)).toBe(
+      "Aster, Luz Aurora, Laboratório Aurora, Luminária Boreal",
+    );
+    f.ha.exposed.mockResolvedValue(new Set());
+    expect(await f.companion.transcriptionContext("owner", f.input)).toBe("Aster");
+  });
   it.each(["expired", "hidden", "unavailable", "renamed", "moved", "reconfigured"])(
     "rejects %s proposals at confirmation time",
     async (reason) => {

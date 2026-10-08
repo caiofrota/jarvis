@@ -23,8 +23,8 @@ class Engine:
     async def has_speech(self, pcm):
         return any(pcm)
 
-    async def transcribe(self, pcm, model):
-        self.calls.append(model)
+    async def transcribe(self, pcm, model, context=""):
+        self.calls.append((model, context) if context else model)
         return "bom dia"
 
 
@@ -51,6 +51,25 @@ def test_private_speech_routes_and_per_request_selection():
             "/transcribe?model=tiny", headers=headers, content=b"\x01\x00" * 320
         ).json() == {"speech": True, "text": "bom dia"}
         assert engine.calls[-1] == "tiny"
+        assert (
+            client.post(
+                "/transcribe",
+                params={"context": "Aster, Luz Aurora"},
+                headers=headers,
+                content=b"\x01\x00" * 320,
+            ).status_code
+            == 200
+        )
+        assert engine.calls[-1] == ("base", "Aster, Luz Aurora")
+        assert (
+            client.post(
+                "/transcribe",
+                params={"context": "x" * 1001},
+                headers=headers,
+                content=b"\x01\x00" * 320,
+            ).status_code
+            == 422
+        )
         assert client.post("/transcribe", headers=headers, content=bytes(640)).json() == {
             "speech": False,
             "text": "",
@@ -111,3 +130,23 @@ def test_speaker_model_absence_is_explicit(monkeypatch):
             client.post("/speaker-embedding", headers=headers, content=bytes(128000)).status_code
             == 503
         )
+
+
+def test_decoder_uses_bounded_context_and_beam_search():
+    from types import SimpleNamespace
+    from unittest.mock import Mock
+
+    from server.speech import Speech
+
+    engine = Speech.__new__(Speech)
+    engine.whisper_name = "base"
+    engine.whisper = SimpleNamespace(
+        transcribe=Mock(return_value=([SimpleNamespace(text=" Aster ")], None))
+    )
+    assert engine._transcribe(bytes(640), "base", "Aster, Luz Aurora") == "Aster"
+    options = engine.whisper.transcribe.call_args.kwargs
+    assert options["initial_prompt"] == "Aster, Luz Aurora"
+    assert options["beam_size"] == 5
+    assert options["language"] == "pt"
+    engine._transcribe(bytes(640), "base", "x" * 2000)
+    assert len(engine.whisper.transcribe.call_args.kwargs["initial_prompt"]) == 1000

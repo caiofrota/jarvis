@@ -83,7 +83,13 @@ export async function companionRoutes(
       rt.companion.session(actor.user.id, input.sessionId);
       const pcm = pcmFromWav(Buffer.from(input.audio, "base64"));
       if (pcm.length > 640000) throw new DomainError("Envie trechos de áudio de até 20 segundos.");
-      const result = await rt.voice.transcribe(pcm, (await rt.repo.settings()).sttModel, signal);
+      const context = await rt.companion.transcriptionContext(actor.user.id, input);
+      const result = await rt.voice.transcribe(
+        pcm,
+        (await rt.repo.settings()).sttModel,
+        signal,
+        context,
+      );
       respond(res, 200, { text: result.speech ? result.text : "" });
     } else {
       const input = companionSpeechSchema.parse(await body(req));

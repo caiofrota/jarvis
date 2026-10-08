@@ -162,7 +162,7 @@ class Speech:
         async with self.lock:
             return await self._run(self._has_speech, pcm)
 
-    def _transcribe(self, pcm, name=None):
+    def _transcribe(self, pcm, name=None, context=""):
         from faster_whisper import WhisperModel
 
         name = name or self.store.catalog.settings.stt_model
@@ -178,15 +178,20 @@ class Speech:
             self.whisper_name = name
         audio = np.frombuffer(pcm, dtype="<i2").astype(np.float32) / 32768
         segments, _ = self.whisper.transcribe(
-            audio, language="pt", beam_size=1, condition_on_previous_text=False, vad_filter=False
+            audio,
+            language="pt",
+            beam_size=5,
+            condition_on_previous_text=False,
+            vad_filter=False,
+            initial_prompt=context[:1000] or None,
         )
         return " ".join(s.text.strip() for s in segments).strip()
 
-    async def transcribe(self, pcm, model=None):
+    async def transcribe(self, pcm, model=None, context=""):
         async with self.lock:
-            if model is None:
+            if model is None and not context:
                 return await self._run(self._transcribe, pcm)
-            return await self._run(self._transcribe, pcm, model)
+            return await self._run(self._transcribe, pcm, model, context)
 
     def available_voices(self):
         directory = (self.model_dir / "piper").resolve()

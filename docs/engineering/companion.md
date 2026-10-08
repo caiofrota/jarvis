@@ -30,7 +30,10 @@ Real microphones, echo handling and audible speech still require user acceptance
 
 Immediate on/off requests use the shared generic command parser. Natural-language
 action offers must use `propose_home_action`: the server registers one exact
-entity/action, asks for confirmation and consumes the proposal on the next reply.
+entity/action and asks for confirmation. Clear short approvals retain the fast local path;
+other replies are classified by the selected model as confirmation, refusal, uncertainty
+or a new request. The classifier cannot change the target or action. Unclear replies
+retain the original proposal until its deadline instead of creating repeated offers.
 A positive confirmation dispatches once after rechecking exposure, availability,
 entity identity and connection. Offers expire after two minutes; refusal, topic or
 assistant/location changes discard them. Uncertain dispatch is never retried. HA owns the authoritative
@@ -58,3 +61,10 @@ For local web development, `pnpm setup:brain:https` requires an existing `.env` 
 It creates a 90-day self-signed certificate in ignored `apps/web/.local/tls`, changes the
 configured origin and port, and enables a fixed-origin HTTP redirect. Trust the certificate
 on the review computer. Keep keys private; use trusted certificates for deployed clients.
+
+Companion transcription supplies a bounded vocabulary from the selected assistant and
+Assist-exposed entity names, aliases and areas to the private worker. It contains no
+personality, credentials or transcript replacements. The worker validates its length
+and uses it as Whisper's initial prompt with a five-candidate beam. This may increase
+CPU inference time; real microphone recognition quality remains an acceptance check.
+The vocabulary supplements acoustic decoding and never authorizes an action.

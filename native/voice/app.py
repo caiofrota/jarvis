@@ -11,7 +11,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Literal, Protocol, cast
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Request, WebSocket
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, WebSocket
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from starlette.websockets import WebSocketDisconnect
@@ -28,7 +28,7 @@ class SpeechEngine(Protocol):
     def available_voices(self) -> list[str]: ...
     async def warmup(self) -> None: ...
     async def has_speech(self, pcm: bytes) -> bool: ...
-    async def transcribe(self, pcm: bytes, model: str) -> str: ...
+    async def transcribe(self, pcm: bytes, model: str, context: str = "") -> str: ...
     async def synthesize(self, text: str, voice: str, quality: str) -> bytes: ...
 
 
@@ -125,7 +125,9 @@ def create_app(speech_engine: SpeechEngine | None = None, token: str | None = No
 
     @app.post("/transcribe", dependencies=[Depends(authenticate)])
     async def transcribe(
-        request: Request, model: Literal["tiny", "base", "small"] = "base"
+        request: Request,
+        model: Literal["tiny", "base", "small"] = "base",
+        context: str = Query(default="", max_length=1000, pattern=r"^[^\x00-\x1f\x7f]*$"),
     ) -> dict[str, object]:
         pcm = bytearray()
         async for chunk in request.stream():
@@ -137,7 +139,11 @@ def create_app(speech_engine: SpeechEngine | None = None, token: str | None = No
         async with capacity():
             if not await engine.has_speech(bytes(pcm)):
                 return {"speech": False, "text": ""}
-            text = await engine.transcribe(bytes(pcm), model=model)
+            text = (
+                await engine.transcribe(bytes(pcm), model=model, context=context)
+                if context
+                else await engine.transcribe(bytes(pcm), model=model)
+            )
         return {"speech": True, "text": text}
 
     @app.websocket("/segment")

@@ -68,13 +68,16 @@ export class VoiceClient {
       ).arrayBuffer(),
     );
   }
-  async transcribe(pcm: Buffer, model: string, signal: AbortSignal) {
+  async transcribe(pcm: Buffer, model: string, signal: AbortSignal, context = "") {
     return (
-      await this.request(`/transcribe?model=${encodeURIComponent(model)}`, {
-        method: "POST",
-        body: new Uint8Array(pcm),
-        signal,
-      })
+      await this.request(
+        `/transcribe?model=${encodeURIComponent(model)}&context=${encodeURIComponent(context.slice(0, 1000))}`,
+        {
+          method: "POST",
+          body: new Uint8Array(pcm),
+          signal,
+        },
+      )
     ).json() as Promise<{ speech: boolean; text: string }>;
   }
   async speakerEmbedding(pcm: Buffer, signal: AbortSignal) {
