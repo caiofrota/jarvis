@@ -48,14 +48,18 @@ Personal email/calendar reads use owner-scoped tools; writes require confirmatio
 on **Configurações → Minhas contas**. Scheduled/composite home actions, temperatures, search and desktop executors remain
 outside the companion action boundary in this iteration; never confirm their execution.
 
-iPhone and Android are planned native clients of the central services. No mobile app
-or remote desktop pairing is shipped by this change. The Electron executor remains local.
-Native client authentication, pairing and OS permissions must be implemented explicitly.
+Windows/Linux connect through `pnpm companion --server https://your-server`. The
+remote Electron renderer has no privileged preload or Node access. Android/iPhone
+source uses a native WebView of the same interface, secure server selection and OS
+permissions. See [native client setup](remote-clients.md) for certificates and builds.
+Remote executor pairing is not implemented by the native shell.
 
-The existing workspace uses SQLite, Next and Electron. It intentionally does not add the
-handbook scaffold's Expo mobile app, PostgreSQL, Turbo, API client package or i18n package
-until those boundaries have implementations. The scaffold validation script reports these
-missing components; this is a local integration decision, not evidence of a shipped mobile app.
+The workspace keeps SQLite, Next and Electron. The mobile companion's one connection
+flow uses `registerRootComponent` instead of unused Expo Router routes. It consumes
+the central interface and shared connection policy without importing server/web
+source or duplicating domain services. PostgreSQL, Turbo orchestration and shared
+UI/i18n packages are not added without a consuming implementation. Native pt-BR copy
+stays in its messages module. These are documented scaffold exceptions.
 
 For local web development, `pnpm setup:brain:https` requires an existing `.env` and OpenSSL.
 It creates a 90-day self-signed certificate in ignored `apps/web/.local/tls`, changes the

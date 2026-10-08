@@ -3,7 +3,7 @@
 ## Product and runtime
 
 - Product locale: Brazilian Portuguese (`pt-BR`). User-facing copy and product data may remain in Portuguese.
-- Maintained surfaces: a Next.js browser application, a Node.js local server, an Electron desktop application, and a Python voice runtime.
+- Maintained surfaces: a Next.js browser application, a Node.js local server, Electron local/remote desktop applications, an Expo native companion, and a Python voice runtime.
 - The browser and local server listen on loopback by default. `PORT` is read from the process environment and defaults to `4318`; no dotenv loader is used.
 - The Python voice runtime targets Python 3.11 and is installed into `.voice-env` from the locked project in `voice/`.
 - The shared brain in `apps/web` owns local accounts, scoped catalogs and SQLite. The root desktop runtime retains its local executor boundary. No public deployment is configured.
@@ -12,7 +12,9 @@
 
 - `app/`, `components/`, and `features/` contain the browser UI.
 - `server.ts` and `lib/` contain the local Node.js services.
-- `desktop/` contains the Electron main and preload boundaries.
+- `desktop/` contains local main/preload and sandboxed remote companion boundaries.
+- `apps/mobile/` contains the native Android/iPhone companion shell.
+- `packages/api-client/` contains public connection policy shared by native clients.
 - `voice/` is the independently locked Python runtime for local speech features.
 - `tests/` contains the deterministic Node test suite; hardware and real-provider acceptance remain separate.
 

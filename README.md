@@ -7,14 +7,16 @@ the existing Windows/Linux desktop application and native voice endpoints.
 - `packages`: shared contracts and Prisma database.
 - `native`: existing Rosie speech service and ESP32 firmware, licensed GPL-3.0.
 - Root desktop application: existing local Windows/Linux executor and voice UI.
+- `pnpm companion`: Windows/Linux client of the central HTTPS server.
+- `apps/mobile`: Android/iPhone companion source with native server selection and microphone permissions.
 
 The browser admin uses the Jarvis visual identity and adapts to phone screens.
 Web conversation uses an authenticated companion session and the existing desktop
 orb, microphone capture, playback and speech chunking. No physical endpoint, home
 or room record is required to converse. HA areas and exposed entities are discovered
 directly when controlling the house; an itinerant client asks for missing location.
-The desktop executor is still local: remote computer pairing and native mobile
-control are subsequent integration work. Mobile browser access does not grant
+The desktop executor is still local: remote computer pairing and phone system
+control need further integration. Mobile browser access does not grant
 unrestricted access to iOS or Android system functions.
 
 ## Run the central brain
@@ -45,8 +47,9 @@ running the browser. `pnpm setup:brain:https` creates a private development cert
 moves HTTPS to the next port and redirects the previous HTTP port. Restart the server
 and trust the generated certificate on your computer before microphone testing.
 Production deployments should use their own trusted certificate or HTTPS proxy.
-The planned iPhone/Android clients are native apps; mobile browser access is not a
-requirement. See [companion boundaries](docs/engineering/companion.md).
+The Android/iPhone companion embeds the central interface in a native app; mobile
+browser access is not required. See [native client commands and setup](docs/engineering/remote-clients.md)
+and [companion boundaries](docs/engineering/companion.md).
 Do not expose the server directly to the public internet; configure the documented
 authentication and deployment boundary for remote access.
 

@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Jarvis Companion",
+    "slug": "jarvis-companion",
+    "version": "0.1.0",
+    "scheme": "jarvis-companion",
+    "orientation": "default",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "bundleIdentifier": "dev.jarvisstudio.companion",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "O Jarvis usa sua voz para conversar com seu servidor.",
+        "NSLocalNetworkUsageDescription": "Conectar ao seu servidor Jarvis na rede local."
+      }
+    },
+    "android": {
+      "package": "dev.jarvisstudio.companion",
+      "permissions": ["RECORD_AUDIO"],
+      "blockedPermissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "plugins": ["expo-secure-store", "expo-dev-client", "./plugins/with-local-certificate.cjs"],
+    "platforms": ["ios", "android"]
+  }
+}

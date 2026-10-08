@@ -350,3 +350,22 @@ not additional login mechanisms. Read-only tools may query personal accounts for
 the companion; sending and event creation require explicit page confirmation.
 This implements separate authenticated personal access, not private voice identity
 or native mobile integration. See [the feature and setup contract](personal-assistants.md).
+
+## 023: Native companions reuse the central interface
+
+The owner requested Windows/Linux and iPhone/Android clients of the central server.
+Use a separate sandboxed Electron remote entry and a thin Expo React Native WebView
+app. Both reuse `/studio` with shared public connection policy in `packages/api-client`.
+Neither shell imports server/database code or gives remote content a local executor.
+
+The one native connection flow uses `registerRootComponent`, not unused Expo Router
+routes. Localized native strings live in a focused messages module, without an
+unused shared UI/i18n package. These scaffold exceptions last until more native
+screens/consumers justify routing or shared copy. Remote program execution requires
+a separate executor-pairing feature, not privileged website loading.
+
+Desktop local HTTPS supports exact certificate trust with SAN/date checks. Android
+local CA trust is an optional build-time setting limited to one host; iOS uses
+explicit system trust. System-trusted HTTPS remains the default. Generated native
+projects/binaries are private; signing/device acceptance is separate from bundling.
+No app-store publication is configured.

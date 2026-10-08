@@ -59,6 +59,12 @@ jobs:
           pnpm project:check
           pnpm db:check
           pnpm security:check
+      - name: Validate native companion sources
+        run: |
+          pnpm mobile:check
+          pnpm --filter @jarvis/api-client typecheck
+          pnpm --filter @jarvis/mobile exec expo install --check
+          pnpm --filter @jarvis/mobile exec expo export --platform all --output-dir dist
       - name: Install test browser
         run: pnpm --filter @rosie/web exec playwright install --with-deps chromium
       - name: Validate desktop and mobile central UI

@@ -65,3 +65,12 @@ apps/web/public/pcm-worklet.js
 
 # Synthetic speech fixture required by native VAD regression tests
 !native/tests/fixtures/local-greeting.wav
+
+# Generated native companion projects and builds
+apps/mobile/.expo/
+apps/mobile/android/
+apps/mobile/ios/
+apps/mobile/dist/
+*.apk
+*.aab
+*.ipa

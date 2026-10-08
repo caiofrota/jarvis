@@ -1,4 +1,5 @@
 "use client";
+import { isNativeCompanion } from "@jarvis/api-client";
 import type {
   IntegrationStatus,
   PersonalCalendar,
@@ -37,6 +38,8 @@ export function PersonalIntegrations({ userName, admin }: { userName: string; ad
     [title, setTitle] = useState(""),
     [start, setStart] = useState(""),
     [end, setEnd] = useState("");
+  const [nativeClient, setNativeClient] = useState(false);
+  useEffect(() => setNativeClient(isNativeCompanion(navigator.userAgent)), []);
   const initialized = useRef(false);
   const reload = useCallback(async () => setStatus(await request<IntegrationStatus>(base)), []);
   useEffect(() => {
@@ -117,6 +120,17 @@ export function PersonalIntegrations({ userName, admin }: { userName: string; ad
           histórico não são compartilhados ao escolher um assistente compartilhado.
         </p>
       </section>
+      {nativeClient && (
+        <section className="panel account-guidance">
+          <p>
+            Conecte Google e Microsoft no navegador do sistema. Entre com o mesmo usuário do Jarvis;
+            depois volte ao companion.
+          </p>
+          <a className="button" href="/integrations" target="_blank" rel="noopener noreferrer">
+            Abrir conexões no navegador
+          </a>
+        </section>
+      )}
       {error && (
         <p role="alert" className="error">
           {error}
@@ -142,6 +156,10 @@ export function PersonalIntegrations({ userName, admin }: { userName: string; ad
                   disabled={busy || !provider.configured}
                   onClick={() =>
                     void action(async () => {
+                      if (nativeClient) {
+                        window.open("/integrations", "_blank", "noopener,noreferrer");
+                        return;
+                      }
                       const authorization = await request<{ url: string }>(`${base}/authorize`, {
                         method: "POST",
                         body: JSON.stringify({ provider: provider.provider }),

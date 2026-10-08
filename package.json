@@ -40,7 +40,13 @@
     "firmware:build": "make -C native build",
     "db:init": "pnpm --filter @rosie/web db:init",
     "format:check:brain": "biome check apps packages",
-    "setup:brain": "node scripts/setup-brain.mjs"
+    "setup:brain": "node scripts/setup-brain.mjs",
+    "companion": "pnpm build:runtime && node scripts/start-companion.mjs",
+    "mobile:start": "pnpm --filter @jarvis/mobile start",
+    "mobile:android": "pnpm --filter @jarvis/mobile android",
+    "mobile:ios": "pnpm --filter @jarvis/mobile ios",
+    "mobile:check": "pnpm --filter @jarvis/mobile typecheck && pnpm --filter @jarvis/mobile lint",
+    "certificate:brain": "node scripts/export-brain-certificate.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
