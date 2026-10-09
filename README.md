@@ -15,9 +15,14 @@ Web conversation uses an authenticated companion session and the existing deskto
 orb, microphone capture, playback and speech chunking. No physical endpoint, home
 or room record is required to converse. HA areas and exposed entities are discovered
 directly when controlling the house; an itinerant client asks for missing location.
-The desktop executor is still local: remote computer pairing and phone system
-control need further integration. Mobile browser access does not grant
+The companion can now open local registered apps by buttons or conversation, with
+native confirmation. Personal tasks are shared between the panel and conversation
+and saved per user on the server. Cross-computer dispatch and phone system control
+need further integration. Mobile browser access does not grant
 unrestricted access to iOS or Android system functions.
+
+See [feature parity](docs/engineering/unification-parity.md) for recovered features
+and the remaining gaps.
 
 ## Run the central brain
 

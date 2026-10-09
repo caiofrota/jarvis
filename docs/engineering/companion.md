@@ -45,8 +45,13 @@ an installation home; a companion itself has no home binding. Explicit room name
 optional current area; absent or ambiguous location requires clarification. A successful
 HA service request is acknowledged as a sent command, not verified physical state.
 Personal email/calendar reads use owner-scoped tools; writes require confirmation
-on **Configurações → Minhas contas**. Scheduled/composite home actions, temperatures, search and desktop executors remain
-outside the companion action boundary in this iteration; never confirm their execution.
+on **Configurações → Minhas contas**. Comfort complaints use the current explicitly selected or declared HA area. A declared
+area expires after ten minutes in this session; mentioning a room in a command does
+not establish location. Without location the assistant asks first. Temperature offers
+require an enabled registered climate device with `set_temperature` permission,
+Celsius/range/step validation and actual state data. Confirmation rechecks the state
+and permission before one dispatch. Scheduled/composite home actions and search
+remain outside this companion action boundary; never confirm their execution.
 
 Windows/Linux connect through `pnpm companion --server https://your-server`. The
 remote Electron renderer has no Node access. A narrow preload exposes origin-checked
@@ -54,9 +59,16 @@ window management and catalog actions, with native consent before launching a lo
 program. It exposes no credentials, arbitrary file paths or shell commands. Android/iPhone
 source uses a native WebView of the same interface, secure server selection and OS
 permissions. See [native client setup](remote-clients.md) for certificates and builds.
-Voice-driven remote executor pairing is not implemented by the native shell.
-The computer card can explicitly open locally registered programs through the desktop
-executor; the central model cannot dispatch computer actions.
+The updated native shell sends an available-app catalog containing IDs and labels,
+never executable paths, to the conversation. `open_computer` creates an expiring
+process/session-owned offer; the client revalidates the catalog, prepares an executor
+token and opens the existing native consent dialog. A single-use receipt distinguishes
+sent, cancelled and failed outcomes. Neither a browser nor a mobile client can launch
+apps on another computer. A sent receipt confirms OS dispatch, not a visible window.
+The computer card shows up to six available apps ranked by successful recent local
+activity, with alphabetical fallback and a searchable complete catalog. Activity is
+stored privately on the native OS account; no program-name recommendations are guessed.
+Rebuild/reopen `pnpm companion` after updating the native bridge.
 
 The main interface reuses the original Jarvis shell, particle ring, focus mode, fitted
 card grid, drag/order/size controls and per-window preferences. The signed-in home
@@ -65,10 +77,13 @@ stylesheet, fonts and saved preferences are ready and the browser has laid out t
 panel; a failed stylesheet load offers retry instead of exposing unstyled controls. Desktop window geometry
 and detached cards use the existing WindowSession lifecycle. Administration stays on
 web routes such as `/overview`, `/personal` and `/integrations`, opened in the system
-browser from native clients. Next development indicators are disabled. Tasks and notes
-retain the original client-side persistence, now namespaced by account; they are shared
-between this account's windows on this device, not synchronized across devices or used
-as authoritative central conversation tasks. That integration remains separate work.
+browser from native clients. Next development indicators are disabled. Notes retain account/device-scoped client persistence. Tasks now use an owner-scoped
+server setting with optimistic revisions and transaction validation. `manage_tasks`
+reads or saves before confirming addition, query, correction or completion. The panel
+and conversation use the same list across clients, with periodic refresh and immediate
+refresh after a task receipt. Existing account-namespaced local tasks are imported
+additively and cleared locally only after server acknowledgement; failed imports keep
+the local source. Accountless legacy task data is not automatically assigned to a user.
 The calendar card reads the signed-in user's connected provider calendars; it contains
 no example events.
 
@@ -85,8 +100,12 @@ configured origin and port, and enables a fixed-origin HTTP redirect. Trust the 
 on the review computer. Keep keys private; use trusted certificates for deployed clients.
 
 Companion transcription supplies a bounded vocabulary from the selected assistant and
-Assist-exposed entity names, aliases and areas to the private worker. It contains no
+Assist-exposed entity names, aliases and areas, plus bounded installed-app names when
+available, to the private worker. It contains no
 personality, credentials or transcript replacements. The worker validates its length
 and uses it as Whisper's initial prompt with a five-candidate beam. This may increase
 CPU inference time; real microphone recognition quality remains an acceptance check.
 The vocabulary supplements acoustic decoding and never authorizes an action.
+
+See [the feature parity inventory](unification-parity.md) for remaining differences
+between the original local Jarvis, fixed Rosie endpoints and itinerant companion.

@@ -337,7 +337,9 @@ test('computer actions require owner-bound tokens and native user consent before
     assert.equal(dispatched, 0);
     assert.equal((await execute(event, 'invented-token')).ok, false);
     f.dialogs.response = 1;
-    assert.equal((await execute(event, 'fixture-token')).ok, false);
+    const cancelled = await execute(event, 'fixture-token');
+    assert.equal(cancelled.ok, false);
+    assert.equal(cancelled.code, 'ACTION_CANCELLED');
     assert.equal(dispatched, 0);
     assert.equal(pending.size, 0);
     await prepare(event, 'unfamiliar-editor');

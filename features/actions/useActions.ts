@@ -10,10 +10,12 @@ export function useActions(provided?: Pick<JarvisAPI, 'actions' | 'prepareAction
       runtime: { restricted: false, platform: '', appVersion: '', message: '' },
     }),
     [error, setError] = useState(''),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [externalBusy, setExternalBusy] = useState(false);
   async function refresh() {
     try {
       setCatalog(await api().actions());
+      setError('');
     } catch (eCause) {
       const e = eCause instanceof Error ? eCause : new Error(String(eCause));
       setError(e.message);
@@ -21,6 +23,14 @@ export function useActions(provided?: Pick<JarvisAPI, 'actions' | 'prepareAction
   }
   useEffect(() => {
     refresh();
+    const changed = () => void refresh();
+    const external = (event: Event) => setExternalBusy((event as CustomEvent<boolean>).detail === true);
+    window.addEventListener('jarvis-computer-actions-changed', changed);
+    window.addEventListener('jarvis-computer-busy', external);
+    return () => {
+      window.removeEventListener('jarvis-computer-actions-changed', changed);
+      window.removeEventListener('jarvis-computer-busy', external);
+    };
   }, []);
   async function execute(id: string, newInstance = false) {
     setBusy(true);
@@ -38,5 +48,5 @@ export function useActions(provided?: Pick<JarvisAPI, 'actions' | 'prepareAction
       setBusy(false);
     }
   }
-  return { ...catalog, error, busy, execute };
+  return { ...catalog, error, busy: busy || externalBusy, execute };
 }

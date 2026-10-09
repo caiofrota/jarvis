@@ -229,6 +229,7 @@ app.whenReady().then(() => {
   elevenLabsSecrets = new SecretStore(path.join(app.getPath('userData'), 'elevenlabs-api-key.bin'));
   voice.elevenlabs.setKey(elevenLabsSecrets.read());
   actions = new ActionService({
+    historyPath: path.join(app.getPath('userData'), 'computer-activity.json'),
     catalog: createCatalog({
       folders: {
         documents: app.getPath('documents'),

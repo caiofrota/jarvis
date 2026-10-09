@@ -10,6 +10,7 @@ import { CatalogService } from "../src/server/catalog/service";
 import { Conversation } from "../src/server/conversation/service";
 import { api } from "../src/server/http/api";
 import { PersonalIntegrations } from "../src/server/personal/service";
+import { PersonalTasks } from "../src/server/personal/tasks";
 import type { Runtime } from "../src/server/runtime";
 import { VoiceProfiles } from "../src/server/voice/profiles";
 import { repositoryFixture } from "./fixture";
@@ -29,6 +30,7 @@ export async function httpFixture() {
     config: cfg,
     auth: new Authentication(f.repo, cfg as Runtime["config"]),
     profiles: new PersonalProfiles(f.repo),
+    tasks: new PersonalTasks(f.repo),
     pairing: new Pairing(),
     catalog: new CatalogService(f.repo),
     conversation: new Conversation(f.repo, {} as Automations),

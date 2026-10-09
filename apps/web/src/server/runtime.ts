@@ -10,6 +10,7 @@ import type { AppConfig } from "./config";
 import { CompanionConversation } from "./conversation/companion";
 import { Conversation } from "./conversation/service";
 import { PersonalIntegrations } from "./personal/service";
+import { PersonalTasks } from "./personal/tasks";
 import { RobotGateway } from "./robot/gateway";
 import { Interactions } from "./robot/interactions";
 import { VoiceClient } from "./voice/client";
@@ -21,6 +22,7 @@ export function createRuntime(config: AppConfig) {
     catalog = new CatalogService(repo),
     auth = new Authentication(repo, config),
     profiles = new PersonalProfiles(repo),
+    tasks = new PersonalTasks(repo),
     personalIntegrations = new PersonalIntegrations(repo, config.origin, config.adminToken),
     pairing = new Pairing(),
     automations = new Automations(repo),
@@ -32,6 +34,7 @@ export function createRuntime(config: AppConfig) {
       automations.addons.homeAssistant,
       profiles,
       personalIntegrations,
+      tasks,
     ),
     voice = new VoiceClient(
       config.voiceUrl,
@@ -48,6 +51,7 @@ export function createRuntime(config: AppConfig) {
     catalog,
     auth,
     profiles,
+    tasks,
     personalIntegrations,
     pairing,
     automations,

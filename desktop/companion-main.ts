@@ -36,6 +36,7 @@ const windows = new Map<string, BrowserWindow>();
 const windowSession = new WindowSession(resolve(app.getPath('userData'), 'window-session.json'), windows);
 let window: BrowserWindow | undefined;
 let actions: ActionService | undefined;
+const computerClientId = randomUUID();
 const microphones = new Set<number>();
 const owned = (contents: Electron.WebContents) =>
   [...windows.values()].some((value) => value.webContents === contents);
@@ -247,7 +248,14 @@ app
           trusted(event);
           return { ok: true, value: await callback(event, ...args) };
         } catch (cause) {
-          return { ok: false, error: (cause as Error).message };
+          return {
+            ok: false,
+            error: (cause as Error).message,
+            code:
+              cause && typeof cause === 'object' && 'code' in cause && cause.code === 'ACTION_CANCELLED'
+                ? 'ACTION_CANCELLED'
+                : undefined,
+          };
         }
       });
     };
@@ -263,6 +271,7 @@ app
     });
     const executor = () =>
       (actions ??= new ActionService({
+        historyPath: resolve(app.getPath('userData'), 'computer-activity.json'),
         catalog: createCatalog({
           folders: {
             documents: app.getPath('documents'),
@@ -271,7 +280,7 @@ app
           },
         }),
       }));
-    handle('actions', () => executor().list());
+    handle('actions', () => ({ ...executor().list(), clientId: computerClientId }));
     handle('actions-prepare', (event, id, newInstance = false) => {
       if (typeof id !== 'string' || typeof newInstance !== 'boolean') throw new Error('Ação inválida.');
       return executor().prepare(id, event.sender.id, newInstance);
@@ -294,7 +303,7 @@ app
       trusted(event);
       if (answer.response !== 0) {
         executor().cancel(event.sender.id);
-        throw new Error('Abertura cancelada.');
+        throw Object.assign(new Error('Abertura cancelada.'), { code: 'ACTION_CANCELLED' });
       }
       return executor().execute(token, event.sender.id);
     });

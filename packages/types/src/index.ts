@@ -355,3 +355,4 @@ export * from "./accounts";
 export * from "./companion";
 export * from "./personal";
 export * from "./personal-integrations";
+export * from "./personal-tasks";

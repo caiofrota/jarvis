@@ -409,23 +409,47 @@ class ActionService {
     }
   >();
   history: ActionRecord[] = [];
+  private readonly historyPath?: string;
   constructor({
     catalog = createCatalog(),
     launcher = launch,
     now = Date.now,
     environment = runtimeInfo(),
+    historyPath,
   }: {
     catalog?: ExecutableTarget[];
     launcher?: typeof launch;
     now?: () => number;
     environment?: RuntimeInfo;
+    historyPath?: string;
   } = {}) {
     this.environment = environment;
     this.items = catalog;
     this.launcher = launcher;
     this.now = now;
     this.pending = new Map();
-    this.history = [];
+    this.historyPath = historyPath;
+    try {
+      const records: unknown = historyPath ? JSON.parse(fs.readFileSync(historyPath, 'utf8')) : [];
+      if (Array.isArray(records))
+        this.history = records
+          .filter(
+            (record): record is ActionRecord =>
+              !!record &&
+              typeof record === 'object' &&
+              typeof record.id === 'string' &&
+              typeof record.targetId === 'string' &&
+              this.items.some((item) => item.id === record.targetId) &&
+              typeof record.label === 'string' &&
+              record.label.length <= 200 &&
+              typeof record.at === 'string' &&
+              Number.isFinite(Date.parse(record.at)) &&
+              ['sent', 'error'].includes(record.status),
+          )
+          .slice(-30);
+    } catch {
+      /* Corrupt activity does not disable the executor. */
+    }
   }
   list(): ActionCatalog {
     return {
@@ -471,6 +495,7 @@ class ActionService {
     if (this.environment.restricted) throw new Error(this.environment.message);
     const record: ActionRecord = {
       id: crypto.randomUUID(),
+      targetId: item.id,
       label: item.label,
       at: new Date(this.now()).toISOString(),
       status: 'requested',
@@ -487,6 +512,14 @@ class ActionService {
       const error = errorCause instanceof Error ? errorCause : new Error(String(errorCause));
       record.status = 'error';
       throw error;
+    } finally {
+      if (this.historyPath)
+        try {
+          fs.writeFileSync(this.historyPath + '.tmp', JSON.stringify(this.history), { mode: 0o600 });
+          fs.renameSync(this.historyPath + '.tmp', this.historyPath);
+        } catch {
+          /* Launch receipts remain truthful if activity cannot be saved. */
+        }
     }
   }
 }

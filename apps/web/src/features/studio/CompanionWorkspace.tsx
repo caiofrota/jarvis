@@ -7,7 +7,6 @@ import Shell from "../../../../../components/workspace/Shell";
 import WorkspaceStage from "../../../../../components/workspace/WorkspaceStage";
 import AssistantTabs from "../../../../../features/chat/AssistantTabs";
 import NotesPanel from "../../../../../features/notes/NotesPanel";
-import TasksPanel from "../../../../../features/tasks/TasksPanel";
 import EnergyRing from "../../../../../features/voice/orb/EnergyRing";
 import { openWorkspaceWindow } from "../../../../../features/workspace/open-window";
 import PanelsDialog from "../../../../../features/workspace/PanelsDialog/PanelsDialog";
@@ -23,6 +22,7 @@ import { LoadingScreen } from "../../components/loading-screen/LoadingScreen";
 import { useSession } from "../session/SessionProvider";
 import { CompanionCalendar } from "./CompanionCalendar";
 import { CompanionComputer } from "./CompanionComputer";
+import { CompanionTasks } from "./CompanionTasks";
 import { useCompanionConversation } from "./useCompanionConversation";
 
 const phaseLabels = {
@@ -184,7 +184,9 @@ export function CompanionWorkspace({
                 <span className="energy-center">
                   <span className="energy-center-kicker">{name.toUpperCase()} / ASSISTENTE</span>
                   <span className="energy-center-title" role="status">
-                    {phaseLabels[conversation.phase]}
+                    {conversation.awaitingComputer
+                      ? "Confirme no computador"
+                      : phaseLabels[conversation.phase]}
                   </span>
                   <span className="energy-center-action">
                     {conversation.busy
@@ -315,7 +317,7 @@ export function CompanionWorkspace({
       </div>
     ),
     calendar: <CompanionCalendar />,
-    tasks: <TasksPanel tasks={prefs.tasks} update={(tasks) => patch({ tasks })} />,
+    tasks: <CompanionTasks legacyTasks={prefs.tasks} onImported={() => patch({ tasks: [] })} />,
     notes: (
       <NotesPanel
         value={prefs.notes}

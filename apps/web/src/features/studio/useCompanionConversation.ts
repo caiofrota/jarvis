@@ -1,10 +1,12 @@
 "use client";
+import type { CompanionComputerOffer } from "@rosie/types";
 import { useEffect, useRef, useState } from "react";
 import { AudioOutput } from "../../../../../features/voice/audio-output";
 import { type CaptureSession, capture } from "../../../../../features/voice/local-capture";
 import type { OrbPhase } from "../../../../../features/voice/orb/scene";
 import { SpeechPipeline } from "../../../../../features/voice/speech-pipeline";
 import { type Option, request } from "../../lib/api-client";
+import { executeComputerRequest, readComputerCatalog } from "./computer-client";
 
 type Message = { id: number; role: "user" | "assistant"; text: string };
 type Options = { name: string; assistants: Option[]; areas: Option[] };
@@ -20,6 +22,8 @@ export function useCompanionConversation() {
   const [active, setActive] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [awaitingComputer, setAwaitingComputer] = useState(false);
+  const computerPending = useRef(false);
   const current = useRef({ sessionId, assistantId, areaId });
   current.current = { sessionId, assistantId, areaId };
   const pending = useRef<AbortController | null>(null);
@@ -41,6 +45,8 @@ export function useCompanionConversation() {
   }
   function interrupt() {
     epoch.current++;
+    if (computerPending.current) void window.jarvisCompanionWindows?.cancelAction();
+    setAwaitingComputer(false);
     pending.current?.abort();
     speech.current?.cancel();
     settleSpeech.current?.();
@@ -84,6 +90,7 @@ export function useCompanionConversation() {
       abort.abort();
       voiceActive.current = false;
       epoch.current++;
+      if (computerPending.current) void window.jarvisCompanionWindows?.cancelAction();
       pending.current?.abort();
       speech.current?.cancel();
       settleSpeech.current?.();
@@ -110,12 +117,56 @@ export function useCompanionConversation() {
       [...previous, { id: ++id.current, role: "user" as const, text: phrase }].slice(-40),
     );
     try {
-      const reply = await request<{ text: string; voice: string }>("/companion/message", {
+      const computer = await readComputerCatalog().catch(() => undefined);
+      if (epoch.current !== version) return;
+      let reply = await request<{
+        text: string;
+        voice: string;
+        tasksChanged?: boolean;
+        computerAction?: CompanionComputerOffer;
+      }>("/companion/message", {
         method: "POST",
-        body: JSON.stringify({ ...selection(), text: phrase }),
+        body: JSON.stringify({ ...selection(), text: phrase, computer }),
         signal: abort.signal,
       });
       if (epoch.current !== version) return;
+      if (reply.computerAction) {
+        const offer = reply.computerAction;
+        computerPending.current = true;
+        setAwaitingComputer(true);
+        let status: "sent" | "cancelled" | "failed";
+        try {
+          status = await executeComputerRequest(offer, () => epoch.current === version);
+        } finally {
+          computerPending.current = false;
+          setAwaitingComputer(false);
+        }
+        if (epoch.current !== version) return;
+        try {
+          reply = await request<{ text: string; voice: string }>("/companion/computer-result", {
+            method: "POST",
+            body: JSON.stringify({
+              ...selection(),
+              requestId: offer.requestId,
+              clientId: offer.clientId,
+              status,
+            }),
+            signal: abort.signal,
+          });
+        } catch {
+          reply = {
+            text:
+              status === "sent"
+                ? "O pedido de abertura foi enviado ao sistema, mas não consegui registrar o recibo no servidor."
+                : status === "cancelled"
+                  ? "A abertura foi cancelada."
+                  : "Não consegui confirmar a abertura. Não vou repetir automaticamente.",
+            voice: reply.voice,
+          };
+        }
+        if (epoch.current !== version) return;
+      }
+      if (reply.tasksChanged) window.dispatchEvent(new Event("jarvis-personal-tasks-changed"));
       setMessages((previous) =>
         [...previous, { id: ++id.current, role: "assistant" as const, text: reply.text }].slice(
           -40,
@@ -204,7 +255,11 @@ export function useCompanionConversation() {
             try {
               return await request<{ text: string }>("/companion/transcribe", {
                 method: "POST",
-                body: JSON.stringify({ ...selection(), audio: input.audio }),
+                body: JSON.stringify({
+                  ...selection(),
+                  audio: input.audio,
+                  computer: await readComputerCatalog().catch(() => undefined),
+                }),
                 signal: abort.signal,
               });
             } finally {
@@ -256,6 +311,7 @@ export function useCompanionConversation() {
   }
   return {
     options,
+    awaitingComputer,
     sessionId,
     assistantId,
     areaId,

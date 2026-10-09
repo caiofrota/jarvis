@@ -6,8 +6,10 @@ Each person signs in with their own Jarvis account. Recognition, voices, assista
 HA and personal accounts belong to the central server. No endpoint, house, provider
 key, database or Python voice runtime is needed on the client.
 
-These are thin native clients of the shared interface. The computer card uses the local desktop executor to open registered programs after
-native confirmation. Voice-driven remote computer execution is not implemented.
+These are thin native clients of the shared interface. Buttons and conversational
+requests can open registered programs on the companion's own computer after native
+confirmation. Update and reopen the companion to enable the catalog/receipt bridge.
+Cross-computer dispatch is not implemented.
 Phone system control and a background wake word are not implied by this client.
 
 ## Windows and Linux

@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import {
   type Actor,
   companionAudioSchema,
+  companionComputerResultSchema,
   companionMessageSchema,
   companionSpeechSchema,
 } from "@rosie/types";
@@ -21,6 +22,32 @@ export async function companionRoutes(
   actor: Actor,
 ) {
   if (!path.startsWith("/api/v1/companion/")) return false;
+  if (path === "/api/v1/companion/computer-result" && req.method === "POST") {
+    rt.auth.limits.check(`computer-result:${actor.user.id}`, 60);
+    respond(
+      res,
+      200,
+      await rt.companion.computerResult(
+        actor.user.id,
+        companionComputerResultSchema.parse(await body(req)),
+      ),
+    );
+    return true;
+  }
+  if (path === "/api/v1/companion/tasks" && req.method === "GET") {
+    respond(res, 200, await rt.tasks.get(actor.user.id));
+    return true;
+  }
+  if (path === "/api/v1/companion/tasks" && req.method === "PUT") {
+    rt.auth.limits.check(`tasks:${actor.user.id}`, 60);
+    respond(res, 200, await rt.tasks.save(actor.user.id, await body(req)));
+    return true;
+  }
+  if (path === "/api/v1/companion/tasks/import" && req.method === "POST") {
+    rt.auth.limits.check(`tasks-import:${actor.user.id}`, 20);
+    respond(res, 200, await rt.tasks.import(actor.user.id, await body(req)));
+    return true;
+  }
   if (path === "/api/v1/companion/options" && req.method === "GET") {
     const [personal, areas, settings, speech, catalog] = await Promise.all([
       rt.profiles.get(actor.user.id),
@@ -76,10 +103,10 @@ export async function companionRoutes(
   if (audioRequest) audioWork.set(rt, (audioWork.get(rt) ?? 0) + 1);
   try {
     if (path.endsWith("/message")) {
-      const input = companionMessageSchema.parse(await body(req));
+      const input = companionMessageSchema.parse(await body(req, 650000));
       respond(res, 200, await rt.companion.respond(actor.user.id, input, signal));
     } else if (path.endsWith("/transcribe")) {
-      const input = companionAudioSchema.parse(await body(req, 950000));
+      const input = companionAudioSchema.parse(await body(req, 1550000));
       rt.companion.session(actor.user.id, input.sessionId);
       const pcm = pcmFromWav(Buffer.from(input.audio, "base64"));
       if (pcm.length > 640000) throw new DomainError("Envie trechos de áudio de até 20 segundos.");

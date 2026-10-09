@@ -92,11 +92,13 @@ export interface RuntimeInfo {
 }
 export interface ActionRecord {
   id: string;
+  targetId?: string;
   label: string;
   at: string;
   status: 'requested' | 'sent' | 'error';
 }
 export interface ActionCatalog {
+  clientId?: string;
   runtime: RuntimeInfo;
   items: Target[];
   apps: Target[];

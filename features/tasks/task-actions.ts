@@ -7,14 +7,7 @@ import type {
   TaskCheckReceipt,
   TaskCompleteReceipt,
 } from '../../shared/types';
-function normalize(value: string) {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-    .replace(/\s+/g, ' ')
-    .toLowerCase();
-}
+import { taskTitleKey as normalize } from '../../shared/task-title';
 
 export function updateTask(
   updatePrefs: Save<Preferences>,

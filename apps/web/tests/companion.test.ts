@@ -562,3 +562,321 @@ it("keeps private persona context and resets history when configured values chan
   expect(third.messages[0].content).toContain("Valoriza a sustentabilidade.");
   expect(third.messages.filter((value: { role: string }) => value.role === "user")).toHaveLength(1);
 });
+
+describe("computer and contextual comfort boundaries", () => {
+  it("binds a single-use computer offer to owner, session and native catalog", async () => {
+    const f = fixture(),
+      clientId = crypto.randomUUID();
+    const computer = {
+      clientId,
+      targets: [{ id: "installed-boreal", label: "Boreal Designer", kind: "app" as const }],
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              choices: [
+                {
+                  message: {
+                    role: "assistant",
+                    content: null,
+                    tool_calls: [
+                      {
+                        id: "open",
+                        type: "function",
+                        function: {
+                          name: "open_computer",
+                          arguments: JSON.stringify({ id: "installed-boreal", newInstance: false }),
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            }),
+          ),
+      ),
+    );
+    const reply = await f.companion.respond(
+      "owner",
+      { ...f.input, text: "Abra Boreal Designer", computer },
+      AbortSignal.timeout(5000),
+    );
+    expect(reply.text).toContain("Confirme no computador");
+    expect(f.ha.execute).not.toHaveBeenCalled();
+    const offer = reply.computerAction;
+    if (!offer) throw new Error("missing computer offer");
+    const result = { ...f.input, requestId: offer.requestId, clientId, status: "sent" as const };
+    await expect(f.companion.computerResult("other", result)).rejects.toThrow("expirou");
+    await expect(
+      f.companion.computerResult("owner", { ...result, clientId: crypto.randomUUID() }),
+    ).rejects.toThrow("expirou");
+    expect((await f.companion.computerResult("owner", result)).text).toContain("enviou ao sistema");
+    await expect(f.companion.computerResult("owner", result)).rejects.toThrow("expirou");
+  });
+  it("asks for location before a comfort proposal and rechecks state after consent", async () => {
+    const f = fixture();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              choices: [
+                {
+                  message: {
+                    role: "assistant",
+                    content: null,
+                    tool_calls: [
+                      {
+                        id: "comfort",
+                        type: "function",
+                        function: {
+                          name: "propose_home_action",
+                          arguments: JSON.stringify({
+                            entityId: "switch.relay",
+                            action: "off",
+                            temperature: null,
+                            reason: "comfort",
+                          }),
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            }),
+          ),
+      ),
+    );
+    expect((await f.send("Está muito claro")).text).toContain("Em qual ambiente");
+    expect(f.ha.execute).not.toHaveBeenCalled();
+    const located = { ...f.input, areaId: "lab" };
+    expect(
+      (
+        await f.companion.respond(
+          "owner",
+          { ...located, text: "A claridade incomoda" },
+          AbortSignal.timeout(5000),
+        )
+      ).text,
+    ).toContain("Deseja desligar");
+    f.entities[0].state = "off";
+    expect(
+      (await f.companion.respond("owner", { ...located, text: "Sim" }, AbortSignal.timeout(5000)))
+        .text,
+    ).toContain("mudou");
+    expect(f.ha.execute).not.toHaveBeenCalled();
+  });
+});
+
+it("validates registered climate permissions and refuses a changed setpoint before dispatch", async () => {
+  const f = fixture(),
+    catalog = emptyCatalog();
+  const climate = {
+    ...f.entities[0],
+    id: "climate.boreal",
+    name: "Clima Boreal",
+    kind: "climate",
+    state: "cool",
+  };
+  f.entities.splice(0, 1, climate);
+  const device = schemas.devices.parse({
+    id: "boreal",
+    name: "Clima Boreal",
+    homeId: "home",
+    roomId: "lab",
+    connection: "home-assistant",
+    haEntityId: climate.id,
+    kind: "climate",
+    actions: { set_temperature: "set_temperature" },
+  });
+  catalog.devices.push(device);
+  let temperature = 20;
+  const comfortState = vi.fn(() => ({
+    mode: "cool",
+    temperature,
+    min: 16,
+    max: 30,
+    step: 1,
+    source: "state" as const,
+  }));
+  const validateTemperature = vi.fn((_device: unknown, value: number) => {
+    if (value < 16 || value > 30) throw new Error("limites");
+  });
+  const companion = new CompanionConversation(
+    { settings: async () => f.settings, catalog: async () => catalog },
+    { ...f.ha, comfortState, validateTemperature } as unknown as HomeAssistantAddon,
+  );
+  const sessionId = companion.create("owner"),
+    input = { sessionId, assistantId: null, areaId: "lab" };
+  const send = (text: string) =>
+    companion.respond("owner", { ...input, text }, AbortSignal.timeout(5000));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            choices: [
+              {
+                message: {
+                  role: "assistant",
+                  content: null,
+                  tool_calls: [
+                    {
+                      id: "climate",
+                      type: "function",
+                      function: {
+                        name: "propose_home_action",
+                        arguments: JSON.stringify({
+                          entityId: climate.id,
+                          action: "set_temperature",
+                          temperature: 21,
+                          reason: "comfort",
+                        }),
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+        ),
+    ),
+  );
+  expect((await send("Estou com frio")).text).toContain("21 graus Celsius");
+  expect(f.ha.execute).not.toHaveBeenCalled();
+  temperature = 22;
+  expect((await send("Sim")).text).toContain("estado do aparelho mudou");
+  expect(f.ha.execute).not.toHaveBeenCalled();
+  expect((await send("Está frio")).text).toContain("Deseja");
+  expect((await send("Sim")).text).toContain("Pedido de ajuste");
+  expect(f.ha.execute).toHaveBeenCalledTimes(1);
+  expect(f.ha.execute).toHaveBeenCalledWith(
+    device,
+    "set_temperature",
+    21,
+    true,
+    expect.any(AbortSignal),
+  );
+});
+
+it("remembers only declared location and expires it for later comfort complaints", async () => {
+  const f = fixture();
+  const offer = {
+    id: "comfort",
+    type: "function",
+    function: {
+      name: "propose_home_action",
+      arguments: JSON.stringify({
+        entityId: "switch.relay",
+        action: "off",
+        temperature: null,
+        reason: "comfort",
+      }),
+    },
+  };
+  let declare = true;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            choices: [
+              {
+                message: {
+                  role: "assistant",
+                  content: null,
+                  tool_calls: declare
+                    ? [
+                        {
+                          id: "loc",
+                          type: "function",
+                          function: {
+                            name: "set_current_area",
+                            arguments: JSON.stringify({ areaId: "lab" }),
+                          },
+                        },
+                        offer,
+                      ]
+                    : [offer],
+                },
+              },
+            ],
+          }),
+        ),
+    ),
+  );
+  expect((await f.send("Estou no laboratório e a claridade incomoda")).text).toContain(
+    "Deseja desligar",
+  );
+  await f.send("Não");
+  declare = false;
+  expect((await f.send("Ainda está muito claro")).text).toContain("Deseja desligar");
+  await f.send("Não");
+  vi.spyOn(Date, "now").mockReturnValue(Date.now() + 11 * 60000);
+  expect((await f.send("Essa claridade está incomodando")).text).toContain("Em qual ambiente");
+  expect(f.ha.execute).not.toHaveBeenCalled();
+});
+it("returns persisted task receipts and supplies current tasks to the model", async () => {
+  const f = fixture();
+  const tasks = {
+    get: vi.fn(async () => ({
+      tasks: [{ id: "current-task", text: "Preparar Atlas", done: false }],
+      revision: null,
+    })),
+    execute: vi.fn(async () => ({ text: "Recibo persistido da lista.", changed: true })),
+  };
+  const companion = new CompanionConversation(
+    { settings: async () => f.settings, catalog: async () => emptyCatalog() },
+    f.ha as unknown as HomeAssistantAddon,
+    undefined,
+    undefined,
+    tasks,
+  );
+  const sessionId = companion.create("owner");
+  const provider = vi.fn<typeof fetch>(
+    async () =>
+      new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                role: "assistant",
+                content: "Texto não confirmado",
+                tool_calls: [
+                  {
+                    id: "task",
+                    type: "function",
+                    function: {
+                      name: "manage_tasks",
+                      arguments: JSON.stringify({
+                        operation: "complete",
+                        id: "current-task",
+                        title: null,
+                        expectedTitle: "Preparar Atlas",
+                      }),
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+      ),
+  );
+  vi.stubGlobal("fetch", provider);
+  const result = await companion.respond(
+    "owner",
+    { sessionId, assistantId: null, areaId: null, text: "Já preparei Atlas" },
+    AbortSignal.timeout(5000),
+  );
+  expect(result.text).toBe("Recibo persistido da lista.");
+  expect(result.tasksChanged).toBe(true);
+  expect(tasks.execute).toHaveBeenCalledOnce();
+  expect(String(provider.mock.calls[0][1]?.body)).toContain("current-task");
+});
