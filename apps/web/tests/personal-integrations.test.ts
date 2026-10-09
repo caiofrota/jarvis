@@ -373,3 +373,42 @@ it("queries Microsoft calendar views for the requested interval and labels provi
   );
   expect(events[0].start).toBe("2026-10-09T11:00:00.0000000Z");
 });
+
+it("does not mistake the subscribed calendar owner for the authenticated account when evaluating attendance", async () => {
+  const fetcher = vi.fn<typeof fetch>(async () =>
+    Response.json({
+      items: [
+        {
+          id: "public",
+          summary: "Open exhibition",
+          organizer: { self: true, email: "public@example.test" },
+          attendees: [{ self: true, email: "public@example.test", responseStatus: "declined" }],
+          start: { dateTime: "2026-10-09T10:00:00Z" },
+          end: { dateTime: "2026-10-09T22:00:00Z" },
+        },
+        {
+          id: "private",
+          summary: "Lab review",
+          attendees: [{ self: false, email: "OWNER@example.test", responseStatus: "accepted" }],
+          start: { dateTime: "2026-10-09T17:00:00Z" },
+          end: { dateTime: "2026-10-09T18:00:00Z" },
+        },
+        {
+          id: "busy",
+          start: { dateTime: "2026-10-09T17:00:00Z" },
+          end: { dateTime: "2026-10-09T18:00:00Z" },
+        },
+      ],
+    }),
+  );
+  const events = await new PersonalProviderClient(fetcher).events(
+    "google",
+    "fixture-token",
+    "public",
+    undefined,
+    "owner@example.test",
+  );
+  expect(events[0]).toMatchObject({ participation: "unknown", declined: false });
+  expect(events[1].participation).toBe("accepted");
+  expect(events[2].titleAvailable).toBe(false);
+});

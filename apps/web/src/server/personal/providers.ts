@@ -41,6 +41,17 @@ type Data = {
   receivedDateTime?: string;
   accessRole?: string;
   canEdit?: boolean;
+  primary?: boolean;
+  selected?: boolean;
+  isDefaultCalendar?: boolean;
+  status?: string;
+  transparency?: string;
+  isAllDay?: boolean;
+  isCancelled?: boolean;
+  showAs?: string;
+  responseStatus?: { response?: string };
+  attendees?: { self?: boolean; email?: string; responseStatus?: string }[];
+  organizer?: { email?: string; emailAddress?: { address?: string } };
   mimeType?: string;
   filename?: string;
   from?: { emailAddress?: { address?: string } };
@@ -202,13 +213,22 @@ export class PersonalProviderClient {
       token,
       provider === "google"
         ? "/calendar/v3/users/me/calendarList?maxResults=50"
-        : "/v1.0/me/calendars?$top=50&$select=id,name,canEdit",
+        : "/v1.0/me/calendars?$top=50&$select=id,name,canEdit,isDefaultCalendar",
     );
     return (provider === "google" ? (data.items ?? []) : (data.value ?? []))
       .slice(0, 50)
       .map((calendar: Data) => ({
         id: String(calendar.id),
         name: String(calendar.summary || calendar.name || calendar.id),
+        owned:
+          provider === "google"
+            ? calendar.accessRole === "owner"
+            : calendar.isDefaultCalendar === true,
+        primary:
+          provider === "google" ? calendar.primary === true : calendar.isDefaultCalendar === true,
+        ...(provider === "google" && typeof calendar.selected === "boolean"
+          ? { selected: calendar.selected }
+          : {}),
         writable:
           provider === "google"
             ? ["owner", "writer"].includes(calendar.accessRole ?? "")
@@ -220,13 +240,14 @@ export class PersonalProviderClient {
     token: string,
     calendarId: string,
     period?: { start: string; end: string },
+    accountEmail?: string,
   ): Promise<PersonalEvent[]> {
     const start = period?.start ?? new Date().toISOString(),
       end = period?.end ?? new Date(Date.now() + 7 * 86400000).toISOString();
     const path =
       provider === "google"
         ? `/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${new URLSearchParams({ timeMin: start, timeMax: end, singleEvents: "true", orderBy: "startTime", maxResults: "30" })}`
-        : `/v1.0/me/calendars/${encodeURIComponent(calendarId)}/calendarView?${new URLSearchParams({ startDateTime: start, endDateTime: end, $top: "30", $select: "id,subject,start,end", $orderby: "start/dateTime" })}`;
+        : `/v1.0/me/calendars/${encodeURIComponent(calendarId)}/calendarView?${new URLSearchParams({ startDateTime: start, endDateTime: end, $top: "30", $select: "id,subject,start,end,isAllDay,isCancelled,showAs,responseStatus", $orderby: "start/dateTime" })}`;
     const data = await this.request(provider, token, path);
     const eventTime = (value: Data["start"]) => {
       const date = String(value?.dateTime || value?.date || "");
@@ -235,6 +256,22 @@ export class PersonalProviderClient {
         ? `${date}Z`
         : date;
     };
+    const participation = (event: Data): PersonalEvent["participation"] => {
+      if (!accountEmail) return "unknown";
+      const address = accountEmail.toLowerCase();
+      const organizer = event.organizer?.email || event.organizer?.emailAddress?.address;
+      if (organizer?.toLowerCase() === address) return "organizer";
+      const response =
+        provider === "google"
+          ? event.attendees?.find((attendee) => attendee.email?.toLowerCase() === address)
+              ?.responseStatus
+          : event.responseStatus?.response;
+      return response === "accepted" || response === "tentative"
+        ? response
+        : response === "needsAction" || response === "notResponded"
+          ? "unanswered"
+          : "unknown";
+    };
     return (provider === "google" ? (data.items ?? []) : (data.value ?? []))
       .slice(0, 30)
       .map((event: Data) => ({
@@ -242,6 +279,26 @@ export class PersonalProviderClient {
         title: String(event.summary || event.subject || "Sem título"),
         start: eventTime(event.start),
         end: eventTime(event.end),
+        allDay:
+          provider === "google"
+            ? Boolean(event.start?.date && !event.start?.dateTime)
+            : event.isAllDay === true,
+        cancelled: event.status === "cancelled" || event.isCancelled === true,
+        declined:
+          provider === "google"
+            ? event.attendees?.some(
+                (attendee) =>
+                  attendee.email?.toLowerCase() === accountEmail?.toLowerCase() &&
+                  Boolean(accountEmail) &&
+                  attendee.responseStatus === "declined",
+              ) === true
+            : event.responseStatus?.response === "declined",
+        busy:
+          provider === "google"
+            ? event.transparency !== "transparent"
+            : !["free", "unknown"].includes(event.showAs ?? "unknown"),
+        titleAvailable: Boolean((event.summary || event.subject || "").trim()),
+        participation: participation(event),
       }));
   }
   async send(

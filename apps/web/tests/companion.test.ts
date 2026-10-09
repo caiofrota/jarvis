@@ -881,91 +881,109 @@ it("returns persisted task receipts and supplies current tasks to the model", as
   expect(String(provider.mock.calls[0][1]?.body)).toContain("current-task");
 });
 
-it("offers aggregate agenda reading for daily planning and sends only the authenticated owner's result to the model", async () => {
-  const f = fixture();
-  const agenda = vi.fn(async () => ({
-    events: [{ title: "Revisão", calendar: "Pesquisa" }],
-    incomplete: false,
-  }));
-  const connectionId = "00000000-0000-4000-8000-000000000005";
-  const provider = vi
-    .fn<typeof fetch>()
-    .mockResolvedValueOnce(
-      Response.json({
-        choices: [
-          {
-            message: {
-              role: "assistant",
-              content: null,
-              tool_calls: [
-                {
-                  id: "agenda-call",
-                  type: "function",
-                  function: {
-                    name: "personal_agenda",
-                    arguments: JSON.stringify({
-                      start: "2026-10-09T00:00:00-03:00",
-                      end: "2026-10-10T00:00:00-03:00",
-                      connectionIds: [],
-                    }),
+it.each(["summary", "full"] as const)(
+  "returns the requested %s agenda view only for the authenticated owner",
+  async (view) => {
+    const f = fixture();
+    const agenda = vi.fn(async () => ({
+      events: [{ title: "Revisão", calendar: "Pesquisa" }],
+      focus: [{ title: "Revisão", calendar: "Pesquisa" }],
+      incomplete: false,
+    }));
+    const connectionId = "00000000-0000-4000-8000-000000000005";
+    const provider = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        Response.json({
+          choices: [
+            {
+              message: {
+                role: "assistant",
+                content: null,
+                tool_calls: [
+                  {
+                    id: "agenda-call",
+                    type: "function",
+                    function: {
+                      name: "personal_agenda",
+                      arguments: JSON.stringify({
+                        start: "2026-10-09T00:00:00-03:00",
+                        end: "2026-10-10T00:00:00-03:00",
+                        connectionIds: [],
+                        view,
+                      }),
+                    },
                   },
-                },
-              ],
+                ],
+              },
             },
-          },
-        ],
-      }),
-    )
-    .mockResolvedValueOnce(
-      Response.json({
-        choices: [
-          { message: { role: "assistant", content: "Há uma revisão na agenda Pesquisa." } },
-        ],
-      }),
+          ],
+        }),
+      )
+      .mockResolvedValueOnce(
+        Response.json({
+          choices: [
+            { message: { role: "assistant", content: "Há uma revisão na agenda Pesquisa." } },
+          ],
+        }),
+      );
+    vi.stubGlobal("fetch", provider);
+    const conversation = new CompanionConversation(
+      { settings: async () => f.settings, catalog: async () => catalogFixture() },
+      f.ha as never,
+      undefined,
+      {
+        status: async () => ({
+          connections: [{ id: connectionId, provider: "google", email: "owner@example.test" }],
+        }),
+        agenda,
+        read: vi.fn(),
+      } as never,
     );
-  vi.stubGlobal("fetch", provider);
-  const conversation = new CompanionConversation(
-    { settings: async () => f.settings, catalog: async () => catalogFixture() },
-    f.ha as never,
-    undefined,
-    {
-      status: async () => ({
-        connections: [{ id: connectionId, provider: "google", email: "owner@example.test" }],
-      }),
-      agenda,
-      read: vi.fn(),
-    } as never,
-  );
-  const sessionId = conversation.create("owner");
-  const result = await conversation.respond(
-    "owner",
-    { sessionId, assistantId: null, areaId: null, text: "Como está nosso dia?" },
-    AbortSignal.timeout(5000),
-  );
-  expect(result.text).toContain("Pesquisa");
-  expect(agenda).toHaveBeenCalledWith(
-    "owner",
-    "2026-10-09T00:00:00-03:00",
-    "2026-10-10T00:00:00-03:00",
-    [],
-    expect.any(AbortSignal),
-  );
-  const first = JSON.parse(String(provider.mock.calls[0][1]?.body));
-  expect(
-    first.tools.some(
-      (tool: { function: { name: string } }) => tool.function.name === "personal_agenda",
-    ),
-  ).toBe(true);
-  expect(
-    first.messages.some((message: { content: string }) =>
-      message.content?.includes("sem exigir que a pessoa escolha"),
-    ),
-  ).toBe(true);
-  const second = JSON.parse(String(provider.mock.calls[1][1]?.body));
-  expect(
-    second.messages.some(
-      (message: { role: string; content: string }) =>
-        message.role === "tool" && message.content.includes("Pesquisa"),
-    ),
-  ).toBe(true);
-});
+    const sessionId = conversation.create("owner");
+    const result = await conversation.respond(
+      "owner",
+      {
+        sessionId,
+        assistantId: null,
+        areaId: null,
+        text: view === "summary" ? "Como está nosso dia?" : "Mostre todos os eventos de hoje",
+      },
+      AbortSignal.timeout(5000),
+    );
+    expect(result.text).toContain("Pesquisa");
+    expect(agenda).toHaveBeenCalledWith(
+      "owner",
+      "2026-10-09T00:00:00-03:00",
+      "2026-10-10T00:00:00-03:00",
+      [],
+      expect.any(AbortSignal),
+      "America/Fortaleza",
+    );
+    const first = JSON.parse(String(provider.mock.calls[0][1]?.body));
+    expect(
+      first.tools.some(
+        (tool: { function: { name: string } }) => tool.function.name === "personal_agenda",
+      ),
+    ).toBe(true);
+    expect(
+      first.messages.some((message: { content: string }) =>
+        message.content?.includes("sem exigir que a pessoa escolha"),
+      ),
+    ).toBe(true);
+    const second = JSON.parse(String(provider.mock.calls[1][1]?.body));
+    const toolResult = JSON.parse(
+      second.messages.find((message: { role: string }) => message.role === "tool").content,
+    );
+    expect(toolResult.focus).toEqual([{ title: "Revisão", calendar: "Pesquisa" }]);
+    expect(toolResult.events).toEqual(
+      view === "full" ? [{ title: "Revisão", calendar: "Pesquisa" }] : undefined,
+    );
+    expect(
+      second.messages.some(
+        (message: { role: string; content: string }) =>
+          message.role === "tool" && message.content.includes("Pesquisa"),
+      ),
+    ).toBe(true);
+  },
+);

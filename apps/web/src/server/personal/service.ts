@@ -13,6 +13,7 @@ import {
 import { DomainError } from "@rosie/types/context";
 import * as oauth from "oauth4webapi";
 import { z } from "zod";
+import { type AgendaEvent, agendaFocus } from "./agenda-focus";
 import { PersonalProviderClient, providers } from "./providers";
 
 const tokensSchema = z.object({
@@ -389,7 +390,7 @@ export class PersonalIntegrations {
     if (resource === "inbox") return this.client.inbox(link.provider, token);
     if (resource === "message") return this.client.message(link.provider, token, itemId);
     if (resource === "calendars") return this.client.calendars(link.provider, token);
-    return this.client.events(link.provider, token, itemId);
+    return this.client.events(link.provider, token, itemId, undefined, link.email);
   }
   async agenda(
     owner: string,
@@ -397,6 +398,7 @@ export class PersonalIntegrations {
     end: string,
     connectionIds: string[] = [],
     signal = AbortSignal.timeout(60000),
+    timezone = "UTC",
   ) {
     const period = z
       .object({
@@ -411,15 +413,7 @@ export class PersonalIntegrations {
     if (connectionIds.some((id) => !owned.some((link) => link.id === id)))
       throw new DomainError("Conta pessoal indisponível.");
     const links = owned.filter((link) => !connectionIds.length || connectionIds.includes(link.id));
-    const events: {
-      account: string;
-      calendar: string;
-      calendarId: string;
-      id: string;
-      title: string;
-      start: string;
-      end: string;
-    }[] = [];
+    const events: AgendaEvent[] = [];
     const unavailable: { account: string; calendar?: string }[] = [];
     let incomplete = false;
     let queried = 0;
@@ -449,6 +443,7 @@ export class PersonalIntegrations {
                 await this.token(current),
                 calendar.id,
                 period,
+                current.email,
               );
               if (entries.length === 30) incomplete = true;
               events.push(
@@ -457,6 +452,9 @@ export class PersonalIntegrations {
                   account: link.email,
                   calendar: calendar.name,
                   calendarId: calendar.id,
+                  calendarPrimary: calendar.primary,
+                  calendarSelected: calendar.selected,
+                  calendarOwned: calendar.owned,
                 })),
               );
             } catch {
@@ -473,6 +471,7 @@ export class PersonalIntegrations {
     );
     return {
       period,
+      ...agendaFocus(events, Date.now(), timezone),
       events: events.slice(0, 100),
       unavailable,
       incomplete: incomplete || events.length > 100 || unavailable.length > 0,
