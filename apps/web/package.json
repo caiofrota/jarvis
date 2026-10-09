@@ -1,0 +1,38 @@
+{
+  "name": "@rosie/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "user:create-first": "tsx tools/create-first-user.ts",
+    "dev": "node ../../scripts/build-companion-styles.mjs && tsc -p tsconfig.worklet.json && tsx watch server.ts",
+    "build": "node ../../scripts/build-companion-styles.mjs && tsc -p tsconfig.worklet.json && next build --webpack",
+    "start": "NODE_ENV=production tsx server.ts",
+    "lint": "biome check app src server.ts tools tests e2e playwright.config.ts",
+    "typecheck": "tsc",
+    "test": "vitest run tests",
+    "test:e2e": "playwright test",
+    "db:import": "tsx tools/import-legacy.ts",
+    "db:init": "tsx tools/initialize.ts"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^7.0.0",
+    "@fortawesome/free-solid-svg-icons": "^7.0.0",
+    "@fortawesome/react-fontawesome": "^3.0.0",
+    "@rosie/db": "workspace:*",
+    "@rosie/types": "workspace:*",
+    "iron-session": "9.0.1",
+    "mqtt": "^5.14.0",
+    "next": "16.3.6",
+    "oauth4webapi": "3.8.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "ws": "8.21.3",
+    "zod": "4.6.5",
+    "@jarvis/api-client": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/ws": "^8.18.0"
+  }
+}

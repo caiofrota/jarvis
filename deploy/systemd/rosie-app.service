@@ -1,0 +1,22 @@
+[Unit]
+Description=Rosie application and device gateway
+After=network-online.target rosie-voice.service
+Wants=rosie-voice.service
+
+[Service]
+Type=simple
+WorkingDirectory=%h/workspace/desk-robot/apps/web
+EnvironmentFile=%h/workspace/desk-robot/apps/web/.env
+Environment=NODE_ENV=production
+Environment=NODE_OPTIONS=--max-old-space-size=512
+ExecStart=/usr/bin/env node --import tsx server.ts
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+MemoryHigh=600M
+MemoryMax=900M
+NoNewPrivileges=true
+UMask=0077
+
+[Install]
+WantedBy=default.target

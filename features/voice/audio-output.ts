@@ -97,4 +97,12 @@ export class AudioOutput {
     }
     this.scheduled.clear();
   }
+  async dispose(): Promise<void> {
+    this.stop();
+    const context = this.context;
+    this.context = null;
+    this.meter.input?.disconnect();
+    this.meter = new AudioMeter();
+    if (context && context.state !== 'closed') await context.close();
+  }
 }

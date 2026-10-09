@@ -47,6 +47,28 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
       - name: Install Node dependencies
         run: pnpm install --frozen-lockfile
+      - name: Generate central database client
+        run: pnpm db:generate
+      - name: Validate central brain
+        run: |
+          pnpm format:check:brain
+          pnpm lint:brain
+          pnpm typecheck:brain
+          pnpm test:brain
+          pnpm build:brain
+          pnpm project:check
+          pnpm db:check
+          pnpm security:check
+      - name: Validate native companion sources
+        run: |
+          pnpm mobile:check
+          pnpm --filter @jarvis/api-client typecheck
+          pnpm --filter @jarvis/mobile exec expo install --check
+          pnpm --filter @jarvis/mobile exec expo export --platform all --output-dir dist
+      - name: Install test browser
+        run: pnpm --filter @rosie/web exec playwright install --with-deps chromium
+      - name: Validate desktop and mobile central UI
+        run: pnpm test:e2e:brain
       - name: Check formatting
         run: pnpm format:check
       - name: Lint source and workflows
@@ -60,15 +82,66 @@ jobs:
       - name: Validate Python voice runtime
         run: pnpm python:check
 
+  esphome:
+    name: ESPHome firmware
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Use compile-only credentials
+        run: cp secrets.example.yaml secrets.yaml
+      - name: Test conversation session behavior
+        run: make test
+      - name: Validate both firmware profiles
+        run: make validate
+      - name: Compile the audio firmware
+        run: make build
+      - name: Compile the OLED firmware
+        run: make build-oled
+  native:
+    name: Native robot
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.23.2
+          package-manager-cache: false
+      - name: Install pinned package managers
+        run: |
+          python3 -m pip install uv==0.8.22
+          npm install --global pnpm@11.25.0
+      - name: Install locked dependencies
+        run: make install
+      - name: Validate sources and operational documentation
+        run: make lint
+      - name: Test room resolution, intents and audio flow control
+        run: make test
+      - name: Fetch the selected model with checksum verification
+        run: make model
+      - name: Compile the native WROOM firmware
+        run: make build
   ci:
     name: ci
     if: always()
-    needs: [validate]
+    needs: [validate, esphome, native]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Require all validation jobs
         env:
           VALIDATE_RESULT: ${{ needs.validate.result }}
+          ESPHOME_RESULT: ${{ needs.esphome.result }}
+          NATIVE_RESULT: ${{ needs.native.result }}
         run: |
           test "$VALIDATE_RESULT" = success
+          test "$ESPHOME_RESULT" = success
+          test "$NATIVE_RESULT" = success

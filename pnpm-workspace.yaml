@@ -1,8 +1,33 @@
+packages:
+  - apps/*
+  - packages/*
+  - native
 allowBuilds:
   electron: true
   electron-winstaller: false
+  better-sqlite3: true
   esbuild: true
+  sharp: true
+  '@prisma/engines': true
+  prisma: true
 minimumReleaseAgeExclude:
+  - '@next/env@16.3.6'
+  - '@next/swc-darwin-arm64@16.3.6'
+  - '@next/swc-darwin-x64@16.3.6'
+  - '@next/swc-linux-arm64-gnu@16.3.6'
+  - '@next/swc-linux-arm64-musl@16.3.6'
+  - '@next/swc-linux-x64-gnu@16.3.6'
+  - '@next/swc-linux-x64-musl@16.3.6'
+  - '@next/swc-win32-arm64-msvc@16.3.6'
+  - '@next/swc-win32-x64-msvc@16.3.6'
+  - '@turbo/darwin-64@2.11.3'
+  - '@turbo/darwin-arm64@2.11.3'
+  - '@turbo/linux-64@2.11.3'
+  - '@turbo/linux-arm64@2.11.3'
+  - '@turbo/windows-64@2.11.3'
+  - '@turbo/windows-arm64@2.11.3'
+  - next@16.3.6
+  - turbo@2.11.3
   - '@next/env@16.3.8'
   - '@next/swc-darwin-arm64@16.3.8'
   - '@next/swc-darwin-x64@16.3.8'
@@ -13,5 +38,6 @@ minimumReleaseAgeExclude:
   - '@next/swc-win32-arm64-msvc@16.3.8'
   - '@next/swc-win32-x64-msvc@16.3.8'
   - next@16.3.8
-
-storeDir: ../../work/pnpm-store
+overrides:
+  '@prisma/config>deepmerge-ts': 8.0.0
+  'prisma>mysql2': 3.23.1

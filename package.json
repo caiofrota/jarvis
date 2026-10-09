@@ -3,7 +3,7 @@
   "version": "0.4.0",
   "private": true,
   "packageManager": "pnpm@11.25.0",
-  "description": "Assistente desktop com IA local e na nuvem, notas e painéis configuráveis.",
+  "description": "Shared assistant platform for desktop, web, home automation and voice endpoints.",
   "author": "Jarvis Studio",
   "main": "dist/desktop/main.js",
   "scripts": {
@@ -21,7 +21,32 @@
     "python:check": "uv sync --project voice --locked && uv run --project voice --locked ruff check --config voice/pyproject.toml voice tests/python && uv run --project voice --locked ruff format --config voice/pyproject.toml --check voice tests/python && uv run --project voice --locked python -m unittest discover -s tests/python && uv run --project voice --locked python -m compileall -q voice/download.py voice/wakeword.py voice/worker.py",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit",
     "build:runtime": "tsc -p tsconfig.node.json",
-    "build:worklet": "tsc -p tsconfig.worklet.json"
+    "build:worklet": "tsc -p tsconfig.worklet.json",
+    "dev:brain": "pnpm --filter @rosie/web dev",
+    "start:brain": "pnpm --filter @rosie/web start",
+    "build:brain": "pnpm --filter @rosie/web build",
+    "setup:brain:https": "node scripts/setup-brain-https.mjs",
+    "test:brain": "pnpm --filter @rosie/web test && pnpm --filter @rosie/types test",
+    "typecheck:brain": "pnpm --filter @rosie/types typecheck && pnpm --filter @rosie/db typecheck && pnpm --filter @rosie/web typecheck",
+    "lint:brain": "pnpm --filter @rosie/types lint && pnpm --filter @rosie/db lint && pnpm --filter @rosie/web lint",
+    "test:e2e:brain": "pnpm --filter @rosie/web test:e2e",
+    "project:check": "python3 tools/check-project.py",
+    "security:check": "python3 tools/security-check.py",
+    "user:create-first": "pnpm --filter @rosie/web user:create-first",
+    "db:generate": "pnpm --filter @rosie/db db:generate",
+    "db:deploy": "pnpm --filter @rosie/db db:deploy",
+    "db:import": "pnpm --filter @rosie/web db:import",
+    "db:check": "pnpm --filter @rosie/db db:check",
+    "firmware:build": "make -C native build",
+    "db:init": "pnpm --filter @rosie/web db:init",
+    "format:check:brain": "biome check apps packages",
+    "setup:brain": "node scripts/setup-brain.mjs",
+    "companion": "node scripts/start-companion.mjs",
+    "mobile:start": "pnpm --filter @jarvis/mobile start",
+    "mobile:android": "pnpm --filter @jarvis/mobile android",
+    "mobile:ios": "pnpm --filter @jarvis/mobile ios",
+    "mobile:check": "pnpm --filter @jarvis/mobile typecheck && pnpm --filter @jarvis/mobile lint",
+    "certificate:brain": "node scripts/export-brain-certificate.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
@@ -39,7 +64,11 @@
     "react-dom": "^19.3.0",
     "tsx": "^4.23.15",
     "typescript": "5.9.3",
-    "typescript-eslint": "^8.71.0"
+    "typescript-eslint": "^8.71.0",
+    "@biomejs/biome": "2.5.14",
+    "@playwright/test": "1.63.0",
+    "turbo": "2.11.3",
+    "vitest": "5.0.1"
   },
   "build": {
     "appId": "dev.jarvisstudio.desktop",
@@ -99,5 +128,6 @@
         ]
       }
     ]
-  }
+  },
+  "license": "MIT"
 }

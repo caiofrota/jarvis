@@ -194,3 +194,13 @@ dialog .pc-activity-link {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+.computer-catalog {
+  max-height: 55dvh;
+  overflow: auto;
+  margin-top: 1rem;
+  padding: 0.25rem;
+}
+.computer-body > .panel-link {
+  margin: 1rem 0;
+}

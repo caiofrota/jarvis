@@ -33,3 +33,46 @@ out/
 
 dist/
 *.tsbuildinfo
+
+# Shared brain and robot private runtime
+secrets.yaml
+.esphome/
+.cache/
+artifacts/
+__pycache__/
+node_modules/
+.next/
+.next-users/
+.turbo/
+dist/
+*.tsbuildinfo
+.env
+.env.local
+*.sqlite
+*.sqlite-*
+packages/db/generated/
+playwright-report/
+test-results/
+
+.mypy_cache/
+
+native/.venv/
+.cache/
+
+# Private central development setup
+apps/web/.local/
+apps/web/public/pcm-worklet.js
+
+# Synthetic speech fixture required by native VAD regression tests
+!native/tests/fixtures/local-greeting.wav
+
+# Generated native companion projects and builds
+apps/mobile/.expo/
+apps/mobile/android/
+apps/mobile/ios/
+apps/mobile/dist/
+*.apk
+*.aab
+*.ipa
+
+apps/web/public/companion.css

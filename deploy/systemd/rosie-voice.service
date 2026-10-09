@@ -1,0 +1,23 @@
+[Unit]
+Description=Rosie private local speech worker
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/workspace/desk-robot/native
+EnvironmentFile=%h/workspace/desk-robot/native/voice/.env
+Environment=OMP_NUM_THREADS=2
+Environment=OPENBLAS_NUM_THREADS=1
+Environment=ROSIE_PREWARM=1
+ExecStart=%h/workspace/desk-robot/native/.venv/bin/uvicorn voice.app:create_app --factory --host 127.0.0.1 --port 8766 --ws-max-size 6400 --ws-max-queue 8 --limit-concurrency 32 --no-access-log
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+Nice=10
+MemoryHigh=1200M
+MemoryMax=1800M
+NoNewPrivileges=true
+UMask=0077
+
+[Install]
+WantedBy=default.target

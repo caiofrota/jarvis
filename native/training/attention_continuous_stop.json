@@ -1,0 +1,78 @@
+{
+  "id": "rosie_continuous_stop_20260925",
+  "seed": 20260926,
+  "status": "experimental_user_authorized_training_not_acoustic_approval",
+  "voice_groups": {
+    "training": [
+      "pf_dora",
+      "pm_alex",
+      "af_heart",
+      "af_bella",
+      "am_michael",
+      "am_adam",
+      "af_alloy",
+      "af_aoede",
+      "af_kore",
+      "am_fenrir",
+      "am_onyx",
+      "am_puck"
+    ],
+    "validation": [
+      "pm_santa",
+      "af_sarah",
+      "af_nova",
+      "am_santa"
+    ],
+    "testing": [
+      "af_jessica",
+      "af_sky",
+      "am_eric",
+      "am_liam"
+    ]
+  },
+  "speeds": [
+    0.85,
+    1.0,
+    1.15
+  ],
+  "names": [
+    {
+      "id": "american_rosie",
+      "phonemes": "ɹˈOzi"
+    },
+    {
+      "id": "brazilian_rozi",
+      "phonemes": "hˈozi"
+    }
+  ],
+  "wake_prefixes": [],
+  "stop_orders": [
+    "name_first",
+    "name_last"
+  ],
+  "stop_phonemes": [
+    "pˈaɾɐ",
+    "pˈaɾa"
+  ],
+  "negative_texts": [],
+  "limitations": [
+    "Synthetic Kokoro styles are not held-out human speakers",
+    "Name phonemes reuse the approved September 22 drafts; new prefixes are unverified",
+    "The classifier alone cannot distinguish identical words from the robot's own playback",
+    "Standalone para, cancelar and cancele remain server text commands, not this acoustic stop class"
+  ],
+  "explicit_negative_templates": [],
+  "acceptance_policy": {
+    "voices_never_used_before": [
+      "af_jessica",
+      "af_sky",
+      "am_eric",
+      "am_liam"
+    ],
+    "open_after": "both development gates pass or stop after bounded failed development attempts",
+    "gates_unchanged": true,
+    "previous_test_data": "diagnostic only, never a new acceptance claim",
+    "max_attempts_per_target": 2
+  },
+  "stop_separator": " "
+}

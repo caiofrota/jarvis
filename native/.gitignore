@@ -1,0 +1,14 @@
+.venv/
+data/
+models/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+firmware/build/
+firmware/managed_components/
+firmware/sdkconfig
+firmware/sdkconfig.old
+firmware/main/wake_model.h
+artifacts/
+.env
+node_modules/

@@ -1,3 +1,72 @@
+# Unified Jarvis platform
+
+Jarvis now includes the Rosie central server and browser administration, alongside
+the existing Windows/Linux desktop application and native voice endpoints.
+
+- `apps/web`: authenticated central brain, home tools, assistants, room/device administration and `/studio` web conversation.
+- `packages`: shared contracts and Prisma database.
+- `native`: existing Rosie speech service and ESP32 firmware, licensed GPL-3.0.
+- Root desktop application: existing local Windows/Linux executor and voice UI.
+- `pnpm companion`: Windows/Linux client of the central HTTPS server.
+- `apps/mobile`: Android/iPhone companion source with native server selection and microphone permissions.
+
+The browser admin uses the Jarvis visual identity and adapts to phone screens.
+Web conversation uses an authenticated companion session and the existing desktop
+orb, microphone capture, playback and speech chunking. No physical endpoint, home
+or room record is required to converse. HA areas and exposed entities are discovered
+directly when controlling the house; an itinerant client asks for missing location.
+The companion can now open local registered apps by buttons or conversation, with
+native confirmation. Personal tasks are shared between the panel and conversation
+and saved per user on the server. Cross-computer dispatch and phone system control
+need further integration. Mobile browser access does not grant
+unrestricted access to iOS or Android system functions.
+
+See [feature parity](docs/engineering/unification-parity.md) for recovered features
+and the remaining gaps.
+
+## Run the central brain
+
+Use the pinned Node/pnpm versions in the CI workflow. From the repository root:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm db:generate
+pnpm setup:brain
+set -a
+. ./apps/web/.env
+set +a
+pnpm db:deploy
+pnpm db:init
+pnpm user:create-first
+pnpm dev:brain
+```
+
+`setup:brain` creates private local credentials and an isolated database path on
+port 18765. It refuses to overwrite an existing setup. Use the example `.env`
+for a custom deployment instead. Configure provider settings in the admin after
+creating your first user. See [installation](docs/engineering/installation.md)
+and [Home Assistant integration](docs/engineering/home-assistant.md).
+No physical board is required for browser administration or conversation.
+For web microphone access, open the server over HTTPS or localhost on the computer
+running the browser. `pnpm setup:brain:https` creates a private development certificate,
+moves HTTPS to the next port and redirects the previous HTTP port. Restart the server
+and trust the generated certificate on your computer before microphone testing.
+Production deployments should use their own trusted certificate or HTTPS proxy.
+The Android/iPhone companion embeds the central interface in a native app; mobile
+browser access is not required. See [native client commands and setup](docs/engineering/remote-clients.md)
+and [companion boundaries](docs/engineering/companion.md).
+Do not expose the server directly to the public internet; configure the documented
+authentication and deployment boundary for remote access.
+
+## License
+
+Original Jarvis application code uses [MIT](LICENSE). Imported components preserve
+their existing licenses; see [license boundaries](THIRD_PARTY.md).
+Credentials, databases, recordings, model weights and compiled firmware are private
+runtime artifacts and are excluded from version control.
+
+## Existing desktop documentation
+
 # Jarvis Studio
 
 Assistente com IA local ou na nuvem, conversa por voz e painéis de tarefas,

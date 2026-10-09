@@ -9,12 +9,16 @@ export default function WorkspaceStage({
   patch,
   drag,
   openPanels,
+  calendarDemo = true,
+  detachable = true,
 }: {
   contents: Record<PanelId, React.ReactNode>;
   prefs: Preferences;
   patch(values: Partial<Preferences>): void;
   drag: React.RefObject<PanelId | null>;
   openPanels(): void;
+  calendarDemo?: boolean;
+  detachable?: boolean;
 }) {
   const cards = prefs.order.filter((id) => id !== 'assistant' && !prefs.hidden.includes(id));
   const assistant = !prefs.hidden.includes('assistant');
@@ -35,7 +39,15 @@ export default function WorkspaceStage({
       hidden={!isPage(index)}
       className={'workspace-card' + (prefs.wide.includes(id) ? ' expanded' : '')}
     >
-      <Panel id={id} prefs={prefs} patch={patch} drag={drag} detached={null}>
+      <Panel
+        id={id}
+        prefs={prefs}
+        patch={patch}
+        drag={drag}
+        detached={null}
+        calendarDemo={calendarDemo}
+        detachable={detachable}
+      >
         {contents[id]}
       </Panel>
     </div>
@@ -50,7 +62,7 @@ export default function WorkspaceStage({
           aria-label="Assistente"
         >
           <div className="core-panel-tools">
-            <PanelSettings id="assistant" prefs={prefs} patch={patch} />
+            <PanelSettings id="assistant" prefs={prefs} patch={patch} detachable={detachable} />
           </div>
           {contents.assistant}
         </section>

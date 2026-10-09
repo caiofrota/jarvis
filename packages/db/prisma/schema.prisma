@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Entry {
+  collection String
+  id         String
+  name       String
+  data       Json
+  revision   Int      @default(1)
+  updatedAt  DateTime @updatedAt
+  @@id([collection, id])
+  @@index([collection, name, id])
+}
+
+model Setting {
+  id   String @id
+  data Json
+}
+
+model AdminSession {
+  id        String   @id
+  expiresAt DateTime
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  name         String
+  passwordHash String
+  role         String
+  enabled      Boolean  @default(true)
+  revision     Int      @default(1)
+  createdAt    DateTime @default(now())
+  sessions     UserSession[]
+}
+
+model UserSession {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Event {
+  id       Int      @id @default(autoincrement())
+  time     DateTime @default(now())
+  kind     String
+  detail   Json
+}

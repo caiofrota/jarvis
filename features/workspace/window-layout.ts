@@ -31,9 +31,9 @@ export function validateLayout(input: unknown): WindowLayout {
     wide: validIds(raw?.wide),
   };
 }
-export function workspaceIdentity(): WorkspaceIdentity {
+export function workspaceIdentity(namespace = ''): WorkspaceIdentity {
   const url = new URL(location.href);
-  const registeredKey = 'jarvis-primary-window-v1';
+  const registeredKey = namespace + 'jarvis-primary-window-v1';
   let registered: string | null = null;
   try {
     registered = localStorage.getItem(registeredKey);
@@ -55,7 +55,7 @@ export function workspaceIdentity(): WorkspaceIdentity {
   const primary = candidate && registered === id;
   let legacy = defaults;
   try {
-    legacy = validatePrefs(JSON.parse(localStorage.getItem(sharedPreferencesKey) || 'null'));
+    legacy = validatePrefs(JSON.parse(localStorage.getItem(namespace + sharedPreferencesKey) || 'null'));
   } catch {}
   return {
     id,

@@ -12,14 +12,15 @@ import {
 
 export function useWorkspacePreferences(
   identity: WorkspaceIdentity,
+  namespace = '',
 ): [Preferences, Save<Preferences>, boolean, string] {
   const [shared, saveShared, sharedReady, sharedError] = useStored(
-    sharedPreferencesKey,
+    namespace + sharedPreferencesKey,
     defaults,
     validatePrefs,
   );
   const [layout, saveLayout, layoutReady, layoutError] = useStored(
-    layoutKey(identity.id),
+    namespace + layoutKey(identity.id),
     identity.seed,
     validateLayout,
   );
@@ -28,8 +29,8 @@ export function useWorkspacePreferences(
   const save: Save<Preferences> = (update) => {
     try {
       // Refresh both scopes before evaluating an updater (including task receipts).
-      const latestShared = readStored(sharedPreferencesKey, defaults, validatePrefs);
-      const latestLayout = readStored(layoutKey(identity.id), identity.seed, validateLayout);
+      const latestShared = readStored(namespace + sharedPreferencesKey, defaults, validatePrefs);
+      const latestLayout = readStored(namespace + layoutKey(identity.id), identity.seed, validateLayout);
       const current = { ...latestShared, ...latestLayout };
       const next = typeof update === 'function' ? update(current) : update;
       const nextLayout = validateLayout(next);

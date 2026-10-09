@@ -1,0 +1,36 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
+  "files": {
+    "includes": [
+      "apps/**",
+      "packages/**",
+      "!**/generated",
+      "!**/.next",
+      "!**/dist",
+      "!**/test-results",
+      "!**/playwright-report",
+      "!**/node_modules",
+      "!apps/mobile/android",
+      "!apps/mobile/ios",
+      "!apps/mobile/.expo",
+      "!apps/web/public/pcm-worklet.js",
+      "!apps/web/public/companion.css"
+    ]
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended"
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double"
+    }
+  }
+}

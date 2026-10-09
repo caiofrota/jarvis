@@ -92,11 +92,13 @@ export interface RuntimeInfo {
 }
 export interface ActionRecord {
   id: string;
+  targetId?: string;
   label: string;
   at: string;
   status: 'requested' | 'sent' | 'error';
 }
 export interface ActionCatalog {
+  clientId?: string;
   runtime: RuntimeInfo;
   items: Target[];
   apps: Target[];
@@ -271,6 +273,14 @@ export interface JarvisAPI {
   chat(request: ChatRequest, callback: (event: ChatEvent) => void): Promise<unknown>;
 }
 export interface DesktopAPI extends JarvisAPI {
+  openPanel(panel: PanelId): Promise<boolean>;
+  openWorkspace(): Promise<boolean>;
+}
+
+export interface CompanionWindowsAPI extends Pick<
+  JarvisAPI,
+  'actions' | 'prepareAction' | 'executeAction' | 'cancelAction'
+> {
   openPanel(panel: PanelId): Promise<boolean>;
   openWorkspace(): Promise<boolean>;
 }

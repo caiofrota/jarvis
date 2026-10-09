@@ -1,6 +1,14 @@
 import type { Task } from '../../shared/types';
 import { useState } from 'react';
-export default function TasksPanel({ tasks, update }: { tasks: Task[]; update: (tasks: Task[]) => void }) {
+export default function TasksPanel({
+  tasks,
+  update,
+  disabled = false,
+}: {
+  tasks: Task[];
+  update: (tasks: Task[]) => unknown | Promise<boolean>;
+  disabled?: boolean;
+}) {
   const [draft, setDraft] = useState(''),
     done = tasks.filter((t) => t.done).length;
   return (
@@ -23,6 +31,7 @@ export default function TasksPanel({ tasks, update }: { tasks: Task[]; update: (
               <label>
                 <input
                   type="checkbox"
+                  disabled={disabled}
                   checked={t.done}
                   onChange={(e) =>
                     update(
@@ -34,6 +43,7 @@ export default function TasksPanel({ tasks, update }: { tasks: Task[]; update: (
               </label>
               <button
                 className="delete"
+                disabled={disabled}
                 aria-label={'Excluir ' + t.text}
                 onClick={() => update(tasks.filter((x) => x.id !== t.id))}
               >
@@ -47,23 +57,27 @@ export default function TasksPanel({ tasks, update }: { tasks: Task[]; update: (
       </div>
       <form
         className="task-form"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           if (draft.trim() && tasks.length < 100) {
-            update([...tasks, { id: crypto.randomUUID(), text: draft.trim(), done: false }]);
-            setDraft('');
+            const saved = await update([
+              ...tasks,
+              { id: crypto.randomUUID(), text: draft.trim(), done: false },
+            ]);
+            if (saved !== false) setDraft('');
           }
         }}
       >
         <input
           aria-label="Nova tarefa"
+          disabled={disabled}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           maxLength={180}
           placeholder="Adicionar tarefa…"
           required
         />
-        <button aria-label="Adicionar tarefa" disabled={tasks.length >= 100}>
+        <button aria-label="Adicionar tarefa" disabled={disabled || tasks.length >= 100}>
           +
         </button>
       </form>

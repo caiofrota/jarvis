@@ -1,0 +1,48 @@
+{
+  "id": "acorda_rosie",
+  "wake_word": "Acorda Rosie",
+  "status": "pronunciations_approved_not_trained",
+  "pronunciation_approval": {
+    "date": "2026-09-22",
+    "user_feedback": "Tá ótimo",
+    "reference_samples": {
+      "american_rosie-brazilian_h-pf_dora.wav": "7b1e282b63718362bd877a14bd7039ae9e6a4f8d2415f1bf3d9ddcfea394cf18",
+      "brazilian_rozi-brazilian_h-pf_dora.wav": "902d0752b74a04671e4d73b5d606d7eca039cb5e0f2a2fa16b70f480194f63b1"
+    }
+  },
+  "language": "pt-BR",
+  "alternative_phrase_not_yet_trained": "Oi Rosie",
+  "prefixes": [
+    { "id": "brazilian_h", "phonemes": "akˈɔhdɐ" },
+    { "id": "brazilian_tap", "phonemes": "akˈɔɾdɐ" }
+  ],
+  "names": [
+    {
+      "id": "american_rosie",
+      "phonemes": "ɹˈOzi",
+      "description": "Rosie com R americano e ditongo, tônica na primeira sílaba"
+    },
+    {
+      "id": "brazilian_rozi",
+      "phonemes": "hˈozi",
+      "description": "Rôzi/Rose em português, tônica na primeira sílaba"
+    }
+  ],
+  "preview_voices": ["pf_dora", "pm_alex", "pm_santa"],
+  "hard_negative_texts": [
+    "Acorda cedo",
+    "A cor da rosa",
+    "A cor da roseira",
+    "Agora eu sei",
+    "Acorda todo mundo",
+    "Acorda José",
+    "Rosie",
+    "Qual é a cor da luz"
+  ],
+  "evaluation_only_probes": ["Oi Rosie", "Olá Rosie"],
+  "upstream": {
+    "repository": "https://github.com/OHF-Voice/micro-wake-word",
+    "revision": "4665173cd35f1cff9a61e06fc427f124766c488e",
+    "notebook": "notebooks/basic_training_notebook.ipynb"
+  }
+}

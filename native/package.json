@@ -1,0 +1,17 @@
+{
+  "name": "@rosie/voice",
+  "private": true,
+  "scripts": {
+    "dev": ".venv/bin/uvicorn voice.app:create_app --factory --host 127.0.0.1 --port 8766 --env-file voice/.env",
+    "lint": "make lint",
+    "typecheck": "uv run --locked mypy",
+    "test": "uv run --locked pytest -q",
+    "format:assets": "prettier --write server/static docs README.md THIRD_PARTY.md package.json firmware/main/idf_component.yml",
+    "format:assets:check": "prettier --check server/static docs README.md THIRD_PARTY.md package.json firmware/main/idf_component.yml",
+    "format": "make format",
+    "format:check": "uv run --locked ruff format --check server voice tools tests training && pnpm format:assets:check"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}
