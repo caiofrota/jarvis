@@ -23,12 +23,15 @@ test("personal assistants select provider voices and API conversation models ind
   await page.getByRole("button", { name: "Criar assistente", exact: true }).click();
   const dialog = page.getByRole("dialog");
   const voice = dialog.getByLabel("Voz do assistente", { exact: true });
+  await expect(voice.locator('option[value="kokoro-pf_dora"]')).toHaveText("Dora · Local (Kokoro)");
   await voice.selectOption("openai-marin");
+  await expect(dialog.getByText("Provedor da voz: OpenAI.", { exact: true })).toBeVisible();
   await expect(dialog).toContainText("Voz gerada por IA");
   await expect(voice.locator('option[value="elevenlabs-fixture_voice"]')).toHaveText(
     "Minha voz · ElevenLabs",
   );
   await voice.selectOption("elevenlabs-fixture_voice");
+  await expect(dialog.getByText("Provedor da voz: ElevenLabs.", { exact: true })).toBeVisible();
   await dialog.getByText("Opções de voz e modelo (avançado)", { exact: true }).click();
   await dialog.getByRole("button", { name: "Consultar modelos disponíveis", exact: true }).click();
   await dialog

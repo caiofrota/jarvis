@@ -3,7 +3,20 @@ import { expect, test } from "./fixtures";
 test("companion works without a physical endpoint and starts a fresh session", async ({ page }) => {
   const sessions = ["ee3f4f65-201e-45f7-b045-186b7693da53", "e7c96b24-73e1-4ccf-a99a-a531858efaca"];
   await page.route("**/api/v1/companion/options", (route) =>
-    route.fulfill({ json: { name: "Jarvis", assistants: [], areas: [] } }),
+    route.fulfill({
+      json: {
+        name: "Jarvis",
+        assistants: [
+          {
+            id: "d449644f-43d4-45e3-9a1f-b04c8caf2fc0",
+            name: "Pessoal",
+            voice: "elevenlabs-fixture_voice",
+          },
+        ],
+        areas: [],
+        defaultProfile: { voice: "openai-marin" },
+      },
+    }),
   );
   await page.route("**/api/v1/companion/session", (route) =>
     route.fulfill({ json: { sessionId: sessions.shift() } }),
@@ -16,6 +29,12 @@ test("companion works without a physical endpoint and starts a fresh session", a
   await expect(page.locator(".app-shell")).toHaveCount(0);
   await page.getByRole("button", { name: "Configurações", exact: true }).click();
   await expect(page.getByRole("combobox", { name: "Assistente", exact: true })).toHaveValue("");
+  await expect(page.getByText("Provedor da voz: OpenAI.", { exact: true })).toBeVisible();
+  await page
+    .getByRole("combobox", { name: "Assistente", exact: true })
+    .selectOption("d449644f-43d4-45e3-9a1f-b04c8caf2fc0");
+  await expect(page.getByText("Provedor da voz: ElevenLabs.", { exact: true })).toBeVisible();
+  await page.getByRole("combobox", { name: "Assistente", exact: true }).selectOption("");
   await expect(page.getByRole("combobox", { name: "Localização atual", exact: true })).toHaveValue(
     "",
   );

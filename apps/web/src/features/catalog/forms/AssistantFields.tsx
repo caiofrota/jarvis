@@ -2,6 +2,7 @@ import { Field } from "../../../components/field/Field";
 import { AssistantIdentityFields } from "../../assistants/AssistantIdentityFields";
 import { ConversationModelField } from "../../assistants/ConversationModelField";
 import { VoicePreview } from "../../voice-preview/VoicePreview";
+import { voiceLabel, voiceProvider } from "../../voice-preview/voice-label";
 import type { FormProps } from "./types";
 export function AssistantFields({ value: v, set, voices, cloudHomeId, voiceNames }: FormProps) {
   const external = /^(openai|elevenlabs)-/.test(String(v.voice));
@@ -32,28 +33,16 @@ export function AssistantFields({ value: v, set, voices, cloudHomeId, voiceNames
           onChange={(x) => set("voice", x)}
           options={choices.map((id) => ({
             id,
-            name:
-              (voiceNames?.[id] ??
-                (id.startsWith("ha-cloud-")
-                  ? `${id.slice(9).replace(/Neural$/, "")} · Home Assistant Cloud`
-                  : ((
-                      {
-                        "kokoro-pf_dora": "Dora · Kokoro",
-                        "pt_BR-faber-medium": "Faber · Piper",
-                        "pt_BR-cadu-medium": "Cadu · Piper",
-                        "supertonic-f1": "Supertonic F1",
-                        "supertonic-m1": "Supertonic M1",
-                      } as Record<string, string>
-                    )[id] ?? id))) + (available.includes(id) ? "" : " · indisponível"),
+            name: voiceLabel(id, voiceNames) + (available.includes(id) ? "" : " · indisponível"),
           }))}
           required
-          hint={
+          hint={`Provedor da voz: ${voiceProvider(current)}. ${
             external
               ? "Voz gerada por IA. Envia o texto da resposta à OpenAI ou ElevenLabs, com cobrança pela API. O reconhecimento continua local."
               : cloud
                 ? "Gera a fala na nuvem usando sua assinatura do Home Assistant Cloud. Envia o texto da resposta e precisa de internet. O reconhecimento da sua fala continua local."
                 : "Gera a fala neste servidor. Não usa um serviço de voz na nuvem."
-          }
+          }`}
         />
         <p className="field-hint">
           Ouvir uma amostra não altera a voz do assistente. Salve para aplicar às caixinhas

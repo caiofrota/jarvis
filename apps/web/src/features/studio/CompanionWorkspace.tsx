@@ -20,6 +20,7 @@ import {
 import type { DialogId, PanelId, Preferences } from "../../../../../shared/types";
 import { LoadingScreen } from "../../components/loading-screen/LoadingScreen";
 import { useSession } from "../session/SessionProvider";
+import { voiceProvider } from "../voice-preview/voice-label";
 import { CompanionCalendar } from "./CompanionCalendar";
 import { CompanionComputer } from "./CompanionComputer";
 import { CompanionTasks } from "./CompanionTasks";
@@ -60,6 +61,10 @@ export function CompanionWorkspace({
   const name =
     conversation.options.assistants.find((value) => value.id === conversation.assistantId)?.name ??
     conversation.options.name;
+  const selected = conversation.assistantId || conversation.options.defaultAssistantId;
+  const selectedVoice =
+    conversation.options.assistants.find((assistant) => assistant.id === selected)?.voice ??
+    conversation.options.defaultProfile?.voice;
   const patch = (value: Partial<Preferences>) => savePrefs((current) => ({ ...current, ...value }));
   function open(value: DialogId | null) {
     setDialog(value);
@@ -423,6 +428,11 @@ export function CompanionWorkspace({
                   ))}
                 </select>
               </label>
+              {selectedVoice && (
+                <p className="connection-status">
+                  Provedor da voz: {voiceProvider(selectedVoice)}.
+                </p>
+              )}
               <label className="setting-row">
                 <span>Localização atual</span>
                 <select
