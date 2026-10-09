@@ -1,5 +1,6 @@
 import WebSocket from "ws";
 import { CLOUD_PREFIX, type HomeAssistantVoice } from "./home-assistant";
+import type { ProviderSpeech } from "./providers";
 import { spokenText } from "./text";
 
 export class VoiceClient {
@@ -7,6 +8,7 @@ export class VoiceClient {
     readonly url: string,
     readonly token: string,
     private readonly cloud?: HomeAssistantVoice,
+    private readonly providers?: ProviderSpeech,
   ) {}
   private async request(path: string, init: RequestInit = {}) {
     const response = await fetch(new URL(path, this.url), {
@@ -19,8 +21,17 @@ export class VoiceClient {
     if (!response.ok) throw new Error(`Speech service failed (${response.status})`);
     return response;
   }
-  async health() {
-    const [local, cloud] = await Promise.all([
+  async health(): Promise<{
+    ready: boolean;
+    busy: boolean;
+    voices: string[];
+    speakerIdentification?: boolean;
+    cloudHomeId?: string;
+    cloudError?: string;
+    voiceNames?: Record<string, string>;
+    providerError?: string;
+  }> {
+    const [local, cloud, providers] = await Promise.all([
       this.request("/health", { signal: AbortSignal.timeout(5000) })
         .then(
           (r) =>
@@ -38,10 +49,13 @@ export class VoiceClient {
           speakerIdentification: false,
         })),
       this.cloud?.availability(),
+      this.providers?.availability(),
     ]);
     return {
       ...local,
-      voices: [...local.voices, ...(cloud?.voices ?? [])],
+      voices: [...local.voices, ...(cloud?.voices ?? []), ...(providers?.voices ?? [])],
+      voiceNames: providers?.names ?? {},
+      providerError: providers?.error,
       cloudHomeId: cloud?.cloudHomeId,
       cloudError: cloud?.cloudError,
     };
@@ -53,6 +67,10 @@ export class VoiceClient {
     signal?: AbortSignal,
     homeId?: string,
   ) {
+    if (voice.startsWith("openai-") || voice.startsWith("elevenlabs-")) {
+      if (!this.providers) throw new Error("Provedor de voz não configurado.");
+      return this.providers.synthesize(spokenText(text), voice, quality, signal);
+    }
     if (voice.startsWith(CLOUD_PREFIX)) {
       if (!this.cloud) throw new Error("Home Assistant Cloud não configurado.");
       return this.cloud.synthesize(spokenText(text), voice, homeId, signal);

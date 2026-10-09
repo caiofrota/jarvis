@@ -18,11 +18,13 @@ export async function settingsRoutes(
         ...cfg,
         openaiKey: "",
         deepseekKey: "",
+        elevenlabsKey: "",
         mqttPassword: "",
         homeAssistantToken: "",
         credentials: {
           openaiKey: Boolean(cfg.openaiKey),
           deepseekKey: Boolean(cfg.deepseekKey),
+          elevenlabsKey: Boolean(cfg.elevenlabsKey),
           mqttPassword: Boolean(cfg.mqttPassword),
           homeAssistantToken: Boolean(cfg.homeAssistantToken),
         },
@@ -32,7 +34,13 @@ export async function settingsRoutes(
     if (req.method === "PUT") {
       const raw = await body(req),
         old = await rt.repo.settings();
-      for (const key of ["openaiKey", "deepseekKey", "mqttPassword", "homeAssistantToken"] as const)
+      for (const key of [
+        "openaiKey",
+        "deepseekKey",
+        "elevenlabsKey",
+        "mqttPassword",
+        "homeAssistantToken",
+      ] as const)
         if (!raw[key]) raw[key] = old[key];
       const cfg = settingsSchema.parse(raw);
       if (

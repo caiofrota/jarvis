@@ -1,8 +1,10 @@
 import { Field } from "../../../components/field/Field";
 import { AssistantIdentityFields } from "../../assistants/AssistantIdentityFields";
+import { ConversationModelField } from "../../assistants/ConversationModelField";
 import { VoicePreview } from "../../voice-preview/VoicePreview";
 import type { FormProps } from "./types";
-export function AssistantFields({ value: v, set, voices, cloudHomeId }: FormProps) {
+export function AssistantFields({ value: v, set, voices, cloudHomeId, voiceNames }: FormProps) {
+  const external = /^(openai|elevenlabs)-/.test(String(v.voice));
   const cloud = String(v.voice).startsWith("ha-cloud-");
   const available = voices.filter((id) => !id.startsWith("ha-cloud-") || v.homeId === cloudHomeId);
   const current = String(v.voice ?? "");
@@ -31,23 +33,26 @@ export function AssistantFields({ value: v, set, voices, cloudHomeId }: FormProp
           options={choices.map((id) => ({
             id,
             name:
-              (id.startsWith("ha-cloud-")
-                ? `${id.slice(9).replace(/Neural$/, "")} · Home Assistant Cloud`
-                : ((
-                    {
-                      "kokoro-pf_dora": "Dora · Kokoro",
-                      "pt_BR-faber-medium": "Faber · Piper",
-                      "pt_BR-cadu-medium": "Cadu · Piper",
-                      "supertonic-f1": "Supertonic F1",
-                      "supertonic-m1": "Supertonic M1",
-                    } as Record<string, string>
-                  )[id] ?? id)) + (available.includes(id) ? "" : " · indisponível"),
+              (voiceNames?.[id] ??
+                (id.startsWith("ha-cloud-")
+                  ? `${id.slice(9).replace(/Neural$/, "")} · Home Assistant Cloud`
+                  : ((
+                      {
+                        "kokoro-pf_dora": "Dora · Kokoro",
+                        "pt_BR-faber-medium": "Faber · Piper",
+                        "pt_BR-cadu-medium": "Cadu · Piper",
+                        "supertonic-f1": "Supertonic F1",
+                        "supertonic-m1": "Supertonic M1",
+                      } as Record<string, string>
+                    )[id] ?? id))) + (available.includes(id) ? "" : " · indisponível"),
           }))}
           required
           hint={
-            cloud
-              ? "Gera a fala na nuvem usando sua assinatura do Home Assistant Cloud. Envia o texto da resposta e precisa de internet. O reconhecimento da sua fala continua local."
-              : "Gera a fala neste servidor. Não usa um serviço de voz na nuvem."
+            external
+              ? "Voz gerada por IA. Envia o texto da resposta à OpenAI ou ElevenLabs, com cobrança pela API. O reconhecimento continua local."
+              : cloud
+                ? "Gera a fala na nuvem usando sua assinatura do Home Assistant Cloud. Envia o texto da resposta e precisa de internet. O reconhecimento da sua fala continua local."
+                : "Gera a fala neste servidor. Não usa um serviço de voz na nuvem."
           }
         />
         <p className="field-hint">
@@ -86,11 +91,11 @@ export function AssistantFields({ value: v, set, voices, cloudHomeId }: FormProp
               { id: "deepseek", name: "DeepSeek" },
             ]}
           />
-          <Field
-            label="Modelo de conversa"
-            value={v.model}
-            onChange={(x) => set("model", x)}
-            required
+          <ConversationModelField
+            key={String(v.provider)}
+            provider={String(v.provider)}
+            model={String(v.model)}
+            onChange={(model) => set("model", model)}
           />
           <Field
             label="Limite de tokens por resposta"

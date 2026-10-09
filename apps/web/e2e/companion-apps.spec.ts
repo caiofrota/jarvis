@@ -62,7 +62,7 @@ test("shortlists apps, searches the full catalog and opens a conversational requ
     await page.getByRole("button", { name: "Mostrar cards", exact: true }).click();
   if (info.project.name === "mobile")
     await page.getByRole("button", { name: "Próximos cards", exact: true }).click();
-  await expect(page.locator(".computer-body > .action-grid .action-tile")).toHaveCount(6);
+  await expect(page.locator(".computer-body > .action-grid .action-tile")).toHaveCount(1);
   await expect(page.locator(".computer-body > .action-grid .action-tile").first()).toContainText(
     "Boreal 11",
   );
@@ -71,11 +71,20 @@ test("shortlists apps, searches the full catalog and opens a conversational requ
     .click();
   await page.getByLabel("Buscar aplicativos", { exact: true }).fill("Boreal 09");
   await expect(page.locator(".computer-catalog .action-tile")).toHaveCount(1);
+  await page.getByRole("button", { name: "Fixar Boreal 09", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Desafixar Boreal 09", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  expect(await page.evaluate(() => Reflect.get(window, "fixtureLaunches"))).toEqual([]);
   await page.locator(".computer-catalog .action-tile").click();
   expect(await page.evaluate(() => Reflect.get(window, "fixtureLaunches"))).toEqual([
     "installed-app-9",
   ]);
   await page.getByRole("button", { name: "Fechar", exact: true }).click();
+  await expect(page.locator(".computer-body > .action-grid .action-tile")).toHaveCount(2);
+  await expect(page.locator(".computer-body > .action-grid .action-tile").first()).toContainText(
+    "Boreal 09",
+  );
   let submitted: unknown;
   await page.route("**/api/v1/companion/message", async (route) => {
     submitted = route.request().postDataJSON();

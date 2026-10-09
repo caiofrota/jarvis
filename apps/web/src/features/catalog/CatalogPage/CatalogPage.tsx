@@ -15,11 +15,13 @@ export function CatalogPage({
   collection,
   voices,
   cloudHomeId,
+  voiceNames,
   readOnly = false,
 }: {
   collection: Collection;
   voices: string[];
   cloudHomeId?: string;
+  voiceNames?: Record<string, string>;
   readOnly?: boolean;
 }) {
   const router = useRouter(),
@@ -289,6 +291,7 @@ export function CatalogPage({
           options={options}
           voices={voices}
           cloudHomeId={cloudHomeId}
+          voiceNames={voiceNames}
           onClose={() => {
             setEditing(null);
             if (collection === "residents") void load();

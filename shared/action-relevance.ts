@@ -17,7 +17,12 @@ export function relevantApplications(
   return [
     ...new Map(
       targets
-        .filter((target) => target.kind === 'app' && target.available)
+        .filter(
+          (target) =>
+            target.kind === 'app' &&
+            target.available &&
+            (favorites.includes(target.id) || usage.has(target.id)),
+        )
         .map((target) => [target.id, target]),
     ).values(),
   ]

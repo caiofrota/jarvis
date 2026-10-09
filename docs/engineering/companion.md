@@ -15,6 +15,13 @@ have no household binding. Profile/context edits reset the in-memory conversatio
 history. Personal defaults override the installation fallback; only administrators
 can edit shared profiles or that fallback.
 
+Only the primary companion window shows the login form. Detached cards and secondary
+workspaces stay locked while unauthenticated. Login/logout changes notify same-origin
+windows using BroadcastChannel and a storage fallback; receivers always revalidate
+through the server, never trust a client message as authentication. Focus, visibility
+and periodic checks recover missed notifications and expired sessions. Administration
+pages opened in a separate system browser retain their own browser login.
+
 Companion API routes are authenticated under `/api/v1/companion`. The server creates
 random session IDs, binds them to the authenticated account and expires idle sessions
 after 30 minutes. History is bounded and kept in memory. Audio and conversation text
@@ -109,3 +116,34 @@ The vocabulary supplements acoustic decoding and never authorizes an action.
 
 See [the feature parity inventory](unification-parity.md) for remaining differences
 between the original local Jarvis, fixed Rosie endpoints and itinerant companion.
+
+### Cloud speech in the shared brain
+
+The advanced assistant settings can query conversation models from the selected
+provider using its saved server key. The catalog is bounded and cached; manual
+model identifiers remain supported. Choosing a model does not change the voice.
+
+The existing server OpenAI API key also enables `openai-*` voices. Configure the
+optional ElevenLabs API key in **Voz e conexões → Voz**, then select an account
+voice in a personal assistant. Keys remain server-side and settings responses
+return only configuration flags. Blank key fields preserve saved credentials.
+Selecting a cloud voice sends response text to that provider and incurs API usage;
+these voices are synthesized by AI. Speech recognition remains local. Discovery
+is bounded, cached and invalidated by key changes; errors never trigger a silent
+fallback or move a request to another provider.
+
+The shared speech boundary always returns mono PCM16 at 16 kHz. OpenAI PCM24 is
+filtered and resampled, while ElevenLabs requests PCM16 directly. Browser audio
+is wrapped as WAV; physical endpoints keep the same PCM contract. Provider tests
+use simulated responses, not paid synthesis or hardware playback. The OpenAI
+speech adapter currently uses `gpt-4o-mini-tts`; track the provider deprecation
+schedule before its announced retirement.
+
+### Computer shortlist
+
+The compact computer card includes only available applications with successful
+Jarvis launch history or explicitly pinned favorites, ordered by favorites, use
+frequency and recency. It does not fill empty positions from the alphabetical
+catalog. Without usage data, users select or pin applications from the searchable
+catalog. This measures Jarvis activity, not launches outside Jarvis. Favorites
+are local to the desktop browser profile and synchronize between its windows.

@@ -17,7 +17,7 @@ test('shortlists available apps by actual identity and successful recent use', (
     { id: '3', targetId: 'app-7', at: new Date().toISOString(), status: 'error' },
   ];
   const result = relevantApplications(apps, history);
-  assert.equal(result.length, 6);
+  assert.equal(result.length, 1);
   assert.equal(result[0].id, 'app-9');
   assert.ok(!result.some((t) => t.id === 'folder' || t.id === 'app-8'));
   assert.equal(relevantApplications(apps, history, ['app-6'])[0].id, 'app-6');
@@ -67,4 +67,10 @@ test('application activity survives reopening without launching anything', async
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('does not fill the shortlist with unfamiliar alphabetical entries', () => {
+  const apps = [{ id: 'unused', label: 'A system helper', kind: 'app', available: true }];
+  assert.deepEqual(relevantApplications(apps, []), []);
+  assert.equal(relevantApplications(apps, [], ['unused'])[0].id, 'unused');
 });

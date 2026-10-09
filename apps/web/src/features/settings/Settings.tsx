@@ -29,6 +29,7 @@ type Values = {
   mqttTls: boolean;
   openaiKey: string;
   deepseekKey: string;
+  elevenlabsKey: string;
   credentials: Record<string, boolean>;
 };
 export function Settings({ status, refresh }: { status?: Status; refresh: () => Promise<void> }) {
@@ -130,14 +131,34 @@ export function Settings({ status, refresh }: { status?: Status; refresh: () => 
                         : "O serviço de fala local está indisponível."}
                     </p>
                     <p>
-                      Escolha a voz em Assistentes → Editar. Cada assistente pode usar uma voz local
-                      ou Home Assistant Cloud.
+                      Escolha a voz em Assistentes → Editar. Cada assistente pode usar uma voz
+                      local, da OpenAI, da ElevenLabs ou Home Assistant Cloud.
                     </p>
                     <p role="status">
                       {status?.speech.voices.some((id) => id.startsWith("ha-cloud-"))
                         ? "Home Assistant Cloud disponível. O uso é opcional e incluído na assinatura ativa; gera áudio a partir do texto da resposta pela internet."
                         : status?.speech.cloudError ||
                           "Consultando disponibilidade do Home Assistant Cloud…"}
+                    </p>
+                    {status?.speech.providerError && (
+                      <p role="alert">{status.speech.providerError}</p>
+                    )}
+                    <PasswordField
+                      label="Chave da ElevenLabs"
+                      value={value.elevenlabsKey}
+                      onChange={(key) => set("elevenlabsKey", key)}
+                    />
+                    <p className="field-hint">
+                      {value.credentials.elevenlabsKey
+                        ? "ElevenLabs configurada"
+                        : "ElevenLabs não configurada"}
+                      . Deixe em branco para manter a chave. A OpenAI usa a chave já configurada na
+                      aba Conversa.
+                    </p>
+                    <p className="field-hint">
+                      As vozes são geradas por inteligência artificial. Ao escolher uma voz OpenAI
+                      ou ElevenLabs, o texto das respostas será enviado ao provedor e terá cobrança
+                      pela API.
                     </p>
                     <Field
                       label="Reconhecimento da fala"
