@@ -22,7 +22,10 @@ export function CompanionCalendar() {
     })
       .then((data) => {
         if (!connection) setConnections((data as IntegrationStatus).connections);
-        else if (!calendar) setCalendars(data as PersonalCalendar[]);
+        else if (!calendar)
+          setCalendars(
+            (data as PersonalCalendar[]).filter((value) => value.assistantMode !== "excluded"),
+          );
         else setEvents(data as PersonalEvent[]);
       })
       .catch((cause) => {

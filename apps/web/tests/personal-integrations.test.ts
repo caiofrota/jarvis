@@ -412,3 +412,91 @@ it("does not mistake the subscribed calendar owner for the authenticated account
   expect(events[1].participation).toBe("accepted");
   expect(events[2].titleAvailable).toBe(false);
 });
+
+it("persists owner-bound calendar selection, excludes newly discovered calendars and supports an empty selection", async () => {
+  const f = await fixture();
+  try {
+    await f.service.finish(f.admin.id, (await f.connect(f.admin.id)).continuation);
+    const link = (await f.service.status(f.admin.id)).connections[0];
+    const calendars = [
+      { id: "work", summary: "Research" },
+      { id: "reminders", summary: "Reminders" },
+    ];
+    f.fetcher.mockImplementation(async (input) =>
+      Response.json(
+        String(input).includes("calendarList")
+          ? { items: calendars }
+          : {
+              items: [
+                {
+                  id: "event",
+                  summary: "Unfamiliar event",
+                  organizer: { email: "owner@example.test" },
+                  start: { dateTime: "2026-10-10T12:00:00Z" },
+                  end: { dateTime: "2026-10-10T13:00:00Z" },
+                },
+              ],
+            },
+      ),
+    );
+    await expect(
+      f.service.calendarPreferences(f.partner.id, link.id, { calendars: [] }),
+    ).rejects.toThrow("não encontrada");
+    await expect(
+      f.service.calendarPreferences(f.admin.id, link.id, {
+        calendars: [{ id: "foreign", mode: "normal" }],
+      }),
+    ).rejects.toThrow("não está disponível");
+    await f.service.calendarPreferences(f.admin.id, link.id, {
+      calendars: [
+        { id: "work", mode: "priority" },
+        { id: "reminders", mode: "excluded" },
+      ],
+    });
+    calendars.push({ id: "new", summary: "New subscription" });
+    const restored = new PersonalIntegrations(
+      f.repo,
+      "https://jarvis.example.test",
+      "fixture-encryption-key",
+      new PersonalProviderClient(f.fetcher),
+    );
+    const available = (await restored.read(f.admin.id, link.id, "calendars")) as {
+      id: string;
+      assistantMode: string;
+    }[];
+    expect(available.map((c) => c.assistantMode)).toEqual(["priority", "excluded", "excluded"]);
+    f.fetcher.mockClear();
+    const result = await restored.agenda(
+      f.admin.id,
+      "2026-10-10T00:00:00Z",
+      "2026-10-11T00:00:00Z",
+    );
+    expect(result.events).toHaveLength(1);
+    expect(result.events[0]).toMatchObject({
+      calendarId: "work",
+      calendarPriority: true,
+      participation: "unknown",
+    });
+    expect(
+      f.fetcher.mock.calls.some(
+        ([url]) => String(url).includes("/reminders/events") || String(url).includes("/new/events"),
+      ),
+    ).toBe(false);
+    await expect(restored.read(f.admin.id, link.id, "events", "reminders")).rejects.toThrow(
+      "não está habilitada",
+    );
+    await restored.calendarPreferences(f.admin.id, link.id, { calendars: [] });
+    expect(
+      (await restored.agenda(f.admin.id, "2026-10-10T00:00:00Z", "2026-10-11T00:00:00Z"))
+        .calendarsQueried,
+    ).toBe(0);
+    await restored.disconnect(f.admin.id, link.id);
+    expect(
+      await f.repo.db.setting.findUnique({
+        where: { id: `personal-calendar-preferences:${f.admin.id}:${link.id}` },
+      }),
+    ).toBeNull();
+  } finally {
+    await f.close();
+  }
+});

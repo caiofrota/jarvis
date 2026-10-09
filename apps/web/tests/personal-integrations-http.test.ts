@@ -1,4 +1,4 @@
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { httpFixture } from "./http-fixture";
 
 it("gates personal integration APIs, protects mutations and redacts installation secrets", async () => {
@@ -44,6 +44,32 @@ it("gates personal integration APIs, protects mutations and redacts installation
         })
       ).status,
     ).toBe(200);
+    const path =
+      "/personal-integrations/connections/78fce76a-72c3-4e0a-9817-08df074785d1/calendar-preferences";
+    const save = vi
+      .spyOn(f.rt.personalIntegrations, "calendarPreferences")
+      .mockResolvedValue(undefined);
+    expect(
+      (await client(cookie, "https://untrusted.test")(path, "PUT", { calendars: [] })).status,
+    ).toBe(403);
+    expect(
+      (await admin(path, "PUT", { calendars: [{ id: "work", mode: "priority" }] })).status,
+    ).toBe(200);
+    expect(save).toHaveBeenCalledWith(expect.any(String), "78fce76a-72c3-4e0a-9817-08df074785d1", {
+      calendars: [{ id: "work", mode: "priority" }],
+    });
+    expect(
+      (
+        await admin(path, "PUT", {
+          calendars: [
+            { id: "work", mode: "normal" },
+            { id: "work", mode: "excluded" },
+          ],
+        })
+      ).status,
+    ).toBe(422);
+    expect((await admin(path, "PUT", { owner: "foreign", calendars: [] })).status).toBe(422);
+    expect(save).toHaveBeenCalledTimes(1);
     const status = await (await admin("/personal-integrations")).json();
     expect(status.providers[0]).toMatchObject({ configured: true, clientId: "client" });
     expect(JSON.stringify(status)).not.toContain("fixture-secret");

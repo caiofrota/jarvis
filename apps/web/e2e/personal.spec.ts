@@ -114,6 +114,29 @@ test("integration setup and mail review require explicit confirmation", async ({
     confirmed++;
     await route.fulfill({ json: { message: "Envio aceito pelo provedor." } });
   });
+  let modes = ["normal", "normal"];
+  await page.route(`**/api/v1/personal-integrations/connections/${id}/calendars`, (route) =>
+    route.fulfill({
+      json: [
+        { id: "work", name: "Pesquisa", writable: true, assistantMode: modes[0] },
+        { id: "reminders", name: "Lembretes", writable: false, assistantMode: modes[1] },
+      ],
+    }),
+  );
+  await page.route(
+    `**/api/v1/personal-integrations/connections/${id}/calendar-preferences`,
+    async (route) => {
+      expect(route.request().method()).toBe("PUT");
+      expect(route.request().postDataJSON()).toEqual({
+        calendars: [
+          { id: "work", mode: "priority" },
+          { id: "reminders", mode: "excluded" },
+        ],
+      });
+      modes = ["priority", "excluded"];
+      await route.fulfill({ json: { ok: true } });
+    },
+  );
   await signIn(page, "/integrations");
   await expect(page.getByRole("heading", { name: "Minhas contas", exact: true })).toBeVisible();
   const menuButton = page.getByRole("button", { name: "Abrir menu da administração", exact: true });
@@ -144,6 +167,17 @@ test("integration setup and mail review require explicit confirmation", async ({
   await expect(password).toHaveAttribute("type", "password");
   await page.keyboard.press("Escape");
   await page.goto("/integrations");
+  await page.getByRole("button", { name: `Abrir agendas de ${account}`, exact: true }).click();
+  await page.getByLabel("Consulta de Pesquisa", { exact: true }).selectOption("priority");
+  await page.getByLabel("Consulta de Lembretes", { exact: true }).selectOption("excluded");
+  await page.getByRole("button", { name: "Salvar preferências de agendas", exact: true }).click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Preferências de agendas salvas" }),
+  ).toBeVisible();
+  await page.reload();
+  await page.getByRole("button", { name: `Abrir agendas de ${account}`, exact: true }).click();
+  await expect(page.getByLabel("Consulta de Pesquisa", { exact: true })).toHaveValue("priority");
+  await expect(page.getByLabel("Consulta de Lembretes", { exact: true })).toHaveValue("excluded");
   await page.getByRole("button", { name: `Escrever e-mail com ${account}`, exact: true }).click();
   await dialog.getByLabel("Destinatários", { exact: true }).fill("recipient@example.test");
   await dialog.getByLabel("Assunto", { exact: true }).fill("Revisão");

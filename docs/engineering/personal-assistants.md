@@ -124,3 +124,19 @@ permissions, confirmation and uncertain delivery. Browser checks cover desktop a
 mobile layouts. Real provider consent and real microphone quality require the
 owner's accounts/hardware and are not inferred from those tests. Native mobile and
 desktop clients do not yet consume these personal integration screens.
+
+## Personal calendar selection
+
+In Settings → My accounts, open an account's calendars and save a mode for each:
+priority, normal, or excluded. The selection is persisted per installation user and
+connection, applies to aggregate summaries and direct event reads, and never changes
+the upstream calendars. Existing connections remain enabled until configured; once
+a selection is saved, newly discovered calendars default to excluded. An empty
+selection disables calendar consultation for that connection. Disconnecting removes
+its preferences. Calendar discovery remains available to edit the selection.
+
+Priority is an explicit user preference, not a title classifier. Reminder calendars
+can be excluded or left normal while important calendars are marked priority.
+Provider organizer metadata identifies the calendar record's organizer; it must not
+be presented as evidence that the user hosts the real-world event. Only a verified
+attendee response establishes accepted/tentative participation.

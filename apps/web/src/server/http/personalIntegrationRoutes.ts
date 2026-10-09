@@ -1,5 +1,10 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { type Actor, integrationApplicationSchema, personalProviderSchema } from "@rosie/types";
+import {
+  type Actor,
+  calendarPreferencesSchema,
+  integrationApplicationSchema,
+  personalProviderSchema,
+} from "@rosie/types";
 import { z } from "zod";
 import type { Runtime } from "../runtime";
 import { body, respond } from "./body";
@@ -69,16 +74,30 @@ export async function personalIntegrationRoutes(
     return true;
   }
   const match = path.match(
-    /^\/api\/v1\/personal-integrations\/connections\/([a-f0-9-]{36})(?:\/(inbox|message|calendars|events|proposals))?$/,
+    /^\/api\/v1\/personal-integrations\/connections\/([a-f0-9-]{36})(?:\/(inbox|message|calendars|events|proposals|calendar-preferences))?$/,
   );
   if (match) {
     const [, id, resource] = match;
+    if (resource === "calendar-preferences" && req.method === "PUT") {
+      await service.calendarPreferences(
+        owner,
+        id,
+        calendarPreferencesSchema.parse(await body(req, 40000)),
+      );
+      respond(res, 200, { ok: true });
+      return true;
+    }
     if (!resource && req.method === "DELETE") {
       await service.disconnect(owner, id);
       respond(res, 200, { ok: true });
       return true;
     }
-    if (resource && resource !== "proposals" && req.method === "GET") {
+    if (
+      resource &&
+      resource !== "proposals" &&
+      resource !== "calendar-preferences" &&
+      req.method === "GET"
+    ) {
       const item = z
         .string()
         .min(resource === "message" || resource === "events" ? 1 : 0)

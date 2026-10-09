@@ -1,7 +1,9 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes, randomUUID } from "node:crypto";
 import { json, type Repository } from "@rosie/db";
 import {
+  type CalendarPreferences,
   calendarDraftSchema,
+  calendarPreferencesSchema,
   type IntegrationApplication,
   type IntegrationStatus,
   integrationApplicationSchema,
@@ -41,6 +43,8 @@ type Challenge = {
 };
 type Proposal = PersonalProposal & { owner: string; revision: string; until: number };
 const connectionKey = (owner: string) => `personal-integrations:${owner}`;
+const calendarKey = (owner: string, connection: string) =>
+  `personal-calendar-preferences:${owner}:${connection}`;
 const applicationKey = (provider: PersonalProvider) => `personal-integration-app:${provider}`;
 const identityKey = (provider: PersonalProvider, subject: string) =>
   `personal-integration-identity:${provider}:${createHash("sha256").update(subject).digest("hex")}`;
@@ -299,7 +303,11 @@ export class PersonalIntegrations {
         where: { id },
         data: { data: json(links.filter((value) => value.id !== connectionId)) },
       });
-      await tx.setting.deleteMany({ where: { id: identityKey(link.provider, link.subject) } });
+      await tx.setting.deleteMany({
+        where: {
+          id: { in: [identityKey(link.provider, link.subject), calendarKey(owner, connectionId)] },
+        },
+      });
     });
     for (const [id, value] of this.proposals)
       if (value.owner === owner && value.connectionId === connectionId) this.proposals.delete(id);
@@ -378,6 +386,35 @@ export class PersonalIntegrations {
       if (this.refreshing.get(key) === pending) this.refreshing.delete(key);
     }
   }
+  async calendarPreferences(owner: string, connectionId: string, raw: CalendarPreferences) {
+    const input = calendarPreferencesSchema.parse(raw);
+    const available = await this.read(owner, connectionId, "calendars");
+    if (
+      input.calendars.some(
+        (calendar) => !(available as { id: string }[]).some((value) => value.id === calendar.id),
+      )
+    )
+      throw new DomainError("Uma das agendas não está disponível nesta conta.");
+    await this.repo.db.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({ where: { id: owner } });
+      const row = await tx.setting.findUnique({ where: { id: connectionKey(owner) } });
+      const links = (row?.data as unknown as Link[]) ?? [];
+      if (!user?.enabled || !links.some((link) => link.id === connectionId && link.owner === owner))
+        throw new DomainError("Conexão pessoal não encontrada.");
+      const id = calendarKey(owner, connectionId);
+      await tx.setting.upsert({
+        where: { id },
+        create: { id, data: json(input) },
+        update: { data: json(input) },
+      });
+    });
+  }
+  private async preferences(owner: string, connectionId: string) {
+    const row = await this.repo.db.setting.findUnique({
+      where: { id: calendarKey(owner, connectionId) },
+    });
+    return row ? calendarPreferencesSchema.parse(row.data) : undefined;
+  }
   async read(
     owner: string,
     connectionId: string,
@@ -389,7 +426,25 @@ export class PersonalIntegrations {
     const token = await this.token(link);
     if (resource === "inbox") return this.client.inbox(link.provider, token);
     if (resource === "message") return this.client.message(link.provider, token, itemId);
-    if (resource === "calendars") return this.client.calendars(link.provider, token);
+    if (resource === "calendars") {
+      const preferences = await this.preferences(owner, connectionId);
+      return (await this.client.calendars(link.provider, token)).map((calendar) => ({
+        ...calendar,
+        assistantMode: preferences
+          ? (preferences.calendars.find((value) => value.id === calendar.id)?.mode ?? "excluded")
+          : "normal",
+      }));
+    }
+    const calendars = (await this.read(owner, connectionId, "calendars")) as {
+      id: string;
+      assistantMode: string;
+    }[];
+    if (
+      !calendars.some((calendar) => calendar.id === itemId && calendar.assistantMode !== "excluded")
+    )
+      throw new DomainError(
+        "Esta agenda não está habilitada para consulta. Ajuste em Minhas contas.",
+      );
     return this.client.events(link.provider, token, itemId, undefined, link.email);
   }
   async agenda(
@@ -419,7 +474,9 @@ export class PersonalIntegrations {
     let queried = 0;
     for (const link of links) {
       signal.throwIfAborted();
-      let calendars: Awaited<ReturnType<PersonalProviderClient["calendars"]>>;
+      let calendars: (Awaited<ReturnType<PersonalProviderClient["calendars"]>>[number] & {
+        assistantMode?: string;
+      })[];
       try {
         calendars = (await this.read(owner, link.id, "calendars")) as Awaited<
           ReturnType<PersonalProviderClient["calendars"]>
@@ -428,8 +485,14 @@ export class PersonalIntegrations {
         unavailable.push({ account: link.email });
         continue;
       }
-      if (calendars.length === 50 || calendars.length > 30 - queried) incomplete = true;
-      const selected = calendars.slice(0, Math.max(0, 30 - queried));
+      if (calendars.length === 50) incomplete = true;
+      const allowed = calendars.filter((calendar) => calendar.assistantMode !== "excluded");
+      if (allowed.length > 30 - queried) incomplete = true;
+      const selected = allowed
+        .sort(
+          (a, b) => Number(b.assistantMode === "priority") - Number(a.assistantMode === "priority"),
+        )
+        .slice(0, Math.max(0, 30 - queried));
       queried += selected.length;
       for (let index = 0; index < selected.length; index += 3) {
         signal.throwIfAborted();
@@ -455,6 +518,7 @@ export class PersonalIntegrations {
                   calendarPrimary: calendar.primary,
                   calendarSelected: calendar.selected,
                   calendarOwned: calendar.owned,
+                  calendarPriority: calendar.assistantMode === "priority",
                 })),
               );
             } catch {
