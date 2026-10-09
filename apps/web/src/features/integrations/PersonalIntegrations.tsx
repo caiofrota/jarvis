@@ -93,7 +93,7 @@ export function PersonalIntegrations({ userName, admin }: { userName: string; ad
     setProposal(undefined);
   }
   return (
-    <>
+    <div className="personal-integrations">
       <header className="page-header">
         <div>
           <p className="eyebrow">CONTAS PESSOAIS</p>
@@ -104,22 +104,24 @@ export function PersonalIntegrations({ userName, admin }: { userName: string; ad
           </p>
         </div>
       </header>
-      <section className="panel account-guidance">
-        <h2>Estas conexões pertencem a {userName}</h2>
-        <p>
-          Ao clicar em Conectar, escolha a sua conta no Google ou na Microsoft e autorize o acesso.
-          Para conectar as contas de outra pessoa, ela precisa entrar no Jarvis com o próprio
-          usuário.
-        </p>
+      <section className="panel integration-owner">
+        <div>
+          <p className="eyebrow">SEU PERFIL</p>
+          <h2>Estas conexões pertencem a {userName}</h2>
+          <p>Suas contas e preferências são pessoais, mesmo ao usar um assistente compartilhado.</p>
+          <details>
+            <summary>Como conectar contas de outra pessoa?</summary>
+            <p>
+              Ela deve entrar com o próprio usuário do Jarvis e autorizar suas contas Google ou
+              Microsoft.
+            </p>
+          </details>
+        </div>
         {admin && (
           <Link className="button" href="/users">
             Gerenciar usuários
           </Link>
         )}
-        <p>
-          Nome e voz do assistente não alteram o dono destas conexões. Seus e-mails, agendas e
-          histórico não são compartilhados ao escolher um assistente compartilhado.
-        </p>
       </section>
       {nativeClient && (
         <section className="panel account-guidance">
@@ -142,40 +144,42 @@ export function PersonalIntegrations({ userName, admin }: { userName: string; ad
         <p role="status">Carregando integrações…</p>
       ) : (
         <>
-          <div className="cards">
+          <div className="cards integration-providers">
             {status.providers.map((provider) => (
-              <section className="panel" key={provider.provider}>
+              <section className="panel integration-provider" key={provider.provider}>
                 <h2>{providerName(provider.provider)}</h2>
                 <p>
                   {provider.configured
                     ? "Conecte uma ou mais contas para acessar e-mail e calendário."
                     : "A conexão ainda não está disponível. Um administrador precisa configurar o aplicativo Jarvis para este provedor."}
                 </p>
-                <button
-                  type="button"
-                  className="primary"
-                  disabled={busy || !provider.configured}
-                  onClick={() =>
-                    void action(async () => {
-                      if (nativeClient) {
-                        window.open("/integrations", "_blank", "noopener,noreferrer");
-                        return;
-                      }
-                      const authorization = await request<{ url: string }>(`${base}/authorize`, {
-                        method: "POST",
-                        body: JSON.stringify({ provider: provider.provider }),
-                      });
-                      window.location.assign(authorization.url);
-                    })
-                  }
-                >
-                  Conectar {providerName(provider.provider)}
-                </button>
-                {!provider.configured && admin && (
-                  <Link className="button" href="/provider-apps">
-                    Configurar o aplicativo Jarvis
-                  </Link>
-                )}
+                <div className="integration-actions">
+                  <button
+                    type="button"
+                    className="primary"
+                    disabled={busy || !provider.configured}
+                    onClick={() =>
+                      void action(async () => {
+                        if (nativeClient) {
+                          window.open("/integrations", "_blank", "noopener,noreferrer");
+                          return;
+                        }
+                        const authorization = await request<{ url: string }>(`${base}/authorize`, {
+                          method: "POST",
+                          body: JSON.stringify({ provider: provider.provider }),
+                        });
+                        window.location.assign(authorization.url);
+                      })
+                    }
+                  >
+                    Conectar {providerName(provider.provider)}
+                  </button>
+                  {!provider.configured && admin && (
+                    <Link className="button" href="/provider-apps">
+                      Configurar aplicativo
+                    </Link>
+                  )}
+                </div>
               </section>
             ))}
           </div>
@@ -189,14 +193,15 @@ export function PersonalIntegrations({ userName, admin }: { userName: string; ad
             </section>
           )}
           {status.connections.map((connection) => (
-            <section className="panel" key={connection.id}>
+            <section className="panel integration-account" key={connection.id}>
               <h2>{connection.email}</h2>
               <p>
                 {providerName(connection.provider)} · {connection.name}
               </p>
-              <div className="form-actions">
+              <div className="integration-actions">
                 <button
                   type="button"
+                  aria-label={`Abrir caixa de entrada de ${connection.email}`}
                   disabled={busy}
                   onClick={() =>
                     void action(async () => {
@@ -207,10 +212,11 @@ export function PersonalIntegrations({ userName, admin }: { userName: string; ad
                     })
                   }
                 >
-                  Abrir caixa de entrada de {connection.email}
+                  E-mails
                 </button>
                 <button
                   type="button"
+                  aria-label={`Abrir agendas de ${connection.email}`}
                   disabled={busy}
                   onClick={() =>
                     void action(async () => {
@@ -223,20 +229,27 @@ export function PersonalIntegrations({ userName, admin }: { userName: string; ad
                     })
                   }
                 >
-                  Abrir agendas de {connection.email}
+                  Agendas
                 </button>
                 <button
                   type="button"
+                  aria-label={`Escrever e-mail com ${connection.email}`}
                   disabled={busy}
                   onClick={() => {
                     select(connection);
                     setCompose(true);
                   }}
                 >
-                  Escrever e-mail com {connection.email}
+                  Novo e-mail
                 </button>
-                <button type="button" disabled={busy} onClick={() => setDisconnecting(connection)}>
-                  Desconectar {connection.email}
+                <button
+                  type="button"
+                  className="integration-disconnect"
+                  aria-label={`Desconectar ${connection.email}`}
+                  disabled={busy}
+                  onClick={() => setDisconnecting(connection)}
+                >
+                  Desconectar
                 </button>
               </div>
             </section>
@@ -277,7 +290,7 @@ export function PersonalIntegrations({ userName, admin }: { userName: string; ad
             </section>
           )}
           {selected && calendars && (
-            <section className="panel">
+            <section className="panel integration-calendars">
               <h2>Agendas · {selected.email}</h2>
               <p>
                 Escolha o que seu assistente pode consultar. Agendas prioritárias vêm primeiro nos
@@ -285,85 +298,99 @@ export function PersonalIntegrations({ userName, admin }: { userName: string; ad
               </p>
               <p>Após salvar, agendas novas ficam desabilitadas até você selecioná-las aqui.</p>
               {!calendars.length && <p>Nenhuma agenda disponível.</p>}
-              {calendars.map((calendar) => (
-                <article key={calendar.id}>
-                  <h3>{calendar.name}</h3>
-                  <label>
-                    Consulta de {calendar.name}
-                    <select
-                      aria-label={`Consulta de ${calendar.name}`}
-                      value={calendar.assistantMode ?? "normal"}
-                      disabled={busy}
-                      onChange={(event) =>
-                        setCalendars((current) =>
-                          current?.map((value) =>
-                            value.id === calendar.id
-                              ? { ...value, assistantMode: event.target.value as CalendarMode }
-                              : value,
-                          ),
-                        )
-                      }
-                    >
-                      <option value="priority">Prioritária</option>
-                      <option value="normal">Normal</option>
-                      <option value="excluded">Não consultar</option>
-                    </select>
-                  </label>
+              <div className="integration-calendar-list">
+                {calendars.map((calendar) => (
+                  <article className="integration-calendar-row" key={calendar.id}>
+                    <div className="integration-calendar-name">
+                      <h3>{calendar.name}</h3>
+                      <p>
+                        {calendar.writable ? "Leitura e criação de eventos" : "Somente leitura"}
+                      </p>
+                    </div>
+                    <label>
+                      Uso pelo assistente
+                      <select
+                        aria-label={`Consulta de ${calendar.name}`}
+                        value={calendar.assistantMode ?? "normal"}
+                        disabled={busy}
+                        onChange={(event) =>
+                          setCalendars((current) =>
+                            current?.map((value) =>
+                              value.id === calendar.id
+                                ? { ...value, assistantMode: event.target.value as CalendarMode }
+                                : value,
+                            ),
+                          )
+                        }
+                      >
+                        <option value="priority">Prioritária</option>
+                        <option value="normal">Normal</option>
+                        <option value="excluded">Não consultar</option>
+                      </select>
+                    </label>
+                    <div className="integration-actions">
+                      <button
+                        type="button"
+                        aria-label={`Ver próximos sete dias de ${calendar.name}`}
+                        disabled={busy}
+                        onClick={() =>
+                          void action(async () => {
+                            setCalendarId(calendar.id);
+                            setEvents(
+                              await request<PersonalEvent[]>(
+                                `${connectionPath(selected.id)}/events?id=${encodeURIComponent(calendar.id)}`,
+                              ),
+                            );
+                          })
+                        }
+                      >
+                        Ver eventos
+                      </button>
+                      {calendar.writable && (
+                        <button
+                          type="button"
+                          aria-label={`Criar compromisso em ${calendar.name}`}
+                          disabled={busy}
+                          onClick={() => {
+                            setCalendarId(calendar.id);
+                            setSchedule(true);
+                          }}
+                        >
+                          Criar evento
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
+              {calendars.length > 0 && (
+                <div className="integration-save">
+                  <p>As alterações passam a valer após salvar.</p>
                   <button
                     type="button"
+                    className="primary"
                     disabled={busy}
                     onClick={() =>
                       void action(async () => {
-                        setCalendarId(calendar.id);
-                        setEvents(
-                          await request<PersonalEvent[]>(
-                            `${connectionPath(selected.id)}/events?id=${encodeURIComponent(calendar.id)}`,
-                          ),
+                        await request(`${connectionPath(selected.id)}/calendar-preferences`, {
+                          method: "PUT",
+                          body: JSON.stringify({
+                            calendars: calendars.map((calendar) => ({
+                              id: calendar.id,
+                              mode: calendar.assistantMode ?? "normal",
+                            })),
+                          }),
+                        });
+                        setEvents(undefined);
+                        setNotice(
+                          "Preferências de agendas salvas. Seu assistente usará esta seleção nas próximas consultas.",
                         );
                       })
                     }
                   >
-                    Ver próximos sete dias de {calendar.name}
+                    Salvar preferências de agendas
                   </button>
-                  {calendar.writable && (
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => {
-                        setCalendarId(calendar.id);
-                        setSchedule(true);
-                      }}
-                    >
-                      Criar compromisso em {calendar.name}
-                    </button>
-                  )}
-                </article>
-              ))}
-              {calendars.length > 0 && (
-                <button
-                  type="button"
-                  className="primary"
-                  disabled={busy}
-                  onClick={() =>
-                    void action(async () => {
-                      await request(`${connectionPath(selected.id)}/calendar-preferences`, {
-                        method: "PUT",
-                        body: JSON.stringify({
-                          calendars: calendars.map((calendar) => ({
-                            id: calendar.id,
-                            mode: calendar.assistantMode ?? "normal",
-                          })),
-                        }),
-                      });
-                      setEvents(undefined);
-                      setNotice(
-                        "Preferências de agendas salvas. Seu assistente usará esta seleção nas próximas consultas.",
-                      );
-                    })
-                  }
-                >
-                  Salvar preferências de agendas
-                </button>
+                </div>
               )}
               {events && (
                 <>
@@ -569,33 +596,35 @@ export function PersonalIntegrations({ userName, admin }: { userName: string; ad
               {error}
             </p>
           )}
-          <button type="button" disabled={busy} onClick={() => setProposal(undefined)}>
-            Voltar
-          </button>
-          <button
-            type="button"
-            className="primary"
-            disabled={busy}
-            onClick={() =>
-              void action(async () => {
-                const pending = proposal;
-                setProposal(undefined);
-                setCompose(false);
-                setSchedule(false);
-                const result = await request<{ message: string }>(`${base}/confirm`, {
-                  method: "POST",
-                  body: JSON.stringify({ id: pending.id }),
-                });
-                setNotice(result.message);
-                setTo("");
-                setSubject("");
-                setText("");
-                setTitle("");
-              })
-            }
-          >
-            {proposal.kind === "mail" ? "Confirmar e enviar" : "Confirmar e criar"}
-          </button>
+          <div className="form-actions">
+            <button type="button" disabled={busy} onClick={() => setProposal(undefined)}>
+              Voltar
+            </button>
+            <button
+              type="button"
+              className="primary"
+              disabled={busy}
+              onClick={() =>
+                void action(async () => {
+                  const pending = proposal;
+                  setProposal(undefined);
+                  setCompose(false);
+                  setSchedule(false);
+                  const result = await request<{ message: string }>(`${base}/confirm`, {
+                    method: "POST",
+                    body: JSON.stringify({ id: pending.id }),
+                  });
+                  setNotice(result.message);
+                  setTo("");
+                  setSubject("");
+                  setText("");
+                  setTitle("");
+                })
+              }
+            >
+              {proposal.kind === "mail" ? "Confirmar e enviar" : "Confirmar e criar"}
+            </button>
+          </div>
         </Modal>
       )}
       {disconnecting && (
@@ -631,6 +660,6 @@ export function PersonalIntegrations({ userName, admin }: { userName: string; ad
           </button>
         </Modal>
       )}
-    </>
+    </div>
   );
 }

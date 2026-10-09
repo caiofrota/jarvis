@@ -987,3 +987,51 @@ it.each(["summary", "full"] as const)(
     ).toBe(true);
   },
 );
+
+it("supplies owner-scoped agenda context before an informal planning reply without requiring a model tool call", async () => {
+  const f = fixture();
+  const briefing = vi.fn(async () => ({
+    focus: [{ title: "Revisão de pesquisa", start: "2026-10-09T14:00:00-03:00" }],
+    conflicts: [],
+    incomplete: false,
+  }));
+  const provider = vi.fn<typeof fetch>(async () =>
+    Response.json({
+      choices: [
+        {
+          message: {
+            role: "assistant",
+            content: "A revisão de pesquisa é às 14h; vale preparar as notas antes.",
+          },
+        },
+      ],
+    }),
+  );
+  vi.stubGlobal("fetch", provider);
+  const conversation = new CompanionConversation(
+    { settings: async () => f.settings, catalog: async () => emptyCatalog() },
+    f.ha as never,
+    undefined,
+    {
+      status: async () => ({
+        connections: [{ id: "fixture", email: "owner@example.test", provider: "google" }],
+      }),
+      briefing,
+    } as never,
+  );
+  const sessionId = conversation.create("owner");
+  const result = await conversation.respond(
+    "owner",
+    { sessionId, assistantId: null, areaId: null, text: "Alguma ideia para aproveitar a tarde?" },
+    AbortSignal.timeout(5000),
+  );
+  expect(briefing).toHaveBeenCalledWith("owner", expect.any(String), expect.any(AbortSignal));
+  const request = JSON.parse(String(provider.mock.calls[0][1]?.body));
+  expect(
+    request.messages.some(
+      (message: { role: string; content?: string }) =>
+        message.role === "system" && message.content?.includes('"title":"Revisão de pesquisa"'),
+    ),
+  ).toBe(true);
+  expect(result.text).toContain("14h");
+});

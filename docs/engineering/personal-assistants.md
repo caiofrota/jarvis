@@ -140,3 +140,17 @@ can be excluded or left normal while important calendars are marked priority.
 Provider organizer metadata identifies the calendar record's organizer; it must not
 be presented as evidence that the user hosts the real-world event. Only a verified
 attendee response establishes accepted/tentative participation.
+
+## Proactive conversation context
+
+During authenticated companion conversations, the server supplies a bounded current-day
+calendar briefing from the enabled calendars. This supports informal planning questions
+without requiring the user to explicitly name the calendar or perform the lookup.
+Unrelated topics do not require mentioning events; mail remains request-only. This is
+conversation context, not a background notification scheduler.
+
+Only the selected highlights, conflicts and coverage metadata reach the model through
+this briefing; the full event array is omitted. Complete briefings are cached in memory
+for up to one minute with owner, connection revision and local day isolation. Saving
+calendar preferences or disconnecting invalidates the cache. Failed/partial reads are
+not cached as an empty day. Local midnights are resolved separately for DST correctness.

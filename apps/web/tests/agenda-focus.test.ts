@@ -1,5 +1,9 @@
 import { expect, it } from "vitest";
-import { type AgendaEvent, agendaFocus } from "../src/server/personal/agenda-focus";
+import {
+  type AgendaEvent,
+  agendaDayPeriod,
+  agendaFocus,
+} from "../src/server/personal/agenda-focus";
 
 const now = Date.parse("2026-10-09T12:00:00-03:00");
 function event(id: string, fields: Partial<AgendaEvent> = {}): AgendaEvent {
@@ -86,4 +90,15 @@ it("honors explicit calendar priorities ahead of owned calendar reminders withou
     "America/Fortaleza",
   );
   expect(result.focus[0].id).toBe("Unfamiliar project");
+});
+
+it("resolves the current local day including DST transitions", () => {
+  expect(agendaDayPeriod(Date.parse("2026-10-10T01:00:00Z"), "America/Fortaleza")).toEqual({
+    start: "2026-10-09T03:00:00.000Z",
+    end: "2026-10-10T03:00:00.000Z",
+  });
+  expect(agendaDayPeriod(Date.parse("2026-03-08T14:00:00Z"), "America/New_York")).toEqual({
+    start: "2026-03-08T05:00:00.000Z",
+    end: "2026-03-09T04:00:00.000Z",
+  });
 });
