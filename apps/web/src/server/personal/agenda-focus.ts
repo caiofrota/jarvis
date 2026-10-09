@@ -7,6 +7,7 @@ export type AgendaEvent = PersonalEvent & {
   calendarPrimary?: boolean;
   calendarSelected?: boolean;
   calendarOwned?: boolean;
+  calendarPriority?: boolean;
 };
 
 /** Schedule-based hints, never a guess about the meaning or importance of an event title. */
@@ -26,7 +27,7 @@ export function agendaFocus(events: AgendaEvent[], now: number, timezone: string
         : Number.isFinite(Date.parse(event.start)) && Date.parse(event.end) > now),
   );
   const personal = (event: AgendaEvent) =>
-    event.participation === "organizer" || event.participation === "accepted"
+    event.participation === "accepted"
       ? 0
       : event.calendarPrimary || event.calendarOwned
         ? 1
@@ -38,7 +39,10 @@ export function agendaFocus(events: AgendaEvent[], now: number, timezone: string
     .filter((event) => event.titleAvailable !== false)
     .sort(
       (a, b) =>
-        personal(a) - personal(b) || rank(a) - rank(b) || Date.parse(a.start) - Date.parse(b.start),
+        Number(b.calendarPriority === true) - Number(a.calendarPriority === true) ||
+        personal(a) - personal(b) ||
+        rank(a) - rank(b) ||
+        Date.parse(a.start) - Date.parse(b.start),
     );
   const focus = sorted.slice(0, 3);
   const busy = active.filter(

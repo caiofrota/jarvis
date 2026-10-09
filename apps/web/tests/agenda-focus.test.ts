@@ -48,7 +48,7 @@ it("selects personal commitments rather than reciting ongoing public calendars a
 it("keeps anonymous availability but excludes declined, cancelled, expired and transparent conflicts", () => {
   const result = agendaFocus(
     [
-      event("Meeting", { participation: "organizer" }),
+      event("Meeting", { participation: "accepted" }),
       event("Anonymous", { titleAvailable: false, calendarPrimary: true }),
       event("Not busy", { busy: false }),
       event("Declined", { declined: true }),
@@ -72,4 +72,18 @@ it("compares instants across timezones and applies exclusive all-day dates in th
     "America/Fortaleza",
   );
   expect(result.focus.map((e) => e.id)).toEqual(["Today"]);
+});
+
+it("honors explicit calendar priorities ahead of owned calendar reminders without title heuristics", () => {
+  const result = agendaFocus(
+    [
+      event("Dose A", { calendarOwned: true, start: "2026-10-09T12:05:00-03:00" }),
+      event("Dose B", { calendarOwned: true, start: "2026-10-09T12:10:00-03:00" }),
+      event("Dose C", { calendarOwned: true, start: "2026-10-09T12:15:00-03:00" }),
+      event("Unfamiliar project", { calendarPriority: true }),
+    ],
+    now,
+    "America/Fortaleza",
+  );
+  expect(result.focus[0].id).toBe("Unfamiliar project");
 });

@@ -1,6 +1,7 @@
 "use client";
 import { isNativeCompanion } from "@jarvis/api-client";
 import type {
+  CalendarMode,
   IntegrationStatus,
   PersonalCalendar,
   PersonalConnection,
@@ -278,10 +279,36 @@ export function PersonalIntegrations({ userName, admin }: { userName: string; ad
           {selected && calendars && (
             <section className="panel">
               <h2>Agendas · {selected.email}</h2>
+              <p>
+                Escolha o que seu assistente pode consultar. Agendas prioritárias vêm primeiro nos
+                resumos. A preferência vale somente para esta conta e seu usuário.
+              </p>
+              <p>Após salvar, agendas novas ficam desabilitadas até você selecioná-las aqui.</p>
               {!calendars.length && <p>Nenhuma agenda disponível.</p>}
               {calendars.map((calendar) => (
                 <article key={calendar.id}>
                   <h3>{calendar.name}</h3>
+                  <label>
+                    Consulta de {calendar.name}
+                    <select
+                      aria-label={`Consulta de ${calendar.name}`}
+                      value={calendar.assistantMode ?? "normal"}
+                      disabled={busy}
+                      onChange={(event) =>
+                        setCalendars((current) =>
+                          current?.map((value) =>
+                            value.id === calendar.id
+                              ? { ...value, assistantMode: event.target.value as CalendarMode }
+                              : value,
+                          ),
+                        )
+                      }
+                    >
+                      <option value="priority">Prioritária</option>
+                      <option value="normal">Normal</option>
+                      <option value="excluded">Não consultar</option>
+                    </select>
+                  </label>
                   <button
                     type="button"
                     disabled={busy}
@@ -312,6 +339,32 @@ export function PersonalIntegrations({ userName, admin }: { userName: string; ad
                   )}
                 </article>
               ))}
+              {calendars.length > 0 && (
+                <button
+                  type="button"
+                  className="primary"
+                  disabled={busy}
+                  onClick={() =>
+                    void action(async () => {
+                      await request(`${connectionPath(selected.id)}/calendar-preferences`, {
+                        method: "PUT",
+                        body: JSON.stringify({
+                          calendars: calendars.map((calendar) => ({
+                            id: calendar.id,
+                            mode: calendar.assistantMode ?? "normal",
+                          })),
+                        }),
+                      });
+                      setEvents(undefined);
+                      setNotice(
+                        "Preferências de agendas salvas. Seu assistente usará esta seleção nas próximas consultas.",
+                      );
+                    })
+                  }
+                >
+                  Salvar preferências de agendas
+                </button>
+              )}
               {events && (
                 <>
                   <h3>Próximos sete dias</h3>

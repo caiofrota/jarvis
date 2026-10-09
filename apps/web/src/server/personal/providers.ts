@@ -259,8 +259,6 @@ export class PersonalProviderClient {
     const participation = (event: Data): PersonalEvent["participation"] => {
       if (!accountEmail) return "unknown";
       const address = accountEmail.toLowerCase();
-      const organizer = event.organizer?.email || event.organizer?.emailAddress?.address;
-      if (organizer?.toLowerCase() === address) return "organizer";
       const response =
         provider === "google"
           ? event.attendees?.find((attendee) => attendee.email?.toLowerCase() === address)

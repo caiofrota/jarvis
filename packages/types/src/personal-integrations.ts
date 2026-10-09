@@ -55,10 +55,30 @@ export type PersonalMail = {
   date: string;
   text?: string;
 };
+export const calendarPreferencesSchema = z
+  .object({
+    calendars: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(512),
+            mode: z.enum(["priority", "normal", "excluded"]),
+          })
+          .strict(),
+      )
+      .max(50),
+  })
+  .strict()
+  .refine((value) => new Set(value.calendars.map((c) => c.id)).size === value.calendars.length, {
+    message: "Agendas duplicadas.",
+  });
+export type CalendarPreferences = z.infer<typeof calendarPreferencesSchema>;
+export type CalendarMode = CalendarPreferences["calendars"][number]["mode"];
 export type PersonalCalendar = {
   id: string;
   name: string;
   writable: boolean;
+  assistantMode?: CalendarMode;
   primary?: boolean;
   selected?: boolean;
   owned?: boolean;
@@ -73,7 +93,7 @@ export type PersonalEvent = {
   declined?: boolean;
   busy?: boolean;
   titleAvailable?: boolean;
-  participation?: "organizer" | "accepted" | "tentative" | "unanswered" | "unknown";
+  participation?: "accepted" | "tentative" | "unanswered" | "unknown";
 };
 export type PersonalProposal = {
   id: string;
