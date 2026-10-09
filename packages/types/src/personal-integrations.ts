@@ -55,8 +55,26 @@ export type PersonalMail = {
   date: string;
   text?: string;
 };
-export type PersonalCalendar = { id: string; name: string; writable: boolean };
-export type PersonalEvent = { id: string; title: string; start: string; end: string };
+export type PersonalCalendar = {
+  id: string;
+  name: string;
+  writable: boolean;
+  primary?: boolean;
+  selected?: boolean;
+  owned?: boolean;
+};
+export type PersonalEvent = {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  allDay?: boolean;
+  cancelled?: boolean;
+  declined?: boolean;
+  busy?: boolean;
+  titleAvailable?: boolean;
+  participation?: "organizer" | "accepted" | "tentative" | "unanswered" | "unknown";
+};
 export type PersonalProposal = {
   id: string;
   connectionId: string;
