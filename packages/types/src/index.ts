@@ -312,6 +312,11 @@ export const settingsSchema = z.object({
   webSearchCacheEnabled: z.boolean().default(true),
   sttModel: z.enum(["tiny", "base", "small"]).default("base"),
   openaiKey: z.string().max(500).default(""),
+  elevenlabsKey: z
+    .string()
+    .max(500)
+    .regex(/^[^\r\n]*$/)
+    .default(""),
   deepseekKey: z.string().max(500).default(""),
   mqttHost: z.string().max(250).default(""),
   mqttPort: z.number().int().min(1).max(65535).default(1883),

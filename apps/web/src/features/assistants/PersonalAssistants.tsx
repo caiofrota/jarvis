@@ -12,7 +12,13 @@ import { request } from "../../lib/api-client";
 import { useSession } from "../session/SessionProvider";
 import { AssistantProfileFields } from "./AssistantProfileFields";
 
-type Choices = { voices: string[]; defaultProfile: CompanionProfile; shared?: SharedAssistant[] };
+type Choices = {
+  voices: string[];
+  voiceNames?: Record<string, string>;
+  voiceError?: string;
+  defaultProfile: CompanionProfile;
+  shared?: SharedAssistant[];
+};
 export function PersonalAssistants() {
   const { actor } = useSession();
   const [status, setStatus] = useState<PersonalProfileStatus>();
@@ -250,6 +256,7 @@ export function PersonalAssistants() {
               <AssistantProfileFields
                 value={editing}
                 voices={choices.voices}
+                voiceNames={choices.voiceNames}
                 onChange={(profile) => setEditing({ ...profile, id: editing.id })}
               />
             </fieldset>

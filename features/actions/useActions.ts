@@ -26,9 +26,11 @@ export function useActions(provided?: Pick<JarvisAPI, 'actions' | 'prepareAction
     const changed = () => void refresh();
     const external = (event: Event) => setExternalBusy((event as CustomEvent<boolean>).detail === true);
     window.addEventListener('jarvis-computer-actions-changed', changed);
+    window.addEventListener('focus', changed);
     window.addEventListener('jarvis-computer-busy', external);
     return () => {
       window.removeEventListener('jarvis-computer-actions-changed', changed);
+      window.removeEventListener('focus', changed);
       window.removeEventListener('jarvis-computer-busy', external);
     };
   }, []);

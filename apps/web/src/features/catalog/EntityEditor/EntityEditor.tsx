@@ -66,6 +66,7 @@ export function EntityEditor({
   options,
   voices,
   cloudHomeId,
+  voiceNames,
   onClose,
   onSaved,
 }: {
@@ -74,6 +75,7 @@ export function EntityEditor({
   options: Options;
   voices: string[];
   cloudHomeId?: string;
+  voiceNames?: Record<string, string>;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -147,6 +149,7 @@ export function EntityEditor({
           options={options}
           voices={voices}
           cloudHomeId={cloudHomeId}
+          voiceNames={voiceNames}
         />
         {error && (
           <p className="error" role="alert">

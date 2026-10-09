@@ -22,6 +22,17 @@ export async function profileRoutes(
   path: string,
   actor: Actor,
 ) {
+  if (path === "/api/v1/me/conversation-models") {
+    if (!actor.capabilities.includes("profile.manage"))
+      throw new HttpError(403, "Acesso ao perfil pessoal necessário.");
+    if (req.method !== "GET") throw new HttpError(405, "Método não permitido.");
+    const provider = new URL(req.url ?? "", rt.config.origin).searchParams.get("provider");
+    if (provider !== "openai" && provider !== "deepseek")
+      throw new HttpError(422, "Provedor inválido.");
+    rt.auth.limits.check(`models:${actor.user.id}`, 20);
+    respond(res, 200, { models: await rt.models.list(provider) });
+    return true;
+  }
   if (path === "/api/v1/me/assistant-options") {
     if (!actor.capabilities.includes("profile.manage"))
       throw new HttpError(403, "Acesso ao perfil pessoal necessário.");
@@ -34,6 +45,8 @@ export async function profileRoutes(
     respond(res, 200, {
       defaultProfile: settings.companionProfile,
       voices: speech.voices,
+      voiceNames: "voiceNames" in speech ? speech.voiceNames : {},
+      voiceError: "providerError" in speech ? speech.providerError : undefined,
       shared: catalog.assistants
         .filter((value) => value.enabled)
         .map((value) => sharedAssistantSchema.parse(value)),

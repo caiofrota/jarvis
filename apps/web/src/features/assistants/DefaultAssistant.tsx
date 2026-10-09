@@ -7,6 +7,7 @@ import { AssistantProfileFields } from "./AssistantProfileFields";
 type Status = { profile: CompanionProfile; revision: string };
 export function DefaultAssistant() {
   const [status, setStatus] = useState<Status>();
+  const [voiceNames, setVoiceNames] = useState<Record<string, string>>({});
   const [voices, setVoices] = useState<string[]>([]);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -15,11 +16,15 @@ export function DefaultAssistant() {
     const abort = new AbortController();
     void Promise.all([
       request<Status>("/assistant-default", { signal: abort.signal }),
-      request<{ voices: string[] }>("/me/assistant-options", { signal: abort.signal }),
+      request<{ voices: string[]; voiceNames?: Record<string, string>; voiceError?: string }>(
+        "/me/assistant-options",
+        { signal: abort.signal },
+      ),
     ])
       .then(([value, options]) => {
         setStatus(value);
         setVoices(options.voices);
+        setVoiceNames(options.voiceNames ?? {});
       })
       .catch((cause) => {
         if (!abort.signal.aborted) setError(cause.message);
@@ -73,6 +78,7 @@ export function DefaultAssistant() {
               <AssistantProfileFields
                 value={status.profile}
                 voices={voices}
+                voiceNames={voiceNames}
                 onChange={(profile) => setStatus({ ...status, profile })}
               />
             </fieldset>

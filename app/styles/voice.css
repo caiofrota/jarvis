@@ -12,6 +12,20 @@
   gap: 10px;
   margin: 16px 0;
 }
+.computer-app {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.computer-app .action-tile {
+  width: 100%;
+  flex: 1;
+}
+.computer-app > .panel-link {
+  align-self: flex-start;
+  font-size: 11px;
+}
 .action-tile {
   display: flex;
   flex-direction: column;

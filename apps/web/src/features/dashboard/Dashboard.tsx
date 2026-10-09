@@ -56,6 +56,7 @@ export function Dashboard({ section: requestedSection }: { section?: string }) {
           collection={section as Collection}
           voices={status?.speech.voices ?? []}
           cloudHomeId={status?.speech.cloudHomeId}
+          voiceNames={status?.speech.voiceNames}
           readOnly={!admin}
         />
       ) : (

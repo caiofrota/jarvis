@@ -49,6 +49,8 @@ export type Status = {
   webSearch: WebSearchStatus;
   voiceReferences: Record<string, WebReferences>;
   speech: {
+    providerError?: string;
+    voiceNames?: Record<string, string>;
     ready: boolean;
     voices: string[];
     busy: boolean;
