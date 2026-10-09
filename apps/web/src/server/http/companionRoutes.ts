@@ -60,7 +60,7 @@ export async function companionRoutes(
       assistants: [
         ...personal.profile.assistants,
         ...catalog.assistants.filter((value) => value.enabled),
-      ].map((a) => ({ id: a.id, name: a.name })),
+      ].map((a) => ({ id: a.id, name: a.name, voice: a.voice })),
       defaultAssistantId:
         personal.profile.defaultAssistantId ?? personal.profile.defaultSharedAssistantId,
       voices: speech.voices,

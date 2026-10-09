@@ -9,7 +9,13 @@ import { type Option, request } from "../../lib/api-client";
 import { executeComputerRequest, readComputerCatalog } from "./computer-client";
 
 type Message = { id: number; role: "user" | "assistant"; text: string };
-type Options = { name: string; assistants: Option[]; areas: Option[] };
+type Options = {
+  name: string;
+  assistants: (Option & { voice?: string })[];
+  areas: Option[];
+  defaultAssistantId?: string;
+  defaultProfile?: { voice: string };
+};
 export function useCompanionConversation() {
   const [options, setOptions] = useState<Options>({ name: "Jarvis", assistants: [], areas: [] });
   const [sessionId, setSessionId] = useState("");

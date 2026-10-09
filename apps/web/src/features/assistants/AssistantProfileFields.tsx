@@ -1,5 +1,6 @@
 import type { CompanionProfile } from "@rosie/types";
 import { Field } from "../../components/field/Field";
+import { voiceLabel, voiceProvider } from "../voice-preview/voice-label";
 import { AssistantIdentityFields } from "./AssistantIdentityFields";
 import { ConversationModelField } from "./ConversationModelField";
 export function AssistantProfileFields({
@@ -16,7 +17,7 @@ export function AssistantProfileFields({
   const set = (key: keyof CompanionProfile, next: unknown) => onChange({ ...value, [key]: next });
   const choices = [...new Set([value.voice, ...voices])].map((id) => ({
     id,
-    name: `${voiceNames[id] ?? (id.startsWith("openai-") ? `${id.slice(7)} · OpenAI` : id)}${voices.includes(id) ? "" : " · indisponível"}`,
+    name: `${voiceLabel(id, voiceNames)}${voices.includes(id) ? "" : " · indisponível"}`,
   }));
   return (
     <>
@@ -33,6 +34,7 @@ export function AssistantProfileFields({
         required
         options={choices}
         onChange={(voice) => set("voice", voice)}
+        hint={`Provedor da voz: ${voiceProvider(value.voice)}.`}
       />
       {(value.voice.startsWith("openai-") || value.voice.startsWith("elevenlabs-")) && (
         <p className="field-hint">
