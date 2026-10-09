@@ -1366,3 +1366,156 @@ body.jarvis-companion .command-list a {
   text-decoration: none;
   color: var(--accent);
 }
+
+/* Personal account workspace: consistent spacing and aligned calendar controls. */
+.personal-integrations {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+}
+.personal-integrations .page-header,
+.personal-integrations .panel > :is(h2, p) {
+  margin: 0;
+}
+.personal-integrations .panel {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.personal-integrations :is(h2, h3, p) {
+  overflow-wrap: anywhere;
+}
+.personal-integrations .integration-owner {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 32px;
+}
+.integration-owner h2 {
+  margin: 8px 0;
+  font-size: 1.1rem;
+}
+.personal-integrations .integration-owner p {
+  margin: 0;
+  color: var(--muted);
+}
+.integration-owner details {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.personal-integrations .integration-owner :where(details) p {
+  margin-top: 12px;
+}
+.integration-owner summary {
+  cursor: pointer;
+}
+.integration-owner > .button {
+  flex-shrink: 0;
+}
+.integration-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.integration-provider > .integration-actions {
+  margin-top: auto;
+}
+.integration-account > .integration-actions {
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.integration-account .integration-disconnect {
+  color: var(--danger);
+  margin-left: auto;
+}
+.integration-calendar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+.integration-calendar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 200px 300px;
+  align-items: center;
+  gap: 24px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.integration-calendar-name h3 {
+  font-size: 1rem;
+  margin: 0 0 8px;
+}
+.personal-integrations .integration-calendar-name p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+body .personal-integrations .integration-calendar-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+body .personal-integrations .integration-calendar-row select {
+  width: 100%;
+  margin: 0;
+  min-height: 44px;
+}
+.integration-calendar-row .integration-actions {
+  justify-content: flex-start;
+}
+.integration-save {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+  margin-top: 8px;
+}
+.personal-integrations .integration-save p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+@media (max-width: 1200px) {
+  .integration-calendar-row {
+    grid-template-columns: minmax(0, 1fr) 200px;
+  }
+  .integration-calendar-row .integration-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 760px) {
+  .personal-integrations .panel {
+    padding: 20px;
+  }
+  .personal-integrations .integration-owner,
+  .integration-save {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .integration-calendar-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    padding: 18px;
+  }
+  .integration-account .integration-actions {
+    display: grid;
+    align-items: stretch;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .integration-account .integration-disconnect {
+    margin-left: 0;
+  }
+}

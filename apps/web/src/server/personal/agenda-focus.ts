@@ -66,3 +66,42 @@ export function agendaFocus(events: AgendaEvent[], now: number, timezone: string
     }
   return { asOf: new Date(now).toISOString(), timezone, focus, conflicts };
 }
+
+/** Resolve both local midnights independently so DST days need not last 24 hours. */
+export function agendaDayPeriod(now: number, timezone: string) {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+  const parts = (time: number) =>
+    Object.fromEntries(
+      formatter.formatToParts(new Date(time)).map((part) => [part.type, part.value]),
+    );
+  const today = parts(now);
+  const date = Date.UTC(Number(today.year), Number(today.month) - 1, Number(today.day));
+  const midnight = (local: number) => {
+    let instant = local;
+    for (let i = 0; i < 4; i++) {
+      const p = parts(instant);
+      const displayed = Date.UTC(
+        Number(p.year),
+        Number(p.month) - 1,
+        Number(p.day),
+        Number(p.hour),
+        Number(p.minute),
+        Number(p.second),
+      );
+      const delta = local - displayed;
+      instant += delta;
+      if (!delta) break;
+    }
+    return new Date(instant).toISOString();
+  };
+  return { start: midnight(date), end: midnight(date + 86400000) };
+}

@@ -76,7 +76,7 @@ test("personal assistants persist without requiring a house or endpoint", async 
   ).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Meus assistentes", exact: true })).toBeVisible();
 });
-test("integration setup and mail review require explicit confirmation", async ({ page }) => {
+test("integration setup and mail review require explicit confirmation", async ({ page }, info) => {
   const id = "78fce76a-72c3-4e0a-9817-08df074785d1",
     proposalId = "cc63b76e-e0c1-4b3f-81b5-8b2acb109b55";
   const account = "person@example.test";
@@ -168,6 +168,26 @@ test("integration setup and mail review require explicit confirmation", async ({
   await page.keyboard.press("Escape");
   await page.goto("/integrations");
   await page.getByRole("button", { name: `Abrir agendas de ${account}`, exact: true }).click();
+  await expect(page.getByLabel("Consulta de Pesquisa", { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const rows = await page.locator(".integration-calendar-row").evaluateAll((elements) =>
+    elements.map((element) => {
+      const row = element.getBoundingClientRect();
+      const buttons = Array.from(element.querySelectorAll("button")).map((button) =>
+        button.getBoundingClientRect(),
+      );
+      return {
+        top: row.top,
+        bottom: row.bottom,
+        contained: buttons.every((button) => button.left >= row.left && button.right <= row.right),
+        aligned: buttons.length < 2 || Math.abs(buttons[0].top - buttons[1].top) < 1,
+        gap: buttons.length < 2 ? 12 : buttons[1].left - buttons[0].right,
+      };
+    }),
+  );
+  await page.screenshot({ path: info.outputPath("calendar-settings.png"), fullPage: true });
+  expect(rows.filter((row) => !row.contained || !row.aligned || row.gap < 12)).toEqual([]);
+  expect(rows[1].top - rows[0].bottom).toBeGreaterThanOrEqual(12);
   await page.getByLabel("Consulta de Pesquisa", { exact: true }).selectOption("priority");
   await page.getByLabel("Consulta de Lembretes", { exact: true }).selectOption("excluded");
   await page.getByRole("button", { name: "Salvar preferências de agendas", exact: true }).click();

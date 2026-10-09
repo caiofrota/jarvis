@@ -15,7 +15,7 @@ import {
 import { DomainError } from "@rosie/types/context";
 import * as oauth from "oauth4webapi";
 import { z } from "zod";
-import { type AgendaEvent, agendaFocus } from "./agenda-focus";
+import { type AgendaEvent, agendaDayPeriod, agendaFocus } from "./agenda-focus";
 import { PersonalProviderClient, providers } from "./providers";
 
 const tokensSchema = z.object({
@@ -53,6 +53,12 @@ export class PersonalIntegrations {
   private readonly key: Buffer;
   private challenges = new Map<string, Challenge>();
   private proposals = new Map<string, Proposal>();
+  private briefingRevision = 0;
+  private invalidateBriefings() {
+    this.briefingRevision++;
+    this.briefings.clear();
+  }
+  private briefings = new Map<string, { until: number; data: unknown }>();
   private refreshing = new Map<string, Promise<Tokens>>();
   readonly callback: string;
   constructor(
@@ -294,6 +300,7 @@ export class PersonalIntegrations {
     });
   }
   async disconnect(owner: string, connectionId: string) {
+    this.invalidateBriefings();
     const link = await this.link(owner, connectionId);
     await this.repo.db.$transaction(async (tx) => {
       const id = connectionKey(owner),
@@ -387,6 +394,7 @@ export class PersonalIntegrations {
     }
   }
   async calendarPreferences(owner: string, connectionId: string, raw: CalendarPreferences) {
+    this.invalidateBriefings();
     const input = calendarPreferencesSchema.parse(raw);
     const available = await this.read(owner, connectionId, "calendars");
     if (
@@ -408,6 +416,7 @@ export class PersonalIntegrations {
         update: { data: json(input) },
       });
     });
+    this.invalidateBriefings();
   }
   private async preferences(owner: string, connectionId: string) {
     const row = await this.repo.db.setting.findUnique({
@@ -446,6 +455,36 @@ export class PersonalIntegrations {
         "Esta agenda não está habilitada para consulta. Ajuste em Minhas contas.",
       );
     return this.client.events(link.provider, token, itemId, undefined, link.email);
+  }
+  async briefing(owner: string, timezone: string, signal: AbortSignal) {
+    const links = await this.links(owner);
+    const period = agendaDayPeriod(Date.now(), timezone);
+    const key = JSON.stringify([
+      owner,
+      timezone,
+      period,
+      links.map((link) => [link.id, link.revision]),
+    ]);
+    const cached = this.briefings.get(key);
+    if (cached && cached.until > Date.now()) return cached.data;
+    const revision = this.briefingRevision;
+    const { events, ...summary } = await this.agenda(
+      owner,
+      period.start,
+      period.end,
+      [],
+      signal,
+      timezone,
+    );
+    const data = { ...summary, eventCount: events.length };
+    for (const [id, value] of this.briefings)
+      if (value.until <= Date.now()) this.briefings.delete(id);
+    if (!summary.incomplete && revision === this.briefingRevision) {
+      if (this.briefings.size >= 100)
+        this.briefings.delete(this.briefings.keys().next().value ?? "");
+      this.briefings.set(key, { until: Date.now() + 60000, data });
+    }
+    return data;
   }
   async agenda(
     owner: string,

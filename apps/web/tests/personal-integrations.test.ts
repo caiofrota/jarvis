@@ -500,3 +500,39 @@ it("persists owner-bound calendar selection, excludes newly discovered calendars
     await f.close();
   }
 });
+
+it("caches bounded daily briefings briefly and invalidates them when calendar preferences change", async () => {
+  const f = await fixture();
+  try {
+    await f.service.finish(f.admin.id, (await f.connect(f.admin.id)).continuation);
+    const link = (await f.service.status(f.admin.id)).connections[0];
+    const agenda = vi.spyOn(f.service, "agenda").mockResolvedValue({
+      period: { start: "2026-10-09T03:00:00Z", end: "2026-10-10T03:00:00Z" },
+      asOf: "2026-10-09T14:00:00Z",
+      timezone: "America/Fortaleza",
+      focus: [],
+      conflicts: [],
+      events: [],
+      unavailable: [],
+      incomplete: false,
+      calendarsQueried: 1,
+    });
+    const signal = AbortSignal.timeout(5000);
+    const first = await f.service.briefing(f.admin.id, "America/Fortaleza", signal);
+    expect(first).not.toHaveProperty("events");
+    await f.service.briefing(f.admin.id, "America/Fortaleza", signal);
+    expect(agenda).toHaveBeenCalledTimes(1);
+    await f.service.briefing(f.partner.id, "America/Fortaleza", signal);
+    expect(agenda).toHaveBeenCalledTimes(2);
+    await f.service.calendarPreferences(f.admin.id, link.id, { calendars: [] });
+    await f.service.briefing(f.admin.id, "America/Fortaleza", signal);
+    expect(agenda).toHaveBeenCalledTimes(3);
+    const time = Date.now();
+    vi.spyOn(Date, "now").mockReturnValue(time + 61000);
+    await f.service.briefing(f.admin.id, "America/Fortaleza", signal);
+    expect(agenda).toHaveBeenCalledTimes(4);
+  } finally {
+    vi.restoreAllMocks();
+    await f.close();
+  }
+});
