@@ -262,3 +262,114 @@ it("coalesces refreshes and cannot restore a connection removed during refresh",
     await f.close();
   }
 }, 15000);
+
+it("summarizes multiple owned calendars for an explicit local-day interval and reports unavailable calendars", async () => {
+  const f = await fixture();
+  try {
+    const google = await f.connect(f.admin.id);
+    await f.service.finish(f.admin.id, google.continuation);
+    f.fetcher.mockImplementation(async (input) => {
+      const url = new URL(String(input));
+      if (url.pathname.endsWith("calendarList"))
+        return Response.json({
+          items: [
+            { id: "work", summary: "Pesquisa" },
+            { id: "family", summary: "Família" },
+            { id: "offline", summary: "Sem acesso" },
+          ],
+        });
+      expect(url.searchParams.get("timeMin")).toBe("2026-10-09T00:00:00-03:00");
+      expect(url.searchParams.get("timeMax")).toBe("2026-10-10T00:00:00-03:00");
+      if (url.pathname.includes("/offline/")) return new Response("", { status: 403 });
+      return Response.json({
+        items: [
+          {
+            id: url.pathname,
+            summary: url.pathname.includes("/work/") ? "Revisão matinal" : "Aniversário",
+            start: url.pathname.includes("/work/")
+              ? { dateTime: "2026-10-09T08:00:00-03:00" }
+              : { date: "2026-10-09" },
+            end: { dateTime: "2026-10-09T09:00:00-03:00" },
+          },
+        ],
+      });
+    });
+    const result = await f.service.agenda(
+      f.admin.id,
+      "2026-10-09T00:00:00-03:00",
+      "2026-10-10T00:00:00-03:00",
+    );
+    expect(result.events.map((event) => event.calendar)).toEqual(["Família", "Pesquisa"]);
+    expect(result.events.every((event) => event.account === "owner@example.test")).toBe(true);
+    expect(result.incomplete).toBe(true);
+    expect(result.unavailable).toEqual([{ account: "owner@example.test", calendar: "Sem acesso" }]);
+    const calls = f.fetcher.mock.calls.length;
+    await expect(
+      f.service.agenda(f.partner.id, "2026-10-09T00:00:00-03:00", "2026-10-10T00:00:00-03:00", [
+        (await f.service.status(f.admin.id)).connections[0].id,
+      ]),
+    ).rejects.toThrow("indisponível");
+    expect(f.fetcher.mock.calls).toHaveLength(calls);
+    await expect(
+      f.service.agenda(f.admin.id, "2026-10-09T00:00:00-03:00", "2026-12-10T00:00:00-03:00"),
+    ).rejects.toThrow("31 dias");
+  } finally {
+    await f.close();
+  }
+});
+
+it("bounds aggregate calendar queries and reports incomplete coverage instead of claiming an empty agenda", async () => {
+  const f = await fixture();
+  try {
+    const link = await f.connect(f.admin.id);
+    await f.service.finish(f.admin.id, link.continuation);
+    f.fetcher.mockImplementation(async (input) =>
+      Response.json(
+        String(input).includes("calendarList")
+          ? {
+              items: Array.from({ length: 31 }, (_, id) => ({
+                id: String(id),
+                summary: `Agenda ${id}`,
+              })),
+            }
+          : { items: [] },
+      ),
+    );
+    const result = await f.service.agenda(
+      f.admin.id,
+      "2026-10-09T00:00:00-03:00",
+      "2026-10-10T00:00:00-03:00",
+    );
+    expect(result).toMatchObject({ calendarsQueried: 30, incomplete: true, events: [] });
+    expect(
+      f.fetcher.mock.calls.filter(([input]) => String(input).includes("/events?")),
+    ).toHaveLength(30);
+  } finally {
+    await f.close();
+  }
+});
+
+it("queries Microsoft calendar views for the requested interval and labels provider UTC timestamps", async () => {
+  const fetcher = vi.fn<typeof fetch>(async (input) => {
+    const url = new URL(String(input));
+    expect(url.searchParams.get("startDateTime")).toBe("2026-10-09T00:00:00-03:00");
+    expect(url.searchParams.get("endDateTime")).toBe("2026-10-10T00:00:00-03:00");
+    return Response.json({
+      value: [
+        {
+          id: "review",
+          subject: "Revisão",
+          start: { dateTime: "2026-10-09T11:00:00.0000000" },
+          end: { dateTime: "2026-10-09T12:00:00.0000000" },
+        },
+      ],
+    });
+  });
+  const events = await new PersonalProviderClient(fetcher).events(
+    "microsoft",
+    "fixture-access",
+    "work",
+    { start: "2026-10-09T00:00:00-03:00", end: "2026-10-10T00:00:00-03:00" },
+  );
+  expect(events[0].start).toBe("2026-10-09T11:00:00.0000000Z");
+});

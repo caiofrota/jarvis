@@ -219,21 +219,29 @@ export class PersonalProviderClient {
     provider: PersonalProvider,
     token: string,
     calendarId: string,
+    period?: { start: string; end: string },
   ): Promise<PersonalEvent[]> {
-    const start = new Date().toISOString(),
-      end = new Date(Date.now() + 7 * 86400000).toISOString();
+    const start = period?.start ?? new Date().toISOString(),
+      end = period?.end ?? new Date(Date.now() + 7 * 86400000).toISOString();
     const path =
       provider === "google"
         ? `/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${new URLSearchParams({ timeMin: start, timeMax: end, singleEvents: "true", orderBy: "startTime", maxResults: "30" })}`
         : `/v1.0/me/calendars/${encodeURIComponent(calendarId)}/calendarView?${new URLSearchParams({ startDateTime: start, endDateTime: end, $top: "30", $select: "id,subject,start,end", $orderby: "start/dateTime" })}`;
     const data = await this.request(provider, token, path);
+    const eventTime = (value: Data["start"]) => {
+      const date = String(value?.dateTime || value?.date || "");
+      // Graph returns UTC because request() explicitly asks for outlook.timezone="UTC".
+      return provider === "microsoft" && value?.dateTime && !/(Z|[+-]\d{2}:\d{2})$/i.test(date)
+        ? `${date}Z`
+        : date;
+    };
     return (provider === "google" ? (data.items ?? []) : (data.value ?? []))
       .slice(0, 30)
       .map((event: Data) => ({
         id: String(event.id),
         title: String(event.summary || event.subject || "Sem título"),
-        start: String(event.start?.dateTime || event.start?.date || ""),
-        end: String(event.end?.dateTime || event.end?.date || ""),
+        start: eventTime(event.start),
+        end: eventTime(event.end),
       }));
   }
   async send(
