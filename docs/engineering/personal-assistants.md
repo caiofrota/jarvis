@@ -79,6 +79,8 @@ up to fifty calendars and shows up to thirty events over the next seven days.
 HTML, attachments and remote resources are not displayed. Lists are bounded and
 may be incomplete. All provider calls use official HTTPS endpoints and timeouts.
 
+For conversational planning, `personal_agenda` reads an explicit interval of at most 31 days across the authenticated user's connected accounts. Daily summaries include the entire reference-timezone day, including all-day and earlier events. The model prioritizes upcoming/ongoing commitments and conflicts from actual results. Queries inspect at most 30 calendars, three at a time, return at most 100 events, and report unavailable calendars and potentially truncated provider responses. General summaries do not require choosing one calendar; explicit account restrictions remain owner-validated. No background agenda retrieval or calendar writes are introduced.
+
 Mail sending and event creation have a review step showing the account and draft.
 Only the explicit confirmation dispatches the operation. Proposals expire after
 five minutes, belong to one user and connection revision, and can be consumed only

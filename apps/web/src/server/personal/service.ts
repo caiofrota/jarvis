@@ -391,6 +391,94 @@ export class PersonalIntegrations {
     if (resource === "calendars") return this.client.calendars(link.provider, token);
     return this.client.events(link.provider, token, itemId);
   }
+  async agenda(
+    owner: string,
+    start: string,
+    end: string,
+    connectionIds: string[] = [],
+    signal = AbortSignal.timeout(60000),
+  ) {
+    const period = z
+      .object({
+        start: z.string().datetime({ offset: true }),
+        end: z.string().datetime({ offset: true }),
+      })
+      .parse({ start, end });
+    const duration = Date.parse(end) - Date.parse(start);
+    if (duration <= 0 || duration > 31 * 86400000)
+      throw new DomainError("Escolha um período de até 31 dias.");
+    const owned = await this.links(owner);
+    if (connectionIds.some((id) => !owned.some((link) => link.id === id)))
+      throw new DomainError("Conta pessoal indisponível.");
+    const links = owned.filter((link) => !connectionIds.length || connectionIds.includes(link.id));
+    const events: {
+      account: string;
+      calendar: string;
+      calendarId: string;
+      id: string;
+      title: string;
+      start: string;
+      end: string;
+    }[] = [];
+    const unavailable: { account: string; calendar?: string }[] = [];
+    let incomplete = false;
+    let queried = 0;
+    for (const link of links) {
+      signal.throwIfAborted();
+      let calendars: Awaited<ReturnType<PersonalProviderClient["calendars"]>>;
+      try {
+        calendars = (await this.read(owner, link.id, "calendars")) as Awaited<
+          ReturnType<PersonalProviderClient["calendars"]>
+        >;
+      } catch {
+        unavailable.push({ account: link.email });
+        continue;
+      }
+      if (calendars.length === 50 || calendars.length > 30 - queried) incomplete = true;
+      const selected = calendars.slice(0, Math.max(0, 30 - queried));
+      queried += selected.length;
+      for (let index = 0; index < selected.length; index += 3) {
+        signal.throwIfAborted();
+        await Promise.all(
+          selected.slice(index, index + 3).map(async (calendar) => {
+            try {
+              const current = await this.link(owner, link.id);
+              this.permission(current, "calendar");
+              const entries = await this.client.events(
+                current.provider,
+                await this.token(current),
+                calendar.id,
+                period,
+              );
+              if (entries.length === 30) incomplete = true;
+              events.push(
+                ...entries.map((event) => ({
+                  ...event,
+                  account: link.email,
+                  calendar: calendar.name,
+                  calendarId: calendar.id,
+                })),
+              );
+            } catch {
+              unavailable.push({ account: link.email, calendar: calendar.name });
+            }
+          }),
+        );
+      }
+    }
+    signal.throwIfAborted();
+    await this.enabled(owner);
+    events.sort(
+      (a, b) => Date.parse(a.start) - Date.parse(b.start) || a.title.localeCompare(b.title),
+    );
+    return {
+      period,
+      events: events.slice(0, 100),
+      unavailable,
+      incomplete: incomplete || events.length > 100 || unavailable.length > 0,
+      calendarsQueried: queried,
+    };
+  }
   async propose(
     owner: string,
     connectionId: string,
