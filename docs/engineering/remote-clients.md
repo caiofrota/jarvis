@@ -18,30 +18,32 @@ Use Node 22.23.2 and pnpm 11.25.0 in an authenticated checkout. From its root:
 
 ```powershell
 git fetch origin
-git switch feat/unified-assistant-platform
+git switch main
 git pull --ff-only
 pnpm install --frozen-lockfile
-pnpm companion --server https://192.168.0.226:18766
+pnpm companion --server https://jarvis.example.com
 ```
 
-This is the current local development server. Connect through the same LAN or the
-installation's VPN. Another installation must use its own configured HTTPS origin.
-`pnpm desktop` still starts the legacy local application; `pnpm companion` starts
+Replace the example URL with your installation's exact HTTPS origin. Connect through
+the same LAN or the installation's VPN.
+`pnpm desktop` starts standalone local mode; `pnpm companion` starts
 the remote client. Neither command provisions a central server on the client PC.
 
-The current server uses a local self-signed certificate. Export its public part
+If your server uses the generated local self-signed certificate, export its public part
 on the server with `pnpm certificate:brain`, then copy only the generated
 `apps/web/.local/tls/jarvis-local.cer` to the client. Windows example:
 
 ```powershell
-pnpm companion --server https://192.168.0.226:18766 --certificate "$env:USERPROFILE\Downloads\jarvis-local.cer"
+pnpm companion --server https://jarvis.example.com --certificate "$env:USERPROFILE\Downloads\jarvis-local.cer"
 ```
 
 Linux equivalent:
 
 ```sh
-pnpm companion --server https://192.168.0.226:18766 --certificate ~/Downloads/jarvis-local.cer
+pnpm companion --server https://jarvis.example.com --certificate ~/Downloads/jarvis-local.cer
 ```
+
+When a reverse proxy presents a different leaf certificate, export that public leaf for desktop pinning; mobile/browser trust needs its issuing CA instead.
 
 The desktop accepts only that exact certificate with valid dates and a matching
 subject alternative name. It does not disable TLS checks globally. System-trusted
@@ -68,13 +70,13 @@ connect the phone. Install repository dependencies. In PowerShell at the root:
 Copy-Item apps/mobile/.env.example apps/mobile/.env
 ```
 
-For the current local certificate, edit that file to contain:
+For a local CA, edit that file with the exact server hostname:
 
 ```dotenv
-JARVIS_LOCAL_TLS_HOST=192.168.0.226
+JARVIS_LOCAL_TLS_HOST=jarvis.example.com
 ```
 
-Install `jarvis-local.cer` as a CA certificate in Android's security settings.
+Install the issuing CA certificate (the same `jarvis-local.cer` only for the generated self-signed setup) as a CA certificate in Android's security settings.
 Then run at the repository root:
 
 ```sh
@@ -104,7 +106,7 @@ pnpm dlx eas-cli init
 For a self-signed Android server, configure the cloud build environment:
 
 ```sh
-pnpm dlx eas-cli env:create --name JARVIS_LOCAL_TLS_HOST --value 192.168.0.226 --environment preview --visibility plaintext
+pnpm dlx eas-cli env:create --name JARVIS_LOCAL_TLS_HOST --value jarvis.example.com --environment preview --visibility plaintext
 ```
 
 The ignored local `.env` is not uploaded; configure EAS explicitly. Skip the variable
@@ -128,11 +130,11 @@ team/signing credentials. This cloud build does not require a Mac and does not
 publish to an app store. A Mac with Xcode can alternatively build locally, following
 Apple's device-signing requirements.
 
-For a local certificate on iPhone, open `jarvis-local.cer`, install its profile under
+For a local CA on iPhone, open the issuing CA certificate, install its profile under
 **Settings → General → VPN & Device Management**, then enable its trust under
 **Settings → General → About → Certificate Trust Settings**.
 
-Open **Jarvis Companion**, enter `https://192.168.0.226:18766`, connect and sign in
+Open **Jarvis Companion**, enter `https://jarvis.example.com`, connect and sign in
 with your existing account. Grant microphone/local-network access when requested.
 Server selection uses SecureStore. Login cookies remain HttpOnly inside the WebView.
 Leaving the app releases its WebView and microphone; returning starts a new

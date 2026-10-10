@@ -4,11 +4,17 @@ import re
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
-documents = [root / "README.md", root / "AGENTS.md", *sorted((root / "docs/engineering").glob("*.md"))]
+documents = [
+    root / "README.md",
+    root / "CONTRIBUTING.md",
+    root / "CHANGELOG.md",
+    root / "AGENTS.md",
+    *sorted((root / "docs/engineering").glob("*.md")),
+]
 errors = []
 for path in documents:
     for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", path.read_text()):
-        if "://" in target or target.startswith("#"):
+        if "://" in target or target.startswith(("#", "mailto:")):
             continue
         target = target.split("#")[0]
         if not (path.parent / target).exists():
