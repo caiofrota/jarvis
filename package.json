@@ -16,7 +16,7 @@
     "dev": "node node_modules/tsx/dist/cli.mjs watch --ignore dist --ignore out scripts/dev.ts",
     "build": "pnpm typecheck && pnpm build:runtime && pnpm build:worklet && next build && node dist/scripts/secure-export.js",
     "format": "prettier --write app components features client shared lib desktop scripts tests",
-    "format:check": "prettier --check app components features client shared lib desktop scripts tests package.json tsconfig*.json next.config.ts pnpm-workspace.yaml .prettierrc.json .engineering-handbook.yaml .github/workflows/*.yml docs AGENTS.md README.md eslint.config.mjs",
+    "format:check": "prettier --check app components features client shared lib desktop scripts tests package.json tsconfig*.json next.config.ts pnpm-workspace.yaml .prettierrc.json .engineering-handbook.yaml .github/workflows/*.yml docs AGENTS.md README.md CONTRIBUTING.md CHANGELOG.md eslint.config.mjs",
     "lint": "eslint app components features client shared lib desktop scripts server.ts next.config.ts tests --max-warnings=0 && node scripts/check-workflows.mjs",
     "python:check": "uv sync --project voice --locked && uv run --project voice --locked ruff check --config voice/pyproject.toml voice tests/python && uv run --project voice --locked ruff format --config voice/pyproject.toml --check voice tests/python && uv run --project voice --locked python -m unittest discover -s tests/python && uv run --project voice --locked python -m compileall -q voice/download.py voice/wakeword.py voice/worker.py",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit",
